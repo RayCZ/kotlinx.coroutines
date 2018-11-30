@@ -16,7 +16,7 @@ In order to use coroutines as well as follow the examples in this guide, you nee
 
 ## Table of contents
 
-* [Coroutine basics](basics.md)
+* [Coroutine basics](basics.md) (協程基礎觀念)
 * [Cancellation and timeouts](cancellation-and-timeouts.md)
 * [Composing suspending functions](composing-suspending-functions.md)
 * [Coroutine context and dispatchers](coroutine-context-and-dispatchers.md)
