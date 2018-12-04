@@ -171,9 +171,9 @@ class MyTest {
 
 Waiting for a job ：等待工作
 
-Delaying for a time while another coroutine is working is not a good approach. Let's explicitly wait (in a non-blocking way) until the background [Job](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/index.html) that we have launched is complete:
+Delaying for a time while another coroutine is working is not a good approach. Let's explicitly wait (in a non-blocking way) until the background [Job][Job] that we have launched is complete:
 
-當另一個協程在工作時，延遲一段時間，並不是一個好方法。讓我們明確等待 (在非阻塞的方式中) 直到我們發射的背景程序 [Job](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/index.html) 完成：
+當另一個協程在工作時，延遲一段時間，並不是一個好方法。讓我們明確等待 (在非阻塞的方式中) 直到我們發射的背景程序 [Job][Job] 完成：
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -212,9 +212,9 @@ the background job in any way. Much better.
 
 Structured concurrency ：結構化並發
 
-There is still something to be desired for practical usage of coroutines. When we use `GlobalScope.launch` we create a top-level coroutine. Even though it is light-weight, it still consumes some memory resources while it runs. If we forget to keep a reference to the newly launched coroutine it still runs. What if the code in the coroutine hangs (for example, we erroneously delay for too long), what if we launched too many coroutines and ran out of memory? Having to manually keep a reference to all the launched coroutines and [join](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/join.html) them is error-prone. 
+There is still something to be desired for practical usage of coroutines. When we use `GlobalScope.launch` we create a top-level coroutine. Even though it is light-weight, it still consumes some memory resources while it runs. If we forget to keep a reference to the newly launched coroutine it still runs. What if the code in the coroutine hangs (for example, we erroneously delay for too long), what if we launched too many coroutines and ran out of memory? Having to manually keep a reference to all the launched coroutines and [join][job.join] them is error-prone. 
 
-還是有某些事情被期望用於實踐協程的用法。當我們使用 `GlobalScope.launch` 時，我們創建一個最高層級的協程。即使它是輕量，當它運行時，它還是有消耗某些記憶體資源。如果我們忘記保留新的已發射協程引用，已發射的協程還是在運行。如果在協程中的代碼掛起 (例如：我太長時間錯誤的延遲) ，如果我們發射太多協程且跑出記憶體不足怎麼辦？必須手動保留已發射協程的引用並 [join](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/join.html) 它們容易出錯。
+還是有某些事情被期望用於實踐協程的用法。當我們使用 `GlobalScope.launch` 時，我們創建一個最高層級的協程。即使它是輕量，當它運行時，它還是有消耗某些記憶體資源。如果我們忘記保留新的已發射協程引用，已發射的協程還是在運行。如果在協程中的代碼掛起 (例如：我太長時間錯誤的延遲) ，如果我們發射太多協程且跑出記憶體不足怎麼辦？必須手動保留已發射協程的引用並 [join][job.join] 它們容易出錯。
 
 There is a better solution. We can use structured concurrency in our code. Instead of launching coroutines in the [GlobalScope][GlobalScope], just like we usually do with threads (threads are always global), we can launch coroutines in the specific scope of the operation we are performing. 
 
