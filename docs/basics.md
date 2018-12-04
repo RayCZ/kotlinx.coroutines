@@ -182,7 +182,7 @@ import kotlinx.coroutines.*
 fun main() = runBlocking {
 //sampleStart
     
-    // 建立新的協程，類似於 Thread
+    // 建立新的 coroutine , launch 必須在某個 CoroutineScope 底下
     val job = GlobalScope.launch { // launch new coroutine and keep a reference to its Job
         delay(1000L)
         println("World!")
