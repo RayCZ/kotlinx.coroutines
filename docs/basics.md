@@ -60,9 +60,9 @@ Hello,
 World!
 ```
 
-Essentially, coroutines are light-weight threads. They are launched with [launch][launch] _coroutine builder_ in a context of some [CoroutineScope](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html). Here we are launching a new coroutine in the [GlobalScope][GlobalScope], meaning that the lifetime of the new coroutine is limited only by the lifetime of the whole application. 
+Essentially, coroutines are light-weight threads. They are launched with [launch][launch] _coroutine builder_ in a context of some [CoroutineScope][coroutineScope]. Here we are launching a new coroutine in the [GlobalScope][GlobalScope], meaning that the lifetime of the new coroutine is limited only by the lifetime of the whole application. 
 
-本質上， coroutines  是輕量的線程。它們在一些 [CoroutineScope](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html) 內容中使用 [launch][launch] 協程建造者發射異步。這裡我們 [GlobalScope][GlobalScope] 中發射新的協程，意味者透過整個應用程序的存活時間只限制新的協程存活時間。
+本質上， coroutines  是輕量的線程。它們在一些 [CoroutineScope][coroutineScope] 內容中使用 [launch][launch] 協程建造者發射異步。這裡我們 [GlobalScope][GlobalScope] 中發射新的協程，意味者透過整個應用程序的存活時間只限制新的協程存活時間。
 
 You can achieve the same result replacing `GlobalScope.launch { ... }` with `thread { ... }` and `delay(...)` with `Thread.sleep(...)`. Try it.
 
@@ -220,9 +220,9 @@ There is a better solution. We can use structured concurrency in our code. Inste
 
 有更好的解決方式。我們可以在我們的代碼中使用結構式並發。在 [GlobalScope][GlobalScope] 中代替發射協程，就像我們通常使用線程一樣 (線程總是全域的) ，我們可以在我們正在執行的指定範圍發射協程。
 
-In our example, we have `main` function that is turned into a coroutine using [runBlocking][runBlocking] coroutine builder. Every coroutine builder, including `runBlocking`, adds an instance of [CoroutineScope](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html) to the scope of its code block. We can launch coroutines in this scope without having to `join` them explicitly, because an outer coroutine (`runBlocking` in our example) does not complete until all the coroutines launched in its scope complete. Thus, we can make our example simpler:
+In our example, we have `main` function that is turned into a coroutine using [runBlocking][runBlocking] coroutine builder. Every coroutine builder, including `runBlocking`, adds an instance of [CoroutineScope][coroutineScope] to the scope of its code block. We can launch coroutines in this scope without having to `join` them explicitly, because an outer coroutine (`runBlocking` in our example) does not complete until all the coroutines launched in its scope complete. Thus, we can make our example simpler:
 
-在我們的範例中，我們使用 [runBlocking][runBlocking] 協程建造者將 `main` 函數轉換到協程。每個協程建造者，包括  `runBlocking` ， 添加 [CoroutineScope](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html) 的實例到 `runBlocking` 的代碼區域的圍範。我們可以在 `runBlocking` 範圍內發射協程，不必明確的 `join` 它們，因為外部的協程不會完成執行 (在我們的範例中 `runBlocking`) ，直到在 `runBlocking` 範圍內所有已發射的協程完成。
+在我們的範例中，我們使用 [runBlocking][runBlocking] 協程建造者將 `main` 函數轉換到協程。每個協程建造者，包括  `runBlocking` ， 添加 [CoroutineScope][coroutineScope] 的實例到 `runBlocking` 的代碼區域的圍範。我們可以在 `runBlocking` 範圍內發射協程，不必明確的 `join` 它們，因為外部的協程不會完成執行 (在我們的範例中 `runBlocking`) ，直到在 `runBlocking` 範圍內所有已發射的協程完成。
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -248,9 +248,9 @@ fun main() = runBlocking { // this: CoroutineScope
 
 Scope builder ：範圍建造者
 
-In addition to the coroutine scope provided by different builders, it is possible to declare your own scope using [coroutineScope](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html) builder. It creates new coroutine scope and does not complete until all launched children complete. The main difference between [runBlocking][runBlocking] and [coroutineScope](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html) is that the latter does not block the current thread while waiting for all children to complete.
+In addition to the coroutine scope provided by different builders, it is possible to declare your own scope using [coroutineScope][coroutineScope] builder. It creates new coroutine scope and does not complete until all launched children complete. The main difference between [runBlocking][runBlocking] and [coroutineScope][coroutineScope] is that the latter does not block the current thread while waiting for all children to complete.
 
-除了由不同的建造者提供協程範圍，還可以使用 [coroutineScope](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html) 建造者宣告你擁有的協程範圍。它會創建新的協程範圍，並且直到已發射的子協程完成才會完成整個範圍。 [runBlocking][runBlocking] 和 [coroutineScope](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html) 之間主要的不同是後者在等待所有子協程完成時不會阻塞當前的線程。
+除了由不同的建造者提供協程範圍，還可以使用 [coroutineScope][coroutineScope] 建造者宣告你擁有的協程範圍。它會創建新的協程範圍，並且直到已發射的子協程完成才會完成整個範圍。 [runBlocking][runBlocking] 和 [coroutineScope][coroutineScope] 之間主要的不同是後者在等待所有子協程完成時不會阻塞當前的線程。
 
 ```kotlin
 import kotlinx.coroutines.*
