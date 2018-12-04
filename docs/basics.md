@@ -12,6 +12,8 @@ Table of contents ：內容表
   * [Coroutines ARE light-weight](#coroutines-are-light-weight)
   * [Global coroutines are like daemon threads](#global-coroutines-are-like-daemon-threads)
 
+**以下執行協程可利用  ${Thread.currentThread().name} 查看協程的資訊**
+
 ## Coroutine basics
 
 Coroutine basics ：協程基礎觀念
