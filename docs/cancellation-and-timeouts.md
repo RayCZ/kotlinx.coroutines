@@ -1,23 +1,6 @@
-<!--- INCLUDE .*/example-([a-z]+)-([0-9a-z]+)\.kt 
-/*
- * Copyright 2016-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
-// This file was automatically generated from coroutines-guide.md by Knit tool. Do not edit.
-package kotlinx.coroutines.guide.$$1$$2
--->
-<!--- KNIT     ../core/kotlinx-coroutines-core/test/guide/.*\.kt -->
-<!--- TEST_OUT ../core/kotlinx-coroutines-core/test/guide/test/CancellationTimeOutsGuideTest.kt
-// This file was automatically generated from coroutines-guide.md by Knit tool. Do not edit.
-package kotlinx.coroutines.guide.test
-
-import org.junit.Test
-
-class CancellationTimeOutsGuideTest {
---> 
 ## Table of contents
 
-<!--- TOC -->
+Table of contents ：內容表
 
 * [Cancellation and timeouts](#cancellation-and-timeouts)
   * [Cancelling coroutine execution](#cancelling-coroutine-execution)
@@ -27,21 +10,20 @@ class CancellationTimeOutsGuideTest {
   * [Run non-cancellable block](#run-non-cancellable-block)
   * [Timeout](#timeout)
 
-<!--- END_TOC -->
-
 ## Cancellation and timeouts
+
+Cancellation and timeouts ：取消和超時
 
 This section covers coroutine cancellation and timeouts.
 
+本章節涵蓋協程的取消和超時。
+
 ### Cancelling coroutine execution
 
-In a long-running application you might need fine-grained control on your background coroutines.
-For example, a user might have closed the page that launched a coroutine and now its result
-is no longer needed and its operation can be cancelled. 
-The [launch] function returns a [Job] that can be used to cancel running coroutine:
- 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
- 
+Cancelling coroutine execution ：取消協程執行
+
+In a long-running application you might need fine-grained control on your background coroutines. For example, a user might have closed the page that launched a coroutine and now its result is no longer needed and its operation can be cancelled. The [launch][launch] function returns a [Job][Job] that can be used to cancel running coroutine:
+
 ```kotlin
 import kotlinx.coroutines.*
 
@@ -60,27 +42,13 @@ fun main() = runBlocking {
     println("main: Now I can quit.")
 //sampleEnd    
 }
-``` 
-
-</div>
+```
 
 > You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-cancel-01.kt)
 
 It produces the following output:
 
-```text
-I'm sleeping 0 ...
-I'm sleeping 1 ...
-I'm sleeping 2 ...
-main: I'm tired of waiting!
-main: Now I can quit.
-```
-
-<!--- TEST -->
-
-As soon as main invokes `job.cancel`, we don't see any output from the other coroutine because it was cancelled. 
-There is also a [Job] extension function [cancelAndJoin] 
-that combines [cancel][Job.cancel] and [join][Job.join] invocations.
+As soon as main invokes `job.cancel`, we don't see any output from the other coroutine because it was cancelled. There is also a [Job][Job.join] extension function [cancelAndJoin]  that combines [cancel][Job.cancel] and [join][Job.join] invocations.
 
 ### Cancellation is cooperative
 
@@ -189,10 +157,10 @@ main: Now I can quit.
 Cancellable suspending functions throw [CancellationException] on cancellation which can be handled in 
 a usual way. For example, `try {...} finally {...}` expression and Kotlin `use` function execute their
 finalization actions normally when coroutine is cancelled:
- 
- 
+
+
 <div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
- 
+
 ```kotlin
 import kotlinx.coroutines.*
 
@@ -214,7 +182,7 @@ fun main() = runBlocking {
     println("main: Now I can quit.")
 //sampleEnd    
 }
-``` 
+```
 
 </div>
 
@@ -242,9 +210,9 @@ problem, since all well-behaving closing operations (closing a file, cancelling 
 communication channel) are usually non-blocking and do not involve any suspending functions. However, in the 
 rare case when you need to suspend in the cancelled coroutine you can wrap the corresponding code in
 `withContext(NonCancellable) {...}` using [withContext] function and [NonCancellable] context as the following example shows:
- 
+
 <div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
- 
+
 ```kotlin
 import kotlinx.coroutines.*
 
@@ -270,7 +238,7 @@ fun main() = runBlocking {
     println("main: Now I can quit.")
 //sampleEnd    
 }
-``` 
+```
 
 </div>
 
