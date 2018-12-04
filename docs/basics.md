@@ -60,9 +60,9 @@ Hello,
 World!
 ```
 
-Essentially, coroutines are light-weight threads. They are launched with [launch](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html) _coroutine builder_ in a context of some [CoroutineScope](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html). Here we are launching a new coroutine in the [GlobalScope](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-global-scope/index.html), meaning that the lifetime of the new coroutine is limited only by the lifetime of the whole application. 
+Essentially, coroutines are light-weight threads. They are launched with [launch](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html) _coroutine builder_ in a context of some [CoroutineScope](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html). Here we are launching a new coroutine in the [GlobalScope][GlobalScope], meaning that the lifetime of the new coroutine is limited only by the lifetime of the whole application. 
 
-本質上， coroutines  是輕量的線程。它們在一些 [CoroutineScope](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html) 內容中使用 [launch](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html) 協程建造者發射異步。這裡我們 [GlobalScope](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-global-scope/index.html) 中發射新的協程，意味者透過整個應用程序的存活時間只限制新的協程存活時間。
+本質上， coroutines  是輕量的線程。它們在一些 [CoroutineScope](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html) 內容中使用 [launch](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html) 協程建造者發射異步。這裡我們 [GlobalScope][GlobalScope] 中發射新的協程，意味者透過整個應用程序的存活時間只限制新的協程存活時間。
 
 You can achieve the same result replacing `GlobalScope.launch { ... }` with `thread { ... }` and `delay(...)` with `Thread.sleep(...)`. Try it.
 
@@ -216,9 +216,9 @@ There is still something to be desired for practical usage of coroutines. When w
 
 還是有某些事情被期望用於實踐協程的用法。當我們使用 `GlobalScope.launch` 時，我們創建一個最高層級的協程。即使它是輕量，當它運行時，它還是有消耗某些記憶體資源。如果我們忘記保留新的已發射協程引用，已發射的協程還是在運行。如果在協程中的代碼掛起 (例如：我太長時間錯誤的延遲) ，如果我們發射太多協程且跑出記憶體不足怎麼辦？必須手動保留已發射協程的引用並 [join](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/join.html) 它們容易出錯。
 
-There is a better solution. We can use structured concurrency in our code. Instead of launching coroutines in the [GlobalScope](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-global-scope/index.html), just like we usually do with threads (threads are always global), we can launch coroutines in the specific scope of the operation we are performing. 
+There is a better solution. We can use structured concurrency in our code. Instead of launching coroutines in the [GlobalScope][GlobalScope], just like we usually do with threads (threads are always global), we can launch coroutines in the specific scope of the operation we are performing. 
 
-有更好的解決方式。我們可以在我們的代碼中使用結構式並發。在 [GlobalScope](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-global-scope/index.html) 中代替發射協程，就像我們通常使用線程一樣 (線程總是全域的) ，我們可以在我們正在執行的指定範圍發射協程。
+有更好的解決方式。我們可以在我們的代碼中使用結構式並發。在 [GlobalScope][GlobalScope] 中代替發射協程，就像我們通常使用線程一樣 (線程總是全域的) ，我們可以在我們正在執行的指定範圍發射協程。
 
 In our example, we have `main` function that is turned into a coroutine using [runBlocking](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/run-blocking.html) coroutine builder. Every coroutine builder, including `runBlocking`, adds an instance of [CoroutineScope](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html) to the scope of its code block. We can launch coroutines in this scope without having to `join` them explicitly, because an outer coroutine (`runBlocking` in our example) does not complete until all the coroutines launched in its scope complete. Thus, we can make our example simpler:
 
@@ -357,9 +357,9 @@ It launches 100K coroutines and, after a second, each coroutine prints a dot. No
 
 Global coroutines are like daemon threads ：全域協程像是常駐線程 (背景持續存在)
 
-The following code launches a long-running coroutine in [GlobalScope](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-global-scope/index.html) that prints "I'm sleeping" twice a second and then returns from the main function after some delay:
+The following code launches a long-running coroutine in [GlobalScope][GlobalScope] that prints "I'm sleeping" twice a second and then returns from the main function after some delay:
 
-以下代碼在 [GlobalScope](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-global-scope/index.html) 中發射一個長期運行的協程，它印出 "I'm sleeping" 一秒兩次，並接著在一段時間延遲後從主函數回傳。
+以下代碼在 [GlobalScope][GlobalScope] 中發射一個長期運行的協程，它印出 "I'm sleeping" 一秒兩次，並接著在一段時間延遲後從主函數回傳。
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -400,9 +400,9 @@ I'm sleeping 1 ...
 I'm sleeping 2 ...
 ```
 
-Active coroutines that were launched in [GlobalScope](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-global-scope/index.html) do not keep the process alive. They are like daemon threads.
+Active coroutines that were launched in [GlobalScope][GlobalScope] do not keep the process alive. They are like daemon threads.
 
-在 [GlobalScope](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-global-scope/index.html) 中發射存活的協程，不會使進程保持活躍狀態。它們像是常駐的線程。
+在 [GlobalScope][GlobalScope] 中發射存活的協程，不會使進程保持活躍狀態。它們像是常駐的線程。
 
 [launch]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html
 [CoroutineScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html
