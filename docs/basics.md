@@ -35,7 +35,7 @@ import kotlinx.coroutines.*
 
 fun main() {
     
-    // 建立新的協程，類似於 Thread
+    // 建立新的 coroutine , launch 必須在某個 CoroutineScope 底下
     GlobalScope.launch { // launch new coroutine in background and continue
         delay(1000L) // non-blocking delay for 1 second (default time unit is ms)
         println("World!") // print after delay
@@ -93,7 +93,7 @@ import kotlinx.coroutines.*
 
 fun main() { 
     
-    // 建立新的協程，類似於 Thread
+    // 建立新的 coroutine , launch 必須在某個 CoroutineScope 底下
     GlobalScope.launch { // launch new coroutine in background and continue
         delay(1000L)
         println("World!")
