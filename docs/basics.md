@@ -76,9 +76,9 @@ If you start by replacing `GlobalScope.launch` by `thread`, the compiler produce
 Error: Kotlin: Suspend functions are only allowed to be called from a coroutine or another suspend function
 ```
 
-That is because [delay](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/delay.html) is a special _suspending function_ that does not block a thread, but _suspends_ coroutine and it can be only used from a coroutine.
+That is because [delay][delay] is a special _suspending function_ that does not block a thread, but _suspends_ coroutine and it can be only used from a coroutine.
 
-這是因為 [delay](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/delay.html) 是特別的懸掛函數不會阻塞線程，但是**懸掛**協程只能從協程中使用。 
+這是因為 [delay][delay] 是特別的懸掛函數不會阻塞線程，但是**懸掛**協程只能從協程中使用。 
 
 ### Bridging blocking and non-blocking worlds
 
@@ -117,9 +117,9 @@ fun main() {
 >
 > 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-basic-02b.kt)獲取完整的代碼
 
-The result is the same, but this code uses only non-blocking [delay](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/delay.html). The main thread, that invokes `runBlocking`, _blocks_ until the coroutine inside `runBlocking` completes. 
+The result is the same, but this code uses only non-blocking [delay][delay]. The main thread, that invokes `runBlocking`, _blocks_ until the coroutine inside `runBlocking` completes. 
 
-結果是相同的，但這代碼只使用非阻塞 [delay](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/delay.html) 。主線程，調用 `runBlocking` ，主線程阻塞直到在 `runBlocking` 內協程完成。
+結果是相同的，但這代碼只使用非阻塞 [delay][delay] 。主線程，調用 `runBlocking` ，主線程阻塞直到在 `runBlocking` 內協程完成。
 
 **`runBlocking`  是阻塞當下的線程，由於是在 main() 中呼叫 runblocking {...} 所以阻塞主線程**
 
