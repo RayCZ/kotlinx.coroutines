@@ -10,6 +10,8 @@ Table of contents ：內容表
   * [Run non-cancellable block](#run-non-cancellable-block)
   * [Timeout](#timeout)
 
+**以下執行協程可利用  ${Thread.currentThread().name} 查看協程的資訊**
+
 ## Cancellation and timeouts
 
 Cancellation and timeouts ：取消和超時
@@ -23,6 +25,8 @@ This section covers coroutine cancellation and timeouts.
 Cancelling coroutine execution ：取消協程執行
 
 In a long-running application you might need fine-grained control on your background coroutines. For example, a user might have closed the page that launched a coroutine and now its result is no longer needed and its operation can be cancelled. The [launch][launch] function returns a [Job][Job] that can be used to cancel running coroutine:
+
+在一個長時間運行的應用程式，在你的背景協程中你可能需要細粒度的控制。例如，一個使用者或許已經關閉已發射協程的畫面，然而現在它的結果不再需要和它的操作可以被取消。
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -44,11 +48,25 @@ fun main() = runBlocking {
 }
 ```
 
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-cancel-01.kt)
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-cancel-01.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-cancel-01.kt)獲取完整的代碼
 
 It produces the following output:
 
-As soon as main invokes `job.cancel`, we don't see any output from the other coroutine because it was cancelled. There is also a [Job][Job.join] extension function [cancelAndJoin]  that combines [cancel][Job.cancel] and [join][Job.join] invocations.
+它產生以下輸出：
+
+```text
+I'm sleeping 0 ...
+I'm sleeping 1 ...
+I'm sleeping 2 ...
+main: I'm tired of waiting!
+main: Now I can quit.
+```
+
+As soon as main invokes `job.cancel`, we don't see any output from the other coroutine because it was cancelled. There is also a [Job][Job.join] extension function [cancelAndJoin][cancelAndJoin]  that combines [cancel][Job.cancel] and [join][Job.join] invocations.
+
+一旦在 main 函數中調用 `job.cancel` ，我們不需要從其他的協程看到任何輸出，因為它被取消了。也有 [Job][Job.join] 擴展函數 [cancelAndJoin][cancelAndJoin] 結合 [cancel][Job.cancel] 和 [join][Job.join] 的調用。
 
 ### Cancellation is cooperative
 
