@@ -62,7 +62,7 @@ World!
 
 Essentially, coroutines are light-weight threads. They are launched with [launch][launch] _coroutine builder_ in a context of some [CoroutineScope][-CoroutineScope]. Here we are launching a new coroutine in the [GlobalScope][GlobalScope], meaning that the lifetime of the new coroutine is limited only by the lifetime of the whole application. 
 
-本質上， coroutines  是輕量的線程。它們在一些 [CoroutineScope][-CoroutineScope] 內容中使用 [launch][launch] 協程建造者發射異步。這裡我們 [GlobalScope][GlobalScope] 中發射新的協程，意味者透過整個應用程序的存活時間只限制新的協程存活時間。
+本質上， coroutines  是輕量的線程。在一些 [CoroutineScope][-CoroutineScope] 內容中使用 [launch][launch] 協程建造者發射協程。這裡我們 [GlobalScope][GlobalScope] 中發射新的協程，意味者透過整個應用程序的存活時間只限制新的協程存活時間。
 
 You can achieve the same result replacing `GlobalScope.launch { ... }` with `thread { ... }` and `delay(...)` with `Thread.sleep(...)`. Try it.
 
