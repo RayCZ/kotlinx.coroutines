@@ -173,7 +173,7 @@ Closing resources with finally ：使用 finally 關掉資源
 
 Cancellable suspending functions throw [CancellationException][CancellationException] on cancellation which can be handled in a usual way. For example, `try {...} finally {...}` expression and Kotlin `use` function execute their finalization actions normally when coroutine is cancelled:
 
-可取消的懸掛函數在取消時丟出 [CancellationException][CancellationException] ，常用的方式處理取消。例如， `try {...} finally {...}` 表達式，以及當協程被取消時， Kotlin `use` 函數正常執行它們的結束動作。
+可取消的懸掛函數在取消時丟出 [CancellationException][CancellationException] ，在常用的方法中處理取消。例如， `try {...} finally {...}` 表達式，以及當協程被取消時， Kotlin `use` 函數正常執行它們的結束動作。
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -264,13 +264,11 @@ fun main() = runBlocking {
 
 ### Timeout
 
-The most obvious reason to cancel coroutine execution in practice 
-is because its execution time has exceeded some timeout.
-While you can manually track the reference to the corresponding [Job] and launch a separate coroutine to cancel 
-the tracked one after delay, there is a ready to use [withTimeout] function that does it.
-Look at the following example:
+Timeout ：超時
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+The most obvious reason to cancel coroutine execution in practice is because its execution time has exceeded some timeout. While you can manually track the reference to the corresponding [Job][Job] and launch a separate coroutine to cancel the tracked one after delay, there is a ready to use [withTimeout][withTimeout] function that does it. Look at the following example:
+
+在實踐中取消協程執行最明顯的原因是因為它的執行時間超出某些超時。當你可以手動追蹤對應的 [Job][Job] 引用並發射單獨協程在延遲後取消追蹤，有一個準備好使用 [withTimeout][withTimeout] 函數做這件事。看看以下範例：
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -287,11 +285,13 @@ fun main() = runBlocking {
 }
 ```
 
-</div>
-
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-cancel-06.kt)
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-cancel-06.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-cancel-06.kt)獲取完整的代碼
 
 It produces the following output:
+
+它產生以下輸出：
 
 ```text
 I'm sleeping 0 ...
@@ -300,26 +300,20 @@ I'm sleeping 2 ...
 Exception in thread "main" kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 1300 ms
 ```
 
-<!--- TEST STARTS_WITH -->
+The `TimeoutCancellationException` that is thrown by [withTimeout][withTimeout] is a subclass of [CancellationException][CancellationException]. We have not seen its stack trace printed on the console before. That is because inside a cancelled coroutine `CancellationException` is considered to be a normal reason for coroutine completion. However, in this example we have used `withTimeout` right inside the `main` function.
 
-The `TimeoutCancellationException` that is thrown by [withTimeout] is a subclass of [CancellationException].
-We have not seen its stack trace printed on the console before. That is because
-inside a cancelled coroutine `CancellationException` is considered to be a normal reason for coroutine completion. 
-However, in this example we have used `withTimeout` right inside the `main` function. 
+由 [withTimeout][withTimeout] 丟出 `TimeoutCancellationException` 是 [CancellationException][CancellationException] 的子類別。我們之前在控制台上已經沒看到它的堆疊追蹤印出。這是因為在已取消的協程內 `CancellationException`被視為協程完成的正常原因。然而，在這個例子我們在 `main` 函數內已經正確使用 `withTimeout` 。
 
-Because cancellation is just an exception, all the resources are closed in a usual way. 
-You can wrap the code with timeout in `try {...} catch (e: TimeoutCancellationException) {...}` block if 
-you need to do some additional action specifically on any kind of timeout or use [withTimeoutOrNull] function
-that is similar to [withTimeout], but returns `null` on timeout instead of throwing an exception:
+Because cancellation is just an exception, all the resources are closed in a usual way. You can wrap the code with timeout in `try {...} catch (e: TimeoutCancellationException) {...}` block if you need to do some additional action specifically on any kind of timeout or use [withTimeoutOrNull][withTimeoutOrNull] function that is similar to [withTimeout][withTimeout], but returns `null` on timeout instead of throwing an exception:
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+因為取消就是一個異常，在常用的方法中關閉所有資源。如果你需要在各種超時中做一些額外特別的動作，或使用 [withTimeoutOrNull][withTimeoutOrNull] 函數類似於 [withTimeout][withTimeout] ，你可以在 `try {...} catch (e: TimeoutCancellationException) {...}` 區塊中指定超時包裝代碼，但在超時中回傳 `null` 代替丟出一個異常：
 
 ```kotlin
 import kotlinx.coroutines.*
 
 fun main() = runBlocking {
 //sampleStart
-    val result = withTimeoutOrNull(1300L) {
+    val result = withTimeoutOrNull(1300L) { // 超時沒完全執行也回傳 null
         repeat(1000) { i ->
             println("I'm sleeping $i ...")
             delay(500L)
@@ -331,11 +325,13 @@ fun main() = runBlocking {
 }
 ```
 
-</div>
-
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-cancel-07.kt)
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-cancel-07.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-cancel-07.kt)獲取完整的代碼
 
 There is no longer an exception when running this code:
+
+當正在運行這些代碼時，不再有異常：
 
 ```text
 I'm sleeping 0 ...
@@ -344,10 +340,6 @@ I'm sleeping 2 ...
 Result is null
 ```
 
-<!--- TEST -->
-
-<!--- MODULE kotlinx-coroutines-core -->
-<!--- INDEX kotlinx.coroutines -->
 [launch]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html
 [Job]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/index.html
 [cancelAndJoin]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/cancel-and-join.html
@@ -361,4 +353,3 @@ Result is null
 [NonCancellable]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-non-cancellable.html
 [withTimeout]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-timeout.html
 [withTimeoutOrNull]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-timeout-or-null.html
-<!--- END -->
