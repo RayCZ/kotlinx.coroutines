@@ -404,6 +404,9 @@ Active coroutines that were launched in [GlobalScope][GlobalScope] do not keep t
 
 在 [GlobalScope][GlobalScope] 中發射存活的協程，不會使進程保持活躍狀態。它們像是常駐的線程。
 
+<!--- MODULE kotlinx-coroutines-core -->
+<!--- INDEX kotlinx.coroutines -->
+
 [launch]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html
 [-CoroutineScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html
 [GlobalScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-global-scope/index.html
@@ -413,3 +416,5 @@ Active coroutines that were launched in [GlobalScope][GlobalScope] do not keep t
 [Job.join]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/join.html
 [coroutineScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html
 [CoroutineScope()]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope.html
+
+<!--- END -->
