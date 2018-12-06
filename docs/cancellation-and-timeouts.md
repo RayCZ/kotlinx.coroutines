@@ -120,7 +120,7 @@ fun main() = runBlocking {
 
 Run it to see that it continues to print "I'm sleeping" even after cancellation until the job completes by itself after five iterations.
 
-運行它去看，去看繼續印出 "I'm sleeping" 即使在之後取消，直到在五次循環後透過 job 本身完成。
+運行它去看，去看繼續印出 "I'm sleeping" 即使在之後取消，直到在五次遍歷後透過 job 本身完成。
 
 ### Making computation code cancellable
 
