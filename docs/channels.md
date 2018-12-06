@@ -32,7 +32,7 @@ Channel basics ：通道基礎
 
 A [Channel][Channel] is conceptually very similar to `BlockingQueue`. One key difference is that instead of a blocking `put` operation it has a suspending [send][SendChannel.send], and instead of a blocking `take` operation it has a suspending [receive][ReceiveChannel.receive].
 
-[通道][Channel]的概念與 `BlockingQueue` 非常相似。一個關鍵的不同是，代替阻塞的 `put` 操作，它有懸掛函數 `send` ，而且代替阻塞的 `take` 操作，它有懸掛函數 `receive` 。 
+[通道][Channel]的概念與 `BlockingQueue` 非常相似。一個關鍵的不同是，代替阻塞的 `put` 操作，它有懸掛函數 [`send`][SendChannel.send] ，而且代替阻塞的 `take` 操作，它有懸掛函數 [`receive`][ReceiveChannel.receive] 。 
 
 ```kotlin
 import kotlinx.coroutines.*
