@@ -644,27 +644,29 @@ Note, that sometimes channels may produce executions that look unfair due to the
 
 ### Ticker channels
 
-Ticker channel is a special rendezvous channel that produces `Unit` every time given delay passes since last consumption from this channel.
-Though it may seem to be useless standalone, it is a useful building block to create complex time-based [produce] 
-pipelines and operators that do windowing and other time-dependent processing.
-Ticker channel can be used in [select] to perform "on tick" action.
+Ticker channels ：定時器通道 (定期生成器)
 
-To create such channel use a factory method [ticker]. 
-To indicate that no further elements are needed use [ReceiveChannel.cancel] method on it.
+Ticker channel is a special rendezvous channel that produces `Unit` every time given delay passes since last consumption from this channel. Though it may seem to be useless standalone, it is a useful building block to create complex time-based [produce][produce] pipelines and operators that do windowing and other time-dependent processing. Ticker channel can be used in [select][select] to perform "on tick" action.
+
+定時器通道是特殊的約定會合通道，從上次開始由這個通道的消耗，每次給定延遲通過時生成 `Unit`。雖然它可能似乎單獨無用，但它是一個有用的建造時間阻斷，用來建立以時間為基礎複雜的 [produce][produce](生產) 管線和運算符，進行窗口和其他時間相關的處理。定時器通道可以被用在 [select][select](選擇懸掛中的協程) 去執行 "定期調用" 的動作。
+
+To create such channel use a factory method [ticker][ticker]. To indicate that no further elements are needed use [ReceiveChannel.cancel][ReceiveChannel.cancel] method on it.
 
 Now let's see how it works in practice:
-
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
 
 ```kotlin
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 
 fun main() = runBlocking<Unit> {
+    // delayMillis 每次延遲時間 0.1 秒 ， initialDelayMillis 第一次發送的延遲時間 0 秒
     val tickerChannel = ticker(delayMillis = 100, initialDelayMillis = 0) // create ticker channel
+    
+    // 第一次取值，如果沒有值就回傳 null ，有就 Unit
     var nextElement = withTimeoutOrNull(1) { tickerChannel.receive() }
     println("Initial element is available immediately: $nextElement") // initial delay hasn't passed yet
 
+    // 超過 0.05 秒就超時，回傳 null ，還沒到 0.1 秒生成的時間，所以取不到
     nextElement = withTimeoutOrNull(50) { tickerChannel.receive() } // all subsequent elements has 100ms delay
     println("Next element is not ready in 50 ms: $nextElement")
 
@@ -685,11 +687,13 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-</div>
-
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-channel-10.kt)
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-channel-10.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-channel-10.kt)獲取完整的代碼
 
 It prints following lines:
+
+它印出以下行：
 
 ```text
 Initial element is available immediately: kotlin.Unit
@@ -700,17 +704,17 @@ Next element is available immediately after large consumer delay: kotlin.Unit
 Next element is ready in 50ms after consumer pause in 150ms: kotlin.Unit
 ```
 
-<!--- TEST -->
+Note that [ticker][ticker] is aware of possible consumer pauses and, by default, adjusts next produced element delay if a pause occurs, trying to maintain a fixed rate of produced elements.
 
-Note that [ticker] is aware of possible consumer pauses and, by default, adjusts next produced element 
-delay if a pause occurs, trying to maintain a fixed rate of produced elements.
+注意： [ticker][ticker] 定時器可能知道消費者暫停，並且，預設模式下 [TickerMode.FIXED_PERIOD](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-ticker-mode/-f-i-x-e-d_-p-e-r-i-o-d.html)，如果暫停發生，調整下一個生成元素的延遲，嘗試維持生成元素的固定速率。
 
-Optionally, a `mode` parameter equal to [TickerMode.FIXED_DELAY] can be specified to maintain a fixed
-delay between elements.  
+Optionally, a `mode` parameter equal to [TickerMode.FIXED_DELAY][TickerMode.FIXED_DELAY] can be specified to maintain a fixed delay between elements.  
 
+可選的， `mode` 參數相當於可以指定 [TickerMode.FIXED_DELAY][TickerMode.FIXED_DELAY] 在元素之間維持固定的延遲時間。
 
 <!--- MODULE kotlinx-coroutines-core -->
 <!--- INDEX kotlinx.coroutines -->
+
 [CoroutineScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html
 [runBlocking]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/run-blocking.html
 [kotlin.coroutines.CoroutineContext.cancelChildren]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/kotlin.coroutines.-coroutine-context/cancel-children.html
