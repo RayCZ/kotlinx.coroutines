@@ -300,6 +300,21 @@ Let's extract the block of code inside `launch { ... }` into a separate function
 
 讓我們提取 `launch { ... }` 內的代碼區域到單獨函數。當你在這份代碼執行 "提取函數" 重構時，你使用 `suspend` 修飾符取得新的函數。這是你第一個**懸掛函數**。懸掛函數可以用在協程內就像常規函數，但它們的額外功能是它們可以反過來使用其他的懸掛函數，像是在範例中的 `delay` ，懸掛 (暫停) 協程的執行。
 
+**Suspend ：懸掛函數，不是以阻塞的方式來處理線程，而是讓線程「懸起來」跟「掛回去」的某種機制，賦與線程某種生命週期。**
+
+> Understanding suspend function of Kotlin Coroutines
+> [https://medium.com/@elye.project/understanding-suspend-function-of-coroutines-de26b070c5ed](https://medium.com/@elye.project/understanding-suspend-function-of-coroutines-de26b070c5ed)
+
+>https://stackoverflow.com/questions/50171038/what-is-the-difference-between-block-suspend-and-sleep
+>"Suspended" -- sometimes is used in a generic way, meaning that the thread is waiting for ...something. Other times, "Suspended" means that some other thread or process *explicitly* suspended it (e.g., for debugging purposes), and the process/thread will not be able to run again until it is explicitly resumed.
+>
+>"Blocked" -- is the most generic of the three. Often it merely means that the process/thread is waiting for something. Sometimes it implies that what the thread/process is waiting for is an I/O operation.
+
+> https://english.stackexchange.com/questions/117771/suspended-vs-blocked-meaning
+> I suspect this belongs on a computer-oriented SE. A process is *blocked* when there is some external reason that it *can not* be restarted, e.g., an I/O device is unavailable, or a semaphore file is locked. A process is *suspended* means that the OS has stopped executing it, but that could just be for time-slicing (multitasking). There is no implication that the process can not be resumed immediately.
+>
+> Neither of these words, especially *blocked,* are being used the same as in non-computer contexts.
+
 ```kotlin
 import kotlinx.coroutines.*
 
