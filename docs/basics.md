@@ -303,14 +303,17 @@ Let's extract the block of code inside `launch { ... }` into a separate function
 **Suspend ：懸掛函數，不是以阻塞的方式來處理線程，而是讓線程「懸起來」跟「掛回去」的某種機制，賦與線程某種生命週期。**
 
 > Understanding suspend function of Kotlin Coroutines
+>
 > [https://medium.com/@elye.project/understanding-suspend-function-of-coroutines-de26b070c5ed](https://medium.com/@elye.project/understanding-suspend-function-of-coroutines-de26b070c5ed)
 
 >https://stackoverflow.com/questions/50171038/what-is-the-difference-between-block-suspend-and-sleep
+>
 >"Suspended" -- sometimes is used in a generic way, meaning that the thread is waiting for ...something. Other times, "Suspended" means that some other thread or process *explicitly* suspended it (e.g., for debugging purposes), and the process/thread will not be able to run again until it is explicitly resumed.
 >
 >"Blocked" -- is the most generic of the three. Often it merely means that the process/thread is waiting for something. Sometimes it implies that what the thread/process is waiting for is an I/O operation.
 
 > https://english.stackexchange.com/questions/117771/suspended-vs-blocked-meaning
+>
 > I suspect this belongs on a computer-oriented SE. A process is *blocked* when there is some external reason that it *can not* be restarted, e.g., an I/O device is unavailable, or a semaphore file is locked. A process is *suspended* means that the OS has stopped executing it, but that could just be for time-slicing (multitasking). There is no implication that the process can not be resumed immediately.
 >
 > Neither of these words, especially *blocked,* are being used the same as in non-computer contexts.
