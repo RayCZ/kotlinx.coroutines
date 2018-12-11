@@ -15,8 +15,6 @@ This section covers various approaches to composition of suspending functions.
 
 本章節涵蓋各種懸掛函數的組合方法。
 
-g 
-
 ### Sequential by default
 
 Sequential by default ：根據預設依序
