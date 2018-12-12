@@ -161,16 +161,13 @@ So, the coroutine that had inherited context of `runBlocking {...}` continues to
 
 ### Debugging coroutines and threads
 
-Coroutines can suspend on one thread and resume on another thread. 
-Even with a single-threaded dispatcher it might be hard to
-figure out what coroutine was doing, where, and when. The common approach to debugging applications with 
-threads is to print the thread name in the log file on each log statement. This feature is universally supported
-by logging frameworks. When using coroutines, the thread name alone does not give much of a context, so 
-`kotlinx.coroutines` includes debugging facilities to make it easier. 
+Debugging coroutines and threads ：執行協程和線程的除錯
+
+Coroutines can suspend on one thread and resume on another thread. Even with a single-threaded dispatcher it might be hard to figure out what coroutine was doing, where, and when. The common approach to debugging applications with threads is to print the thread name in the log file on each log statement. This feature is universally supported by logging frameworks. When using coroutines, the thread name alone does not give much of a context, so `kotlinx.coroutines` includes debugging facilities to make it easier. 
+
+協程可以懸掛一個線程並恢復其他的線程。即使使用單線程的分配器，它可能很難指出協程正在那時那此做什麼。常用的方式是
 
 Run the following code with `-Dkotlinx.coroutines.debug` JVM option:
-
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -192,14 +189,9 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-</div>
-
 > You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-context-03.kt)
 
-There are three coroutines. The main coroutine (#1) -- `runBlocking` one, 
-and two coroutines computing deferred values `a` (#2) and `b` (#3).
-They are all executing in the context of `runBlocking` and are confined to the main thread.
-The output of this code is:
+There are three coroutines. The main coroutine (#1) -- `runBlocking` one, and two coroutines computing deferred values `a` (#2) and `b` (#3). They are all executing in the context of `runBlocking` and are confined to the main thread. The output of this code is:
 
 ```text
 [main @coroutine#2] I'm computing a piece of the answer
@@ -207,11 +199,7 @@ The output of this code is:
 [main @coroutine#1] The answer is 42
 ```
 
-<!--- TEST FLEXIBLE_THREAD -->
-
-The `log` function prints the name of the thread in square brackets and you can see, that it is the `main`
-thread, but the identifier of the currently executing coroutine is appended to it. This identifier 
-is consecutively assigned to all created coroutines when debugging mode is turned on.
+The `log` function prints the name of the thread in square brackets and you can see, that it is the `main` thread, but the identifier of the currently executing coroutine is appended to it. This identifier is consecutively assigned to all created coroutines when debugging mode is turned on.
 
 You can read more about debugging facilities in the documentation for [newCoroutineContext] function.
 
