@@ -1,24 +1,6 @@
-<!--- INCLUDE .*/example-([a-z]+)-([0-9a-z]+)\.kt 
-/*
- * Copyright 2016-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
-// This file was automatically generated from coroutines-guide.md by Knit tool. Do not edit.
-package kotlinx.coroutines.guide.$$1$$2
--->
-<!--- KNIT     ../core/kotlinx-coroutines-core/test/guide/.*\.kt -->
-<!--- TEST_OUT ../core/kotlinx-coroutines-core/test/guide/test/DispatcherGuideTest.kt
-// This file was automatically generated from coroutines-guide.md by Knit tool. Do not edit.
-package kotlinx.coroutines.guide.test
-
-import org.junit.Test
-
-class DispatchersGuideTest {
---> 
-
 ## Table of contents
 
-<!--- TOC -->
+Table of contents ：內容表
 
 * [Coroutine context and dispatchers](#coroutine-context-and-dispatchers)
   * [Dispatchers and threads](#dispatchers-and-threads)
@@ -33,16 +15,17 @@ class DispatchersGuideTest {
   * [Cancellation via explicit job](#cancellation-via-explicit-job)
   * [Thread-local data](#thread-local-data)
 
-<!--- END_TOC -->
-
 ## Coroutine context and dispatchers
 
-Coroutines always execute in some context which is represented by the value of 
-[CoroutineContext](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/) 
-type, defined in the Kotlin standard library.
+Coroutine context and dispatchers ：協程環境與分配器
 
-The coroutine context is a set of various elements. The main elements are the [Job] of the coroutine, 
-which we've seen before, and its dispatcher, which is covered in this section.
+Coroutines always execute in some context which is represented by the value of [CoroutineContext](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/) type, defined in the Kotlin standard library.
+
+協程總是執行在某種環境下，環境由 Kotlin 標準函式庫中定義的 [CoroutineContext](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/) 類型值表示。
+
+The coroutine context is a set of various elements. The main elements are the [Job][Job] of the coroutine, which we've seen before, and its dispatcher, which is covered in this section.
+
+協程環境是一組各種元素。主要元素是我們之前看過的協程 [Job][Job] 及它的分配器，本章節涵蓋。 
 
 ### Dispatchers and threads
 
@@ -104,14 +87,14 @@ in fact, a different mechanism that is explained later.
 The default dispatcher, that is used when coroutines are launched in [GlobalScope],
 is represented by [Dispatchers.Default] and uses shared background pool of threads,
 so `launch(Dispatchers.Default) { ... }` uses the same dispatcher as `GlobalScope.launch { ... }`.
-  
+
 [newSingleThreadContext] creates a new thread for the coroutine to run. 
 A dedicated thread is a very expensive resource. 
 In a real application it must be either released, when no longer needed, using [close][ExecutorCoroutineDispatcher.close] 
 function, or stored in a top-level variable and reused throughout the application.  
 
 ### Unconfined vs confined dispatcher
- 
+
 The [Dispatchers.Unconfined] coroutine dispatcher starts coroutine in the caller thread, but only until the
 first suspension point. After suspension it resumes in the thread that is fully determined by the
 suspending function that was invoked. Unconfined dispatcher is appropriate when coroutine does not
@@ -148,7 +131,7 @@ fun main() = runBlocking<Unit> {
 > You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-context-02.kt)
 
 Produces the output: 
- 
+
 ```text
 Unconfined      : I'm working in thread main
 main runBlocking: I'm working in thread main
@@ -157,7 +140,7 @@ main runBlocking: After delay in thread main
 ```
 
 <!--- TEST LINES_START -->
- 
+
 So, the coroutine that had inherited context of `runBlocking {...}` continues to execute
 in the `main` thread, while the unconfined one had resumed in the default executor thread that [delay]
 function is using.
@@ -312,7 +295,7 @@ are recursively cancelled, too.
 
 However, when [GlobalScope] is used to launch a coroutine, it is not tied to the scope it
 was launched from and operates independently.
-  
+
 
 <div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
 
@@ -445,7 +428,7 @@ fun main() = runBlocking(CoroutineName("main")) {
 > You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-context-08.kt)
 
 The output it produces with `-Dkotlinx.coroutines.debug` JVM option is similar to:
- 
+
 ```text
 [main @main#1] Started main coroutine
 [main @v1coroutine#2] Computing v1
@@ -494,7 +477,7 @@ an object with a lifecycle, but that object is not a coroutine. For example, we 
 and launch various coroutines in the context of an Android activity to perform asynchronous operations to fetch 
 and update data, do animations, etc. All of these coroutines must be cancelled when activity is destroyed
 to avoid memory leaks. 
-  
+
 We manage a lifecycle of our coroutines by creating an instance of [Job] that is tied to 
 the lifecycle of our activity. A job instance is created using [Job()] factory function when
 activity is created and it is cancelled when an activity is destroyed like this:
@@ -550,7 +533,7 @@ specify their context. For the demo, we launch ten coroutines that delay for a d
         }
     }
 } // class Activity ends
-``` 
+```
 
 </div>
 
@@ -658,7 +641,7 @@ fun main() = runBlocking<Unit> {
     println("Post-main, current thread: ${Thread.currentThread()}, thread local value: '${threadLocal.get()}'")
 //sampleEnd    
 }
-```  
+```
 
 </div>                                                                                       
 
