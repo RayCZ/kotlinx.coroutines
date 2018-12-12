@@ -17,15 +17,15 @@ Table of contents ：內容表
 
 ## Coroutine context and dispatchers
 
-Coroutine context and dispatchers ：協程環境與分配器
+Coroutine context and dispatchers ：協程執行環境與分配器
 
 Coroutines always execute in some context which is represented by the value of [CoroutineContext](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/) type, defined in the Kotlin standard library.
 
-協程總是執行在某種環境下，環境由 Kotlin 標準函式庫中定義的 [CoroutineContext](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/) 類型值表示。
+協程總是執行在某種環境下，執行環境由 Kotlin 標準函式庫中定義的 [CoroutineContext](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/) 類型值表示。
 
 The coroutine context is a set of various elements. The main elements are the [Job][Job] of the coroutine, which we've seen before, and its dispatcher, which is covered in this section.
 
-協程環境是一組各種元素。主要元素是我們之前看過的協程 [Job][Job] 及它的分配器，本章節涵蓋。 
+協程執行環境是一組各種元素。主要元素是我們之前看過的協程 [Job][Job] 及它的分配器，在本章節中涵蓋。 
 
 ### Dispatchers and threads
 
