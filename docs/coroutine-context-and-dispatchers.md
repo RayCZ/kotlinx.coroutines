@@ -147,7 +147,7 @@ main runBlocking: After delay in thread main
 
 So, the coroutine that had inherited context of `runBlocking {...}` continues to execute in the `main` thread, while the unconfined one had resumed in the default executor thread that [delay][delay] function is using.
 
-所以，協程已繼承 `runBlocking {...}` 協程的環境在主線程中執行，而無限制的協程在 [delay][delay] 函數使用時的預設執行者線程已恢復。
+所以，協程已繼承 `runBlocking {...}` 協程的執行環境在主線程中執行，而無限制的協程在 [delay][delay] 函數使用時的預設執行者線程已恢復。
 
 > Unconfined dispatcher is an advanced mechanism that can be helpful in certain corner cases where dispatching of coroutine for its execution later is not needed or produces undesirable side-effects, because some operation in a coroutine must be performed right away. Unconfined dispatcher should not be used in general code. 
 >
