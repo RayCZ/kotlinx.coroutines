@@ -29,32 +29,38 @@ The coroutine context is a set of various elements. The main elements are the [J
 
 ### Dispatchers and threads
 
-Coroutine context includes a _coroutine dispatcher_ (see [CoroutineDispatcher]) that determines what thread or threads 
-the corresponding coroutine uses for its execution. Coroutine dispatcher can confine coroutine execution 
-to a specific thread, dispatch it to a thread pool, or let it run unconfined. 
+Dispatchers and threads 分配器和線程
 
-All coroutine builders like [launch] and [async] accept an optional 
-[CoroutineContext](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/) 
-parameter that can be used to explicitly specify the dispatcher for new coroutine and other context elements. 
+Coroutine context includes a _coroutine dispatcher_ (see [CoroutineDispatcher][CoroutineDispatcher]) that determines what thread or threads the corresponding coroutine uses for its execution. Coroutine dispatcher can confine coroutine execution to a specific thread, dispatch it to a thread pool, or let it run unconfined. 
 
-Try the following example:
+協程執行環境包括**協程分配器** (參閱 [CoroutineDispatcher][CoroutineDispatcher]) 決定協程相對應的單線程或多線程用於它的執行。協程分配器可以限制協程執行於特定線程，分配它到線程池，或讓它無限制的執行。
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+All coroutine builders like [launch][launch] and [async][async] accept an optional [CoroutineContext](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/) parameter that can be used to explicitly specify the dispatcher for new coroutine and other context elements. 
+
+所有協程建造者像 [launch][launch] 或 [async][async] 接受一個可選的 [CoroutineContext](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/) 參數 ，參數被用來指定分配器給新的協程以及其他的執行環境元素。
 
 ```kotlin
 import kotlinx.coroutines.*
 
 fun main() = runBlocking<Unit> {
 //sampleStart
+    
+    // context(協程執行環境) 依上層的元素決定 (runBlocking) 是在主線程運行
     launch { // context of the parent, main runBlocking coroutine
         println("main runBlocking      : I'm working in thread ${Thread.currentThread().name}")
     }
+    
+    // context(協程執行環境) 沒有限制值接在主線程運行
     launch(Dispatchers.Unconfined) { // not confined -- will work with main thread
         println("Unconfined            : I'm working in thread ${Thread.currentThread().name}")
     }
+    
+    // context(協程執行環境) 指定預設分配器中的線程運行
     launch(Dispatchers.Default) { // will get dispatched to DefaultDispatcher 
         println("Default               : I'm working in thread ${Thread.currentThread().name}")
     }
+    
+    // context(協程執行環境) 指定一個自建的線程來運行
     launch(newSingleThreadContext("MyOwnThread")) { // will get its own new thread
         println("newSingleThreadContext: I'm working in thread ${Thread.currentThread().name}")
     }
@@ -62,11 +68,13 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-</div>
-
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-context-01.kt)
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-context-01.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-context-01.kt)獲取完整的代碼
 
 It produces the following output (maybe in different order):
+
+它產生以下輸出 (也許是不同順序) ：
 
 ```text
 Unconfined            : I'm working in thread main
@@ -75,23 +83,21 @@ newSingleThreadContext: I'm working in thread MyOwnThread
 main runBlocking      : I'm working in thread main
 ```
 
-<!--- TEST LINES_START_UNORDERED -->
+When `launch { ... }` is used without parameters, it inherits the context (and thus dispatcher) from the [CoroutineScope][CoroutineScope] that it is being launched from. In this case, it inherits the context of the main `runBlocking` coroutine which runs in the `main` thread. 
 
-When `launch { ... }` is used without parameters, it inherits the context (and thus dispatcher)
-from the [CoroutineScope] that it is being launched from. In this case, it inherits the
-context of the main `runBlocking` coroutine which runs in the `main` thread. 
+當無參數的使用`launch { ... }` 時，它從被正在發射的 [CoroutineScope][CoroutineScope] 中繼承執行環境 (以及分配器)。在這樣的情況下，它繼承在 `main` 線程中執行的主要 `runBlocking` 協程的執行環境。
 
-[Dispatchers.Unconfined] is a special dispatcher that also appears to run in the `main` thread, but it is,
-in fact, a different mechanism that is explained later.
+[Dispatchers.Unconfined][Dispatchers.Unconfined] is a special dispatcher that also appears to run in the `main` thread, but it is, in fact, a different mechanism that is explained later.
 
-The default dispatcher, that is used when coroutines are launched in [GlobalScope],
-is represented by [Dispatchers.Default] and uses shared background pool of threads,
-so `launch(Dispatchers.Default) { ... }` uses the same dispatcher as `GlobalScope.launch { ... }`.
+[Dispatchers.Unconfined][Dispatchers.Unconfined]  是特別的分配器，也似乎在 `main` 線程中運行，但它實際上是一種不同的機制，稍後會解釋。
 
-[newSingleThreadContext] creates a new thread for the coroutine to run. 
-A dedicated thread is a very expensive resource. 
-In a real application it must be either released, when no longer needed, using [close][ExecutorCoroutineDispatcher.close] 
-function, or stored in a top-level variable and reused throughout the application.  
+The default dispatcher, that is used when coroutines are launched in [GlobalScope][GlobalScope], is represented by [Dispatchers.Default][Dispatchers.Default] and uses shared background pool of threads, so `launch(Dispatchers.Default) { ... }` uses the same dispatcher as `GlobalScope.launch { ... }`.
+
+當在 [GlobalScope][GlobalScope] 中發射協程時，使用預設的分配器，由 [Dispatchers.Default][Dispatchers.Default] 表示並使用共享的背景程序線程池，所以 `launch(Dispatchers.Default) { ... }` 使用與 `GlobalScope.launch { ... }` 相同的分配器。
+
+[newSingleThreadContext][newSingleThreadContext] creates a new thread for the coroutine to run. A dedicated thread is a very expensive resource. In a real application it must be either released, when no longer needed, using [close][ExecutorCoroutineDispatcher.close] function, or stored in a top-level variable and reused throughout the application.  
+
+[newSingleThreadContext][newSingleThreadContext]  創建一個新的線程用於協程運行。一個專用的線程是非常昂貴的資源。在實際應用程式中，當沒有長時間需要運行時，必須釋放，使用 [close][ExecutorCoroutineDispatcher.close] 函數，或儲存在最高層級中，並遍布整個應用程式重覆使用。
 
 ### Unconfined vs confined dispatcher
 
