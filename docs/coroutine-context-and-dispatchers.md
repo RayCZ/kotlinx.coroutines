@@ -101,15 +101,15 @@ The default dispatcher, that is used when coroutines are launched in [GlobalScop
 
 ### Unconfined vs confined dispatcher
 
-Unconfined vs confined dispatcher ：自由的 (不受拘束的、無限制的) vs 限制的 分配器
+Unconfined vs confined dispatcher ：不受限制的 (不受拘束的、自由的) vs 受限制的 分配器
 
 The [Dispatchers.Unconfined][Dispatchers.Unconfined] coroutine dispatcher starts coroutine in the caller thread, but only until the first suspension point. After suspension it resumes in the thread that is fully determined by the suspending function that was invoked. Unconfined dispatcher is appropriate when coroutine does not consume CPU time nor updates any shared data (like UI) that is confined to a specific thread. 
 
-[Dispatchers.Unconfined][Dispatchers.Unconfined] 協程分配器在調用者的線程中啟動協程，但只在第一個懸掛點之前。懸掛之後，它在線程中恢復，由被調用的懸掛函數完全決定。無限制分配器適用於，當協程不消耗 CPU 時間也不更新任何共享資料 (像是 UI) ，它被限制在特定的線程時。
+在調用者的線程中 [Dispatchers.Unconfined][Dispatchers.Unconfined] 協程分配器啟動協程，但只在第一個懸掛點之前。懸掛之後，它在線程中恢復，由被調用的懸掛函數完全決定線程。不受限制的分配器適用於，當協程不消耗 CPU 時間也不更新任何共享資料 (像是 UI) ，它被受限制在特定的線程時。
 
 On the other side, by default, a dispatcher for the outer [CoroutineScope][CoroutineScope] is inherited. The default dispatcher for [runBlocking][runBlocking] coroutine, in particular, is confined to the invoker thread, so inheriting it has the effect of confining execution to this thread with a predictable FIFO scheduling.
 
-另一方面，根據預設，對於繼承外部的 [CoroutineScope][CoroutineScope] 的分配器。就是 [runBlocking][runBlocking] 協程的預設分配器，特別的，限制調用者線程，因此它有效的
+另一方面，根據預設，對於繼承外部的 [CoroutineScope][CoroutineScope] 分配器。特別是， 對於 [runBlocking][runBlocking] 協程的預設分配器只受限於調用者線程，因此繼承它有受限制的執行效果，使用可預測的先進先出排程的線程。
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -117,11 +117,17 @@ import kotlinx.coroutines.*
 fun main() = runBlocking<Unit> {
 //sampleStart
     launch(Dispatchers.Unconfined) { // not confined -- will work with main thread
+        
+        // 不受限制的協程，一開始在主線程
         println("Unconfined      : I'm working in thread ${Thread.currentThread().name}")
         delay(500)
+        
+        // 後來在懸掛點後，在預設的執行者線程
         println("Unconfined      : After delay in thread ${Thread.currentThread().name}")
     }
     launch { // context of the parent, main runBlocking coroutine
+        
+        // 受限制的協程，都一直在主線程
         println("main runBlocking: I'm working in thread ${Thread.currentThread().name}")
         delay(1000)
         println("main runBlocking: After delay in thread ${Thread.currentThread().name}")
@@ -147,11 +153,11 @@ main runBlocking: After delay in thread main
 
 So, the coroutine that had inherited context of `runBlocking {...}` continues to execute in the `main` thread, while the unconfined one had resumed in the default executor thread that [delay][delay] function is using.
 
-所以，協程已繼承 `runBlocking {...}` 協程的執行環境在主線程中執行，而無限制的協程在 [delay][delay] 函數使用時的預設執行者線程已恢復。
+所以，協程已繼承 `runBlocking {...}` 協程的執行環境在主線程中執行，而不受限制的協程在 [delay][delay] 函數使用時的預設執行者線程已恢復。
 
 > Unconfined dispatcher is an advanced mechanism that can be helpful in certain corner cases where dispatching of coroutine for its execution later is not needed or produces undesirable side-effects, because some operation in a coroutine must be performed right away. Unconfined dispatcher should not be used in general code. 
 >
-> 無限制的分配器是一種進階的機制，它在某些極端情況下可能有幫助，在極端情況下，分配它執行的協程是稍後不被需要的或產生不良的副作用，因為在協程中必需立即執行某些操作。無限制的分配器在通常的代碼中不應該使用。
+> 不受限制的分配器是一種進階的機制，它在某些極端情況下可能有幫助，在極端情況下，分配它執行的協程是稍後不被需要的或產生不良的副作用，因為在協程中某些操作必須立即被執行。不受限制的分配器在一般的代碼中不應該使用。
 
 ### Debugging coroutines and threads
 
