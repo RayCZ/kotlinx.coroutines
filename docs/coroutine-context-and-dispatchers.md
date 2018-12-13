@@ -683,7 +683,7 @@ fun main() = runBlocking<Unit> {
 
 In this example we launch new coroutine in a background thread pool using [Dispatchers.Default][Dispatchers.Default], so it works on a different threads from a thread pool, but it still has the value of thread local variable, that we've specified using `threadLocal.asContextElement(value = "launch")`, no matter on what thread the coroutine is executed.Thus, output (with [debug](#debugging-coroutines-and-threads)) is:
 
-有這個範例中，我們在背景線程池使用 [Dispatchers.Default][Dispatchers.Default] 中發射新的協程，所以它適用於不同線程池的線程，但它還是有線程區域變數的值，我們已指定使用 `threadLocal.asContextElement(value = "launch")` ，無論執行協程在什麼線程。因此，輸出 (使用 [debug](#debugging-coroutines-and-threads)) 是：
+有這個範例中，我們在背景線程池中使用 [Dispatchers.Default][Dispatchers.Default] 發射新的協程，所以它適用於不同線程池的線程，但它還是有線程區域變數的值，我們已指定使用 `threadLocal.asContextElement(value = "launch")` ，無論執行協程在什麼線程。因此，輸出 (使用 [debug](#debugging-coroutines-and-threads)) 是：
 
 ```text
 Pre-main, current thread: Thread[main @coroutine#1,5,main], thread local value: 'main'
