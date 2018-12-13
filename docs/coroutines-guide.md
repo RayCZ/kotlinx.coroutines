@@ -16,12 +16,12 @@ In order to use coroutines as well as follow the examples in this guide, you nee
 
 ## Table of contents
 
-* [Coroutine basics](basics.md) (協程基礎觀念)
-* [Cancellation and timeouts](cancellation-and-timeouts.md)
-* [Composing suspending functions](composing-suspending-functions.md)
-* [Coroutine context and dispatchers](coroutine-context-and-dispatchers.md)
+* [Coroutine basics](basics.md) (協程基本概念)
+* [Cancellation and timeouts](cancellation-and-timeouts.md) (取消和超時)
+* [Composing suspending functions](composing-suspending-functions.md) (組合懸掛函數)
+* [Coroutine context and dispatchers](coroutine-context-and-dispatchers.md) (協程環境和分配器)
 * [Exception handling and supervision](exception-handling.md)
-* [Channels (experimental)](channels.md)
+* [Channels (experimental)](channels.md) (通道)
 * [Shared mutable state and concurrency](shared-mutable-state-and-concurrency.md)
 * [Select expression (experimental)](select-expression.md)
 
