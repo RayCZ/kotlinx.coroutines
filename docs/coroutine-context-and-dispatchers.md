@@ -97,7 +97,7 @@ The default dispatcher, that is used when coroutines are launched in [GlobalScop
 
 [newSingleThreadContext][newSingleThreadContext] creates a new thread for the coroutine to run. A dedicated thread is a very expensive resource. In a real application it must be either released, when no longer needed, using [close][ExecutorCoroutineDispatcher.close] function, or stored in a top-level variable and reused throughout the application.  
 
-[newSingleThreadContext][newSingleThreadContext]  創建一個新的線程用於協程運行。一個專用的線程是非常昂貴的資源。在實際應用程式中，當沒有長時間需要運行時，必須釋放，使用 [close][ExecutorCoroutineDispatcher.close] 函數，或儲存在最高層級中，並遍布整個應用程式重覆使用。
+[newSingleThreadContext][newSingleThreadContext]  創建一個新的線程用於協程運行。一個專用的線程是非常昂貴的資源。在實際應用程式中，當不再需要運行時，必須釋放，使用 [close][ExecutorCoroutineDispatcher.close] 函數，或儲存在最高層級中，並遍布整個應用程式重覆使用。
 
 ### Unconfined vs confined dispatcher
 
@@ -257,7 +257,7 @@ fun main() {
 
 It demonstrates several new techniques. One is using [runBlocking][runBlocking] with an explicitly specified context, and the other one is using [withContext][withContext] function to change a context of a coroutine while still staying in the same coroutine as you can see in the output below:
 
-它展示幾種新技術。一個是使用 [runBlocking][runBlocking] 明確指定執行環境 ，而另一個是使用 [withContext][withContext] 函數改變協程的執行環境，而
+它展示幾種新技術。一個是使用 [runBlocking][runBlocking] 明確指定執行環境 ，而另一個是使用 [withContext][withContext] 函數改變協程的執行環境，還是停留在與你在下面輸出可以看到的協程相同：
 
 ```text
 [Ctx1 @coroutine#1] Started in ctx1
@@ -265,14 +265,17 @@ It demonstrates several new techniques. One is using [runBlocking][runBlocking] 
 [Ctx1 @coroutine#1] Back to ctx1
 ```
 
-Note, that this example also uses `use` function from the Kotlin standard library to release threads that are created with [newSingleThreadContext] when they are no longer needed. 
+Note, that this example also uses `use` function from the Kotlin standard library to release threads that are created with [newSingleThreadContext][newSingleThreadContext]  when they are no longer needed. 
+
+注意：這個範例也使用從 Kotlin 標準函式庫中的  `use` 函數，當你不再需要時，來釋放使用 [newSingleThreadContext][newSingleThreadContext] 創建的線程。
 
 ### Job in the context
 
-The coroutine's [Job] is part of its context. The coroutine can retrieve it from its own context 
-using `coroutineContext[Job]` expression:
+Job in the context ：在執行環境中的 Job
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+The coroutine's [Job][Job] is part of its context. The coroutine can retrieve it from its own context using `coroutineContext[Job]` expression:
+
+協程的 [Job][Job] 是它執行環境中的一部分。協程可以使用 `coroutineContext[Job]` 表達式從它擁有的環境中獲取它。
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -284,34 +287,33 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-</div>
-
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-context-05.kt)
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-context-05.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-context-05.kt)獲取完整的代碼
 
 It produces something like that when running in [debug mode](#debugging-coroutines-and-threads):
+
+在[除錯模式](#debugging-coroutines-and-threads)運行時，它產生某些像是：
 
 ```
 My job is "coroutine#1":BlockingCoroutine{Active}@6d311334
 ```
 
-<!--- TEST lines.size == 1 && lines[0].startsWith("My job is \"coroutine#1\":BlockingCoroutine{Active}@") -->
+Note, that [isActive][isActive] in [CoroutineScope][CoroutineScope] is just a convenient shortcut for `coroutineContext[Job]?.isActive == true`.
 
-Note, that [isActive] in [CoroutineScope] is just a convenient shortcut for
-`coroutineContext[Job]?.isActive == true`.
+注意： [CoroutineScope][CoroutineScope] 中的 [isActive][isActive] 只是 `coroutineContext[Job]?.isActive == true` 的方便快捷方式。
 
 ### Children of a coroutine
 
-When a coroutine is launched in the [CoroutineScope] of another coroutine,
-it inherits its context via [CoroutineScope.coroutineContext] and 
-the [Job] of the new coroutine becomes
-a _child_ of the parent coroutine's job. When the parent coroutine is cancelled, all its children
-are recursively cancelled, too. 
+Children of a coroutine ：協程的後代
 
-However, when [GlobalScope] is used to launch a coroutine, it is not tied to the scope it
-was launched from and operates independently.
+When a coroutine is launched in the [CoroutineScope][CoroutineScope] of another coroutine, it inherits its context via [CoroutineScope.coroutineContext][CoroutineScope.coroutineContext] and the [Job][Job] of the new coroutine becomes a _child_ of the parent coroutine's job. When the parent coroutine is cancelled, all its children are recursively cancelled, too. 
 
+當在另一個協程的 [CoroutineScope][CoroutineScope] 中發射一個協程時，它通過 [CoroutineScope.coroutineContext][CoroutineScope.coroutineContext] 繼承它的環境，並且新協程的 [Job][Job] 成為父協程 job 的後代。當父協程被取消，所有它的後代也會遞迴式的被取消。
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+However, when [GlobalScope][GlobalScope] is used to launch a coroutine, it is not tied to the scope it was launched from and operates independently.
+
+無論如何，當 [GlobalScope][GlobalScope] 被用於發射協程時，從它發射的範圍沒有聯繫而且獨立的操作。
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -320,12 +322,16 @@ fun main() = runBlocking<Unit> {
 //sampleStart
     // launch a coroutine to process some kind of incoming request
     val request = launch {
+        
+        // 利用 GlobalScope 的環境與範圍發射，不會依上層而被取消，是獨立的範圍
         // it spawns two other jobs, one with GlobalScope
         GlobalScope.launch {
             println("job1: I run in GlobalScope and execute independently!")
             delay(1000)
             println("job1: I am not affected by cancellation of the request")
         }
+        
+        // 依上層的環境與範圍發射，所以上層取消這裡也會取消
         // and the other inherits the parent context
         launch {
             delay(100)
@@ -334,6 +340,8 @@ fun main() = runBlocking<Unit> {
             println("job2: I will not execute this line if my parent request is cancelled")
         }
     }
+    
+    // 延遲 0.5 秒，然後取消協程
     delay(500)
     request.cancel() // cancel processing of the request
     delay(1000) // delay a second to see what happens
@@ -342,11 +350,13 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-</div>
-
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-context-06.kt)
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-context-06.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-context-06.kt)獲取完整的代碼
 
 The output of this code is:
+
+這些代碼的輸出是：
 
 ```text
 job1: I run in GlobalScope and execute independently!
@@ -354,8 +364,6 @@ job2: I am a child of the request coroutine
 job1: I am not affected by cancellation of the request
 main: Who has survived request cancellation?
 ```
-
-<!--- TEST -->
 
 ### Parental responsibilities 
 
