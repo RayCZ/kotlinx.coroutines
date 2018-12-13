@@ -21,7 +21,7 @@ Coroutine context and dispatchers ：協程執行環境與分配器
 
 Coroutines always execute in some context which is represented by the value of [CoroutineContext](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/) type, defined in the Kotlin standard library.
 
-協程總是執行在某種環境下，執行環境由 Kotlin 標準函式庫中定義的 [CoroutineContext](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/) 類型值表示。
+協程總是在某種環境下執行，執行環境由 Kotlin 標準函式庫中定義的 [CoroutineContext](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/) 類型值表示。
 
 The coroutine context is a set of various elements. The main elements are the [Job][Job] of the coroutine, which we've seen before, and its dispatcher, which is covered in this section.
 
@@ -165,9 +165,11 @@ Debugging coroutines and threads ：執行協程和線程的除錯
 
 Coroutines can suspend on one thread and resume on another thread. Even with a single-threaded dispatcher it might be hard to figure out what coroutine was doing, where, and when. The common approach to debugging applications with threads is to print the thread name in the log file on each log statement. This feature is universally supported by logging frameworks. When using coroutines, the thread name alone does not give much of a context, so `kotlinx.coroutines` includes debugging facilities to make it easier. 
 
-協程可以懸掛一個線程並恢復其他的線程。即使使用單線程的分配器，它可能很難指出協程正在那時那此做什麼。常用的方式是
+協程可以懸掛一個線程並恢復其他的線程。即使使用單線程的分配器，它可能很難指出協程正在做什麼，那時和那處。使用線程除錯應用程式常用的方式是在日誌檔中的每個日誌敘述印出線程名稱。這個功能透過日誌框架普遍支援。當使用協程時，單獨的線程名稱不會給出很多的內容，因此 `kotlinx.coroutines` 包括除錯工具，使它更容易使用。
 
 Run the following code with `-Dkotlinx.coroutines.debug` JVM option:
+
+使用 `-Dkotlinx.coroutines.debug` JVM 選項執行以下代碼：
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -189,9 +191,13 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-context-03.kt)
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-context-03.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-context-03.kt)獲取完整的代碼
 
 There are three coroutines. The main coroutine (#1) -- `runBlocking` one, and two coroutines computing deferred values `a` (#2) and `b` (#3). They are all executing in the context of `runBlocking` and are confined to the main thread. The output of this code is:
+
+有三個協程。主協程 (#1) -- `runBlocking` 協程，以及兩個協程計算推遲的值 `a` (#2) 和 `b` (#3) 。他們在 `runBlocking` 的執行環境下執行，並受限於主線程。這些代碼輸出是：
 
 ```text
 [main @coroutine#2] I'm computing a piece of the answer
@@ -201,7 +207,11 @@ There are three coroutines. The main coroutine (#1) -- `runBlocking` one, and tw
 
 The `log` function prints the name of the thread in square brackets and you can see, that it is the `main` thread, but the identifier of the currently executing coroutine is appended to it. This identifier is consecutively assigned to all created coroutines when debugging mode is turned on.
 
-You can read more about debugging facilities in the documentation for [newCoroutineContext] function.
+`log`函數在方括號中印出線程的名稱並且你可以看到，它是 `main` 線程，但目前正在執行的協程識別附加到 `main` 線程，當除錯模式被打開時，這個識別是連續被分配到所有已創建的協程。
+
+You can read more about debugging facilities in the documentation for [newCoroutineContext][newCoroutineContext] function.
+
+你可以在 [newCoroutineContext][newCoroutineContext] 函數的文件中閱多更多有關除錯工具。
 
 ### Jumping between threads
 
