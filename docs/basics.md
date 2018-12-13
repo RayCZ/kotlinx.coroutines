@@ -300,7 +300,7 @@ Let's extract the block of code inside `launch { ... }` into a separate function
 
 讓我們提取 `launch { ... }` 內的代碼區域到單獨函數。當你在這份代碼執行 "提取函數" 重構時，你使用 `suspend` 修飾符取得新的函數。這是你第一個**懸掛函數**。懸掛函數可以用在協程內就像常規函數，但它們的額外功能是它們可以反過來使用其他的懸掛函數，像是在範例中的 `delay` ，懸掛 (暫停) 協程的執行。
 
-**Suspend ：懸掛函數，不是以阻塞的方式來處理線程，而是讓線程「懸起來」跟「掛回去」的某種機制，賦與線程某種生命週期。**
+**Suspend ：懸掛函數，不是以阻塞的方式來處理線程，而是讓線程暫停「懸起來」跟「掛回去」的某種機制，賦與線程某種生命週期。 Suspend 英文上是指正在進行中的事暫停，尤其強調短時間的停止。**
 
 > Understanding suspend function of Kotlin Coroutines
 >
