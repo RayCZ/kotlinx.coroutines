@@ -207,7 +207,7 @@ There are three coroutines. The main coroutine (#1) -- `runBlocking` one, and tw
 
 The `log` function prints the name of the thread in square brackets and you can see, that it is the `main` thread, but the identifier of the currently executing coroutine is appended to it. This identifier is consecutively assigned to all created coroutines when debugging mode is turned on.
 
-`log`函數在方括號中印出線程的名稱並且你可以看到，它是 `main` 線程，但目前正在執行的協程識別附加到 `main` 線程，當除錯模式被打開時，這個識別是連續被分配到所有已創建的協程。
+`log`函數在方括號中印出線程的名稱，並且你可以看到它是 `main` 線程，而且目前正在執行的協程識別附加到 `main` 線程，當除錯模式被打開時，這個識別是連續被分配到所有已創建的協程。
 
 You can read more about debugging facilities in the documentation for [newCoroutineContext][newCoroutineContext] function.
 
