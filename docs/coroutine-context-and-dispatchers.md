@@ -420,7 +420,7 @@ Now processing of the request is complete
 
 ### Naming coroutines for debugging
 
-Naming coroutines for debugging ：對於除錯的命名協程
+Naming coroutines for debugging ：命名協程用於除錯
 
 Automatically assigned ids are good when coroutines log often and you just need to correlate log records coming from the same coroutine. However, when coroutine is tied to the processing of a specific request or doing some specific background task, it is better to name it explicitly for debugging purposes. [CoroutineName][CoroutineName] context element serves the same function as a thread name. It'll get displayed in the thread name that is executing this coroutine when [debugging mode](#debugging-coroutines-and-threads) is turned on.
 
@@ -455,7 +455,7 @@ fun main() = runBlocking(CoroutineName("main")) {
 }
 ```
 
-> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-context-08.kt
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-context-08.kt)
 >
 > 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-context-08.kt)獲取完整的代碼
 
@@ -472,17 +472,19 @@ The output it produces with `-Dkotlinx.coroutines.debug` JVM option is similar t
 
 ### Combining context elements
 
-Sometimes we need to define multiple elements for coroutine context. We can use `+` operator for that.
-For example, we can launch a coroutine with an explicitly specified dispatcher and an explicitly specified 
-name at the same time: 
+Combining context elements ：結合環境元素
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+Sometimes we need to define multiple elements for coroutine context. We can use `+` operator for that. For example, we can launch a coroutine with an explicitly specified dispatcher and an explicitly specified name at the same time: 
+
+有時我們需要為協程環境定義多個元素。我們可以使用 `+` 運算符。例如，我們可以同時明確指定分配器和明確指定名稱發射一個協程：
 
 ```kotlin
 import kotlinx.coroutines.*
 
 fun main() = runBlocking<Unit> {
 //sampleStart
+    
+    // 指定協程分配器和命稱
     launch(Dispatchers.Default + CoroutineName("test")) {
         println("I'm working in thread ${Thread.currentThread().name}")
     }
@@ -490,54 +492,49 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-</div>
-
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-context-09.kt)
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-context-09.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-context-09.kt)獲取完整的代碼
 
 The output of this code  with `-Dkotlinx.coroutines.debug` JVM option is: 
+
+這代碼使用 `-Dkotlinx.coroutines.debug` JVM 選項的輸出是：
 
 ```text
 I'm working in thread DefaultDispatcher-worker-1 @test#2
 ```
 
-<!--- TEST FLEXIBLE_THREAD -->
-
 ### Cancellation via explicit job
 
-Let us put our knowledge about contexts, children and jobs together. Assume that our application has
-an object with a lifecycle, but that object is not a coroutine. For example, we are writing an Android application
-and launch various coroutines in the context of an Android activity to perform asynchronous operations to fetch 
-and update data, do animations, etc. All of these coroutines must be cancelled when activity is destroyed
-to avoid memory leaks. 
+Cancellation via explicit job ：明確
 
-We manage a lifecycle of our coroutines by creating an instance of [Job] that is tied to 
-the lifecycle of our activity. A job instance is created using [Job()] factory function when
-activity is created and it is cancelled when an activity is destroyed like this:
+Let us put our knowledge about contexts, children and jobs together. Assume that our application has an object with a lifecycle, but that object is not a coroutine. For example, we are writing an Android application and launch various coroutines in the context of an Android activity to perform asynchronous operations to fetch and update data, do animations, etc. All of these coroutines must be cancelled when activity is destroyed to avoid memory leaks. 
 
+讓我們把有關環境、子協程、[Job][Job] 的知識放一起。假設我們的應用程式有一個生命週期的物件，但該物件不是協程。例如，我們正在寫 Android 應用程式並在 Android Activity 的環境中發射各種協程，去執行異步的操作去獲取或更新資料、做動畫等等。當 Activity 被銷毀時，這些所有的協程必須被取消，來避免記憶體溢漏。
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+We manage a lifecycle of our coroutines by creating an instance of [Job][Job] that is tied to the lifecycle of our activity. A job instance is created using [Job()][Job()] factory function when activity is created and it is cancelled when an activity is destroyed like this:
+
+我們透過創建與我們 Activity 生命週期相關的 [Job][Job] 實例，管理我們協程的生命週期。 當 `Activity` 被創建時，使用 [Job()][Job()] 工廠函數創建 job 實例，當 `Activity` 被銷毀時，取消 job，像這樣：
 
 ```kotlin
 class Activity : CoroutineScope {
     lateinit var job: Job
 
+    // 在 Activity 生命週期創建時，建立 job
     fun create() {
         job = Job()
     }
 
+    // 在 Activity 生命週期創建時，取消 job
     fun destroy() {
         job.cancel()
     }
     // to be continued ...
 ```
 
-</div>
+We also implement [CoroutineScope][CoroutineScope] interface in this `Actvity` class. We only need to provide an override for its [CoroutineScope.coroutineContext][CoroutineScope.coroutineContext] property to specify the context for coroutines launched in its scope. We combine the desired dispatcher (we used [Dispatchers.Default][Dispatchers.Default] in this example) and a job:
 
-We also implement [CoroutineScope] interface in this `Actvity` class. We only need to provide an override
-for its [CoroutineScope.coroutineContext] property to specify the context for coroutines launched in its
-scope. We combine the desired dispatcher (we used [Dispatchers.Default] in this example) and a job:
-
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+我們在這個 `Activity` 類別中也實作 [CoroutineScope][CoroutineScope] 介面。我們只需要為它的 [CoroutineScope.coroutineContext][CoroutineScope.coroutineContext] 屬性提供 override (覆寫) ，去指定在它範圍中發射的協程環境。我們組合需要的分配器 (我們在範例中使用 [Dispatchers.Default][Dispatchers.Default]) 和 job ：
 
 ```kotlin
     // class Activity continues
@@ -546,16 +543,15 @@ scope. We combine the desired dispatcher (we used [Dispatchers.Default] in this 
     // to be continued ...
 ```
 
-</div>
+Now, we can launch coroutines in the scope of this `Activity` without having to explicitly specify their context. For the demo, we launch ten coroutines that delay for a different time:
 
-Now, we can launch coroutines in the scope of this `Activity` without having to explicitly
-specify their context. For the demo, we launch ten coroutines that delay for a different time:
-
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+現在，我們可以在這個 `Activity` 的範圍中發射協程，不必明確指定它的環境。如示範，我們不同時間的延遲發射十個協程：
 
 ```kotlin
     // class Activity continues
     fun doSomething() {
+        
+        // 重覆發射十個協程並延遲
         // launch ten coroutines for a demo, each working for a different time
         repeat(10) { i ->
             launch {
@@ -567,15 +563,9 @@ specify their context. For the demo, we launch ten coroutines that delay for a d
 } // class Activity ends
 ```
 
-</div>
+In our main function we create activity, call our test `doSomething` function, and destroy activity after 500ms. This cancels all the coroutines that were launched which we can confirm by noting that it does not print onto the screen anymore if we wait: 
 
-In our main function we create activity, call our test `doSomething` function, and destroy activity after 500ms.
-This cancels all the coroutines that were launched which we can confirm by noting that it does not print 
-onto the screen anymore if we wait: 
-
-<!--- CLEAR -->
-
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+我們的 `main` 函數，我們創建 activity 實例，調用我們測試 `doSomething` 函數，並延遲 0.5 秒後銷毀 activity ，這取消所有被發射的協程，我們可以透過提示，如果我們等待它不會再印出到畫面上來確定：
 
 ```kotlin
 import kotlin.coroutines.*
@@ -612,6 +602,8 @@ class Activity : CoroutineScope {
 
 fun main() = runBlocking<Unit> {
 //sampleStart
+    
+    // 建立 activity 實例，呼叫生命週期、做事情、銷毀
     val activity = Activity()
     activity.create() // create an activity
     activity.doSomething() // run test function
@@ -624,11 +616,13 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-</div>
-
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-context-10.kt)
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-context-10.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-context-10.kt)獲取完整的代碼
 
 The output of this example is:
+
+這個範例的輸出是：
 
 ```text
 Launched coroutines
@@ -637,23 +631,25 @@ Coroutine 1 is done
 Destroying activity!
 ```
 
-<!--- TEST -->
+As you can see, only the first two coroutines had printed a message and the others were cancelled by a single invocation of `job.cancel()` in `Activity.destroy()`.
 
-As you can see, only the first two coroutines had printed a message and the others were cancelled 
-by a single invocation of `job.cancel()` in `Activity.destroy()`.
+如你可以看到的。只有首要兩個協程已印出訊息，而在 `Activity.destroy()` 中單獨調用 `job.cancel()` 取消其他的協程。
 
 ### Thread-local data
 
-Sometimes it is convenient to have an ability to pass some thread-local data, but, for coroutines, which 
-are not bound to any particular thread, it is hard to achieve it manually without writing a lot of boilerplate.
+Thread-local data ：各線程區域資料，每個線程獨立的儲存區
 
-For [`ThreadLocal`](https://docs.oracle.com/javase/8/docs/api/java/lang/ThreadLocal.html), 
-[asContextElement] extension function is here for the rescue. It creates an additional context element, 
-which keeps the value of the given `ThreadLocal` and restores it every time the coroutine switches its context.
+Sometimes it is convenient to have an ability to pass some thread-local data, but, for coroutines, which are not bound to any particular thread, it is hard to achieve it manually without writing a lot of boilerplate.
+
+有時能夠傳遞一些線程區域資料是方便的。但對於沒有受約束於特定線程的協程，不寫很多模版程式，很難去手動的獲取它。
+
+For [`ThreadLocal`](https://docs.oracle.com/javase/8/docs/api/java/lang/ThreadLocal.html), [asContextElement][asContextElement] extension function is here for the rescue. It creates an additional context element, which keeps the value of the given `ThreadLocal` and restores it every time the coroutine switches its context.
+
+對於 [`ThreadLocal`](https://docs.oracle.com/javase/8/docs/api/java/lang/ThreadLocal.html) 類型， [asContextElement][asContextElement] 擴展函數在這裡用於救援。它創建額外的環境元素，它保留已給的 `ThreadLocal` 值，並每次協程切換它的環境時儲存它。
 
 It is easy to demonstrate it in action:
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+在實踐中，容易展示它：
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -662,10 +658,16 @@ val threadLocal = ThreadLocal<String?>() // declare thread-local variable
 
 fun main() = runBlocking<Unit> {
 //sampleStart
+    
+    // 設置線程區域值
     threadLocal.set("main")
     println("Pre-main, current thread: ${Thread.currentThread()}, thread local value: '${threadLocal.get()}'")
+    
+    // 發射協程，使用 asContextElement 擴展函數創建環境元素並切換線程時保留上一個 ThreadLocal 值
     val job = launch(Dispatchers.Default + threadLocal.asContextElement(value = "launch")) {
        println("Launch start, current thread: ${Thread.currentThread()}, thread local value: '${threadLocal.get()}'")
+        
+        // 讓出 (切換) 線程，，把保留 ThreadLocal 值回存回去
         yield()
         println("After yield, current thread: ${Thread.currentThread()}, thread local value: '${threadLocal.get()}'")
     }
@@ -675,15 +677,13 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-</div>                                                                                       
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-context-11.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-context-11.kt)獲取完整的代碼
 
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-context-11.kt)
+In this example we launch new coroutine in a background thread pool using [Dispatchers.Default][Dispatchers.Default], so it works on a different threads from a thread pool, but it still has the value of thread local variable, that we've specified using `threadLocal.asContextElement(value = "launch")`, no matter on what thread the coroutine is executed.Thus, output (with [debug](#debugging-coroutines-and-threads)) is:
 
-In this example we launch new coroutine in a background thread pool using [Dispatchers.Default], so
-it works on a different threads from a thread pool, but it still has the value of thread local variable,
-that we've specified using `threadLocal.asContextElement(value = "launch")`,
-no matter on what thread the coroutine is executed.
-Thus, output (with [debug](#debugging-coroutines-and-threads)) is:
+有這個範例中，我們在背景線程池使用 [Dispatchers.Default][Dispatchers.Default] 中發射新的協程，所以它適用於不同線程池的線程，但它還是有線程區域變數的值，我們已指定使用 `threadLocal.asContextElement(value = "launch")` ，無論執行協程在什麼線程。因此，輸出 (使用 [debug](#debugging-coroutines-and-threads)) 是：
 
 ```text
 Pre-main, current thread: Thread[main @coroutine#1,5,main], thread local value: 'main'
@@ -692,23 +692,21 @@ After yield, current thread: Thread[DefaultDispatcher-worker-2 @coroutine#2,5,ma
 Post-main, current thread: Thread[main @coroutine#1,5,main], thread local value: 'main'
 ```
 
-<!--- TEST FLEXIBLE_THREAD -->
+`ThreadLocal` has first-class support and can be used with any primitive `kotlinx.coroutines` provides. It has one key limitation: when thread-local is mutated, a new value is not propagated to the coroutine caller (as context element cannot track all `ThreadLocal` object accesses) and updated value is lost on the next suspension. Use [withContext][withContext] to update the value of the thread-local in a coroutine, see [asContextElement][asContextElement] for more details. 
 
-`ThreadLocal` has first-class support and can be used with any primitive `kotlinx.coroutines` provides.
-It has one key limitation: when thread-local is mutated, a new value is not propagated to the coroutine caller 
-(as context element cannot track all `ThreadLocal` object accesses) and updated value is lost on the next suspension.
-Use [withContext] to update the value of the thread-local in a coroutine, see [asContextElement] for more details. 
+`ThreadLocal` 已經支援頭等函數，並可以與任何原生提供的 `kotlinx.coroutines` 一起使用。它有一個關鍵的限制：當線程區域是可變的，新值不會傳播到協程調用者 (因為環境元素不可以追蹤所有 `ThreadLocal` 物件存取) 並且更新值在下一個懸掛 (暫停) 時丟失。使用 [withContext][withContext] 去更新在協程中的線程區域值，更多詳細請參閱 [asContextElement][asContextElement]。
 
-Alternatively, a value can be stored in a mutable box like `class Counter(var i: Int)`, which is, in turn, 
-stored in a thread-local variable. However, in this case you are fully responsible to synchronize 
-potentially concurrent modifications to the variable in this mutable box.
+Alternatively, a value can be stored in a mutable box like `class Counter(var i: Int)`, which is, in turn, stored in a thread-local variable. However, in this case you are fully responsible to synchronize potentially concurrent modifications to the variable in this mutable box.
 
-For advanced usage, for example for integration with logging MDC, transactional contexts or any other libraries
-which internally use thread-locals for passing data, see documentation for [ThreadContextElement] interface 
-that should be implemented. 
+另外，值可以被儲存在可變的裝箱中像 `class Counter(var i: Int)`，反過來，它存儲在線程區域變數。然而，在這樣的情況下，你有完全的責任在這樣可變的裝箱中，同步潛在的並發(同時)修改變數。
+
+For advanced usage, for example for integration with logging MDC, transactional contexts or any other libraries which internally use thread-locals for passing data, see documentation for [ThreadContextElement][ThreadContextElement] interface that should be implemented. 
+
+對於進階的用法，例如，使用 MDC 函式庫日誌，交易環境或內部使用線程區域用於傳遞資料的任何其他函式庫整合， 參閱 [ThreadContextElement][ThreadContextElement] 介面應該被實作的文件。
 
 <!--- MODULE kotlinx-coroutines-core -->
 <!--- INDEX kotlinx.coroutines -->
+
 [Job]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/index.html
 [CoroutineDispatcher]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-dispatcher/index.html
 [launch]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html
