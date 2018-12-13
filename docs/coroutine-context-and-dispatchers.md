@@ -167,9 +167,9 @@ Coroutines can suspend on one thread and resume on another thread. Even with a s
 
 協程可以懸掛一個線程並恢復其他的線程。即使使用單線程的分配器，它可能很難指出協程正在做什麼，那時和那處。使用線程除錯應用程式常用的方式是在日誌檔中的每個日誌敘述印出線程名稱。這個功能透過日誌框架普遍支援。當使用協程時，單獨的線程名稱不會給出很多的內容，因此 `kotlinx.coroutines` 包括除錯工具，使它更容易使用。
 
-Run the following code with `-Dkotlinx.coroutines.debug` JVM option:
+Run the following code with `-Dkotlinx.coroutines.debug=on/off` JVM option:
 
-使用 `-Dkotlinx.coroutines.debug` JVM 選項執行以下代碼：
+使用 `-Dkotlinx.coroutines.debug=on/off` JVM 選項執行以下代碼：
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -197,7 +197,7 @@ fun main() = runBlocking<Unit> {
 
 There are three coroutines. The main coroutine (#1) -- `runBlocking` one, and two coroutines computing deferred values `a` (#2) and `b` (#3). They are all executing in the context of `runBlocking` and are confined to the main thread. The output of this code is:
 
-有三個協程。主協程 (#1) -- `runBlocking` 協程，以及兩個協程計算推遲的值 `a` (#2) 和 `b` (#3) 。他們在 `runBlocking` 的執行環境下執行，並受限於主線程。這些代碼輸出是：
+有三個協程。主協程 (#1) -- `runBlocking` 協程，以及兩個協程正在計算推遲的值 `a` (#2) 和 `b` (#3) 。他們在 `runBlocking` 的執行環境下執行，並受限於主線程。這些代碼輸出是：
 
 ```text
 [main @coroutine#2] I'm computing a piece of the answer
@@ -211,7 +211,7 @@ The `log` function prints the name of the thread in square brackets and you can 
 
 You can read more about debugging facilities in the documentation for [newCoroutineContext][newCoroutineContext] function.
 
-你可以在 [newCoroutineContext][newCoroutineContext] 函數的文件中閱多更多有關除錯工具。
+你可以在 [newCoroutineContext][newCoroutineContext] 函數的文件中閱讀多更多有關除錯工具。
 
 ### Jumping between threads
 
