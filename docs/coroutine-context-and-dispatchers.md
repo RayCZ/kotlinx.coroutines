@@ -506,7 +506,7 @@ I'm working in thread DefaultDispatcher-worker-1 @test#2
 
 ### Cancellation via explicit job
 
-Cancellation via explicit job ：明確
+Cancellation via explicit job ：經由明確的 job 物件取消
 
 Let us put our knowledge about contexts, children and jobs together. Assume that our application has an object with a lifecycle, but that object is not a coroutine. For example, we are writing an Android application and launch various coroutines in the context of an Android activity to perform asynchronous operations to fetch and update data, do animations, etc. All of these coroutines must be cancelled when activity is destroyed to avoid memory leaks. 
 
@@ -637,15 +637,15 @@ As you can see, only the first two coroutines had printed a message and the othe
 
 ### Thread-local data
 
-Thread-local data ：各線程區域資料，每個線程獨立的儲存區
+Thread-local data ：線程 - 區域資料，每個線程獨立的儲存區
 
 Sometimes it is convenient to have an ability to pass some thread-local data, but, for coroutines, which are not bound to any particular thread, it is hard to achieve it manually without writing a lot of boilerplate.
 
-有時能夠傳遞一些線程區域資料是方便的。但對於沒有受約束於特定線程的協程，不寫很多模版程式，很難去手動的獲取它。
+有時能夠傳遞一些線程 - 區域資料是方便的。但對於沒有受約束於特定線程的協程，不寫很多模版程式，很難去手動的獲取它。
 
 For [`ThreadLocal`](https://docs.oracle.com/javase/8/docs/api/java/lang/ThreadLocal.html), [asContextElement][asContextElement] extension function is here for the rescue. It creates an additional context element, which keeps the value of the given `ThreadLocal` and restores it every time the coroutine switches its context.
 
-對於 [`ThreadLocal`](https://docs.oracle.com/javase/8/docs/api/java/lang/ThreadLocal.html) 類型， [asContextElement][asContextElement] 擴展函數在這裡用於救援。它創建額外的環境元素，它保留已給的 `ThreadLocal` 值，並每次協程切換它的環境時儲存它。
+對於 [`ThreadLocal`](https://docs.oracle.com/javase/8/docs/api/java/lang/ThreadLocal.html) 類型， [asContextElement][asContextElement] 擴展函數在這裡用於救援。它創建額外的環境元素，它保留已給的 `ThreadLocal` 值，並協程每次切換它的環境時儲存它。
 
 It is easy to demonstrate it in action:
 
