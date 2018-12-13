@@ -215,9 +215,11 @@ You can read more about debugging facilities in the documentation for [newCorout
 
 ### Jumping between threads
 
-Run the following code with `-Dkotlinx.coroutines.debug` JVM option (see [debug](#debugging-coroutines-and-threads)):
+Jumping between threads ：在協程之間跳轉：
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+Run the following code with `-Dkotlinx.coroutines.debug=on/off` JVM option (see [debug](#debugging-coroutines-and-threads)):
+
+使用 `-Dkotlinx.coroutines.debug=on/off` JVM 選項執行以下代碼 (看 [debug](#debugging-coroutines-and-threads))：
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -226,10 +228,18 @@ fun log(msg: String) = println("[${Thread.currentThread().name}] $msg")
 
 fun main() {
 //sampleStart
+    
+    // 建立一個線程並指定 Ctx1 名稱
     newSingleThreadContext("Ctx1").use { ctx1 ->
+                                        
+        // 建立一個線程並指定 Ctx2 名稱
         newSingleThreadContext("Ctx2").use { ctx2 ->
+                                            
+            //使用 ctx1 的環境來執行協程
             runBlocking(ctx1) {
                 log("Started in ctx1")
+                
+                // 使用 ctx2 的環境來執行協程
                 withContext(ctx2) {
                     log("Working in ctx2")
                 }
@@ -241,13 +251,13 @@ fun main() {
 }
 ```
 
-</div>
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-context-04.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-context-04.kt)獲取完整的代碼
 
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-context-04.kt)
+It demonstrates several new techniques. One is using [runBlocking][runBlocking] with an explicitly specified context, and the other one is using [withContext][withContext] function to change a context of a coroutine while still staying in the same coroutine as you can see in the output below:
 
-It demonstrates several new techniques. One is using [runBlocking] with an explicitly specified context, and
-the other one is using [withContext] function to change a context of a coroutine while still staying in the
-same coroutine as you can see in the output below:
+它展示幾種新技術。一個是使用 [runBlocking][runBlocking] 明確指定執行環境 ，而另一個是使用 [withContext][withContext] 函數改變協程的執行環境，而
 
 ```text
 [Ctx1 @coroutine#1] Started in ctx1
@@ -255,10 +265,7 @@ same coroutine as you can see in the output below:
 [Ctx1 @coroutine#1] Back to ctx1
 ```
 
-<!--- TEST -->
-
-Note, that this example also uses `use` function from the Kotlin standard library to release threads that
-are created with [newSingleThreadContext] when they are no longer needed. 
+Note, that this example also uses `use` function from the Kotlin standard library to release threads that are created with [newSingleThreadContext] when they are no longer needed. 
 
 ### Job in the context
 
