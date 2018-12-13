@@ -235,7 +235,7 @@ fun main() {
         // 建立一個線程並指定 Ctx2 名稱
         newSingleThreadContext("Ctx2").use { ctx2 ->
                                             
-            //使用 ctx1 的環境來執行協程
+            // 使用 ctx1 的環境來執行協程
             runBlocking(ctx1) {
                 log("Started in ctx1")
                 
@@ -367,37 +367,48 @@ main: Who has survived request cancellation?
 
 ### Parental responsibilities 
 
-A parent coroutine always waits for completion of all its children. Parent does not have to explicitly track
-all the children it launches and it does not have to use [Job.join] to wait for them at the end:
+Parental responsibilities  ：父協程的責任
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+A parent coroutine always waits for completion of all its children. Parent does not have to explicitly track all the children it launches and it does not have to use [Job.join][Job.join] to wait for them at the end:
+
+父協程總是等待所有它的子協程完成。父協程不必明確追蹤它發射的所有子協程，也不必使用 [Job.join][Job.join] 在結束時等待它們：
 
 ```kotlin
 import kotlinx.coroutines.*
 
 fun main() = runBlocking<Unit> {
 //sampleStart
+    
+    // 父協程
     // launch a coroutine to process some kind of incoming request
     val request = launch {
+        
+        // 重覆發射三個子協程
         repeat(3) { i -> // launch a few children jobs
             launch  {
                 delay((i + 1) * 200L) // variable delay 200ms, 400ms, 600ms
                 println("Coroutine $i is done")
             }
         }
+        
+        // 不用等待子協程
         println("request: I'm done and I don't explicitly join my children that are still active")
     }
+    
+    // 等待子協程全部完成
     request.join() // wait for completion of the request, including all its children
     println("Now processing of the request is complete")
 //sampleEnd
 }
 ```
 
-</div>
-
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-context-07.kt)
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-context-07.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-context-07.kt)獲取完整的代碼
 
 The result is going to be:
+
+結果將是：
 
 ```text
 request: I'm done and I don't explicitly join my children that are still active
@@ -407,34 +418,33 @@ Coroutine 2 is done
 Now processing of the request is complete
 ```
 
-<!--- TEST -->
-
 ### Naming coroutines for debugging
 
-Automatically assigned ids are good when coroutines log often and you just need to correlate log records
-coming from the same coroutine. However, when coroutine is tied to the processing of a specific request
-or doing some specific background task, it is better to name it explicitly for debugging purposes.
-[CoroutineName] context element serves the same function as a thread name. It'll get displayed in the thread name that
-is executing this coroutine when [debugging mode](#debugging-coroutines-and-threads) is turned on.
+Naming coroutines for debugging ：對於除錯的命名協程
 
-The following example demonstrates this concept:
+Automatically assigned ids are good when coroutines log often and you just need to correlate log records coming from the same coroutine. However, when coroutine is tied to the processing of a specific request or doing some specific background task, it is better to name it explicitly for debugging purposes. [CoroutineName][CoroutineName] context element serves the same function as a thread name. It'll get displayed in the thread name that is executing this coroutine when [debugging mode](#debugging-coroutines-and-threads) is turned on.
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+當協程經常記錄時，自動分配 ID 很好，並且你只需要關聯來自相同協程的日誌記錄。然而，當協程與特定請求的處理有聯繫時，或做某些特定背景程序任務時，對於除錯目的明確命名它是很好的。 [CoroutineName][CoroutineName] 環境元素提供與線程名稱相同函數。當 [debugging mode](#debugging-coroutines-and-threads) 開啟時，它將在顯示正在執行這個協程的線程名稱。
 
 ```kotlin
 import kotlinx.coroutines.*
 
 fun log(msg: String) = println("[${Thread.currentThread().name}] $msg")
 
+// 為 runBlocking 命名稱 main
 fun main() = runBlocking(CoroutineName("main")) {
 //sampleStart
     log("Started main coroutine")
+    
+    // 命名第一個子協程 v1coroutine
     // run two background value computations
     val v1 = async(CoroutineName("v1coroutine")) {
         delay(500)
         log("Computing v1")
         252
     }
+    
+    // 命名第二個子協程 v2coroutine
     val v2 = async(CoroutineName("v2coroutine")) {
         delay(1000)
         log("Computing v2")
@@ -445,11 +455,13 @@ fun main() = runBlocking(CoroutineName("main")) {
 }
 ```
 
-</div>
-
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-context-08.kt)
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-context-08.kt
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-context-08.kt)獲取完整的代碼
 
 The output it produces with `-Dkotlinx.coroutines.debug` JVM option is similar to:
+
+使用 `-Dkotlinx.coroutines.debug` JVM 選項它產生輸出類似於：
 
 ```text
 [main @main#1] Started main coroutine
@@ -457,8 +469,6 @@ The output it produces with `-Dkotlinx.coroutines.debug` JVM option is similar t
 [main @v2coroutine#3] Computing v2
 [main @main#1] The answer for v1 / v2 = 42
 ```
-
-<!--- TEST FLEXIBLE_THREAD -->
 
 ### Combining context elements
 
