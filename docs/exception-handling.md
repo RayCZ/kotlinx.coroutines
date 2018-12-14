@@ -75,33 +75,37 @@ Caught ArithmeticException
 
 ### CoroutineExceptionHandler
 
-But what if one does not want to print all exceptions to the console?
-[CoroutineExceptionHandler] context element is used as generic `catch` block of coroutine where custom logging or exception handling may take place.
-It is similar to using [`Thread.uncaughtExceptionHandler`](https://docs.oracle.com/javase/8/docs/api/java/lang/Thread.html#setUncaughtExceptionHandler(java.lang.Thread.UncaughtExceptionHandler)).
+CoroutineExceptionHandler ：協程異常處理器
 
-On JVM it is possible to redefine global exception handler for all coroutines by registering [CoroutineExceptionHandler] via
-[`ServiceLoader`](https://docs.oracle.com/javase/8/docs/api/java/util/ServiceLoader.html).
-Global exception handler is similar to 
-[`Thread.defaultUncaughtExceptionHandler`](https://docs.oracle.com/javase/8/docs/api/java/lang/Thread.html#setDefaultUncaughtExceptionHandler(java.lang.Thread.UncaughtExceptionHandler)) 
-which is used when no more specific handlers are registered.
-On Android, `uncaughtExceptionPreHandler` is installed as a global coroutine exception handler.
+But what if one does not want to print all exceptions to the console? [CoroutineExceptionHandler][CoroutineExceptionHandler] context element is used as generic `catch` block of coroutine where custom logging or exception handling may take place. It is similar to using [`Thread.uncaughtExceptionHandler`](https://docs.oracle.com/javase/8/docs/api/java/lang/Thread.html#setUncaughtExceptionHandler(java.lang.Thread.UncaughtExceptionHandler)).
 
-[CoroutineExceptionHandler] is invoked only on exceptions which are not expected to be handled by the user, 
-so registering it in [async] builder and the like of it has no effect.
+但是如果一個人不想要印出所有的異常到控制台？ [CoroutineExceptionHandler][CoroutineExceptionHandler] 環境元素用作協程的通用 `catch` 區域，區域中帶入可以自定義日誌記錄或異常處理。它類似於使用 [`Thread.uncaughtExceptionHandler`](https://docs.oracle.com/javase/8/docs/api/java/lang/Thread.html#setUncaughtExceptionHandler(java.lang.Thread.UncaughtExceptionHandler)) 。
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+On JVM it is possible to redefine global exception handler for all coroutines by registering [CoroutineExceptionHandler][CoroutineExceptionHandler] via [`ServiceLoader`](https://docs.oracle.com/javase/8/docs/api/java/util/ServiceLoader.html). Global exception handler is similar to [`Thread.defaultUncaughtExceptionHandler`](https://docs.oracle.com/javase/8/docs/api/java/lang/Thread.html#setDefaultUncaughtExceptionHandler(java.lang.Thread.UncaughtExceptionHandler)) which is used when no more specific handlers are registered. On Android, `uncaughtExceptionPreHandler` is installed as a global coroutine exception handler.
+
+在 JVM 上，經由 [`ServiceLoader`](https://docs.oracle.com/javase/8/docs/api/java/util/ServiceLoader.html) 註冊 [CoroutineExceptionHandler][CoroutineExceptionHandler] 能重新定義所有協程的全域異常處理器。全域異常處理器類似於 [`Thread.defaultUncaughtExceptionHandler`](https://docs.oracle.com/javase/8/docs/api/java/lang/Thread.html#setDefaultUncaughtExceptionHandler(java.lang.Thread.UncaughtExceptionHandler)) ，它在沒有註冊更多特定處理器時使用。在 Android 上， `uncaughtExceptionPreHandler` 被安裝作為全域協程異常處理器。
+
+[CoroutineExceptionHandler][CoroutineExceptionHandler] is invoked only on exceptions which are not expected to be handled by the user, so registering it in [async][async] builder and the like of it has no effect.
+
+[CoroutineExceptionHandler][CoroutineExceptionHandler] 只在由使用者處理非預期的異常上調用，所以在 [async][async] 建造者註冊它並且它的相似之處沒有效果。
 
 ```kotlin
 import kotlinx.coroutines.*
 
 fun main() = runBlocking {
 //sampleStart
+    
+    // 創建 CoroutineExceptionHandler 實例
     val handler = CoroutineExceptionHandler { _, exception -> 
         println("Caught $exception") 
     }
+    
+    // 協程發射時順便帶入
     val job = GlobalScope.launch(handler) {
         throw AssertionError()
     }
+    
+    // 協程發射時順便帶入
     val deferred = GlobalScope.async(handler) {
         throw ArithmeticException() // Nothing will be printed, relying on user to call deferred.await()
     }
@@ -110,17 +114,17 @@ fun main() = runBlocking {
 }
 ```
 
-</div>
-
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-exceptions-02.kt)
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-exceptions-02.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-exceptions-02.kt)獲取完整的代碼
 
 The output of this code is:
+
+這些代碼的輸出是：
 
 ```text
 Caught java.lang.AssertionError
 ```
-
-<!--- TEST-->
 
 ### Cancellation and exceptions
 
