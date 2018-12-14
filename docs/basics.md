@@ -1,7 +1,5 @@
 ## Table of contents
 
-Table of contents ：內容表
-
 * [Coroutine basics](#coroutine-basics)
   * [Your first coroutine](#your-first-coroutine)
   * [Bridging blocking and non-blocking worlds](#bridging-blocking-and-non-blocking-worlds)
@@ -11,8 +9,6 @@ Table of contents ：內容表
   * [Extract function refactoring](#extract-function-refactoring)
   * [Coroutines ARE light-weight](#coroutines-are-light-weight)
   * [Global coroutines are like daemon threads](#global-coroutines-are-like-daemon-threads)
-
-**以下執行協程可利用  ${Thread.currentThread().name} 查看協程的資訊**
 
 ## Coroutine basics
 

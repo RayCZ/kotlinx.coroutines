@@ -1,7 +1,5 @@
 ## Table of contents
 
-Table of contents ：內容表
-
 * [Channels (experimental)](#channels-experimental)
   * [Channel basics](#channel-basics)
   * [Closing and iteration over channels](#closing-and-iteration-over-channels)

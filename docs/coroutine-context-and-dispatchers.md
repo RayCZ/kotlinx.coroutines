@@ -1,7 +1,5 @@
 ## Table of contents
 
-Table of contents ：內容表
-
 * [Coroutine context and dispatchers](#coroutine-context-and-dispatchers)
   * [Dispatchers and threads](#dispatchers-and-threads)
   * [Unconfined vs confined dispatcher](#unconfined-vs-confined-dispatcher)

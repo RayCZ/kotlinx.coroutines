@@ -1,7 +1,5 @@
 ## Table of contents
 
-Table of contents ：內容表
-
 * [Cancellation and timeouts](#cancellation-and-timeouts)
   * [Cancelling coroutine execution](#cancelling-coroutine-execution)
   * [Cancellation is cooperative](#cancellation-is-cooperative)
@@ -9,8 +7,6 @@ Table of contents ：內容表
   * [Closing resources with finally](#closing-resources-with-finally)
   * [Run non-cancellable block](#run-non-cancellable-block)
   * [Timeout](#timeout)
-
-**以下執行協程可利用  ${Thread.currentThread().name} 查看協程的資訊**
 
 ## Cancellation and timeouts
 
