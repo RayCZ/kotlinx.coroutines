@@ -40,6 +40,8 @@ fun main() = runBlocking {
         println("Throwing exception from launch")
         throw IndexOutOfBoundsException() // Will be printed to the console by Thread.defaultUncaughtExceptionHandler
     }
+    
+    // 等待 lanch 處理完回到協程
     job.join()
     println("Joined failed job")
     
