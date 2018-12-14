@@ -1,23 +1,4 @@
-<!--- INCLUDE .*/example-([a-z]+)-([0-9a-z]+)\.kt 
-/*
- * Copyright 2016-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
-// This file was automatically generated from coroutines-guide.md by Knit tool. Do not edit.
-package kotlinx.coroutines.guide.$$1$$2
--->
-<!--- KNIT     ../core/kotlinx-coroutines-core/test/guide/.*\.kt -->
-<!--- TEST_OUT ../core/kotlinx-coroutines-core/test/guide/test/ExceptionsGuideTest.kt
-// This file was automatically generated from coroutines-guide.md by Knit tool. Do not edit.
-package kotlinx.coroutines.guide.test
-
-import org.junit.Test
-
-class ExceptionsGuideTest {
---> 
 ## Table of contents
-
-<!--- TOC -->
 
 * [Exception handling](#exception-handling)
   * [Exception propagation](#exception-propagation)
@@ -29,39 +10,40 @@ class ExceptionsGuideTest {
   * [Supervision scope](#supervision-scope)
   * [Exceptions in supervised coroutines](#exceptions-in-supervised-coroutines)
 
-<!--- END_TOC -->
-
 ## Exception handling
 
+Exception handling ：異常處理
 
-This section covers exception handling and cancellation on exceptions.
-We already know that cancelled coroutine throws [CancellationException] in suspension points and that it 
-is ignored by coroutines machinery. But what happens if an exception is thrown during cancellation or multiple children of the same 
-coroutine throw an exception?
+This section covers exception handling and cancellation on exceptions. We already know that cancelled coroutine throws [CancellationException][CancellationException] in suspension points and that it is ignored by coroutines machinery. But what happens if an exception is thrown during cancellation or multiple children of the same coroutine throw an exception?
+
+這個章節涵蓋異常處理和在異常中取消。我們已經知道在在懸掛點中取消協程會丟出 [CancellationException][CancellationException] 並且被協程機制忽略。但是如果異常在取消期間丟出異常，或相同協程的多個子協程丟出異常會發生什麼事？
 
 ### Exception propagation
 
-Coroutine builders come in two flavors: propagating exceptions automatically ([launch] and [actor]) or 
-exposing them to users ([async] and [produce]).
-The former treat exceptions as unhandled, similar to Java's `Thread.uncaughtExceptionHandler`, 
-while the latter are relying on the user to consume the final 
-exception, for example via [await][Deferred.await] or [receive][ReceiveChannel.receive] 
-([produce] and [receive][ReceiveChannel.receive] are covered later in [Channels](https://github.com/Kotlin/kotlinx.coroutines/blob/master/docs/channels.md) section).
+Exception propagation ：異常傳播
 
-It can be demonstrated by a simple example that creates new coroutines in [GlobalScope]:
+Coroutine builders come in two flavors: propagating exceptions automatically ([launch][launch] and [actor][actor]) or exposing them to users ([async][async] and [produce][produce]). The former treat exceptions as unhandled, similar to Java's `Thread.uncaughtExceptionHandler`, while the latter are relying on the user to consume the final exception, for example via [await][Deferred.await] or [receive][ReceiveChannel.receive] ([produce][produce] and [receive][ReceiveChannel.receive] are covered later in [Channels](channels.md) section).
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+協程建造者有兩種風格：自動的傳播異常 ([launch][launch] 和 [actor][actor]) 或揭露它們給使用者 ([async][async] 和 [produce][produce]) 。前者視異常未處理，類似於 Java 的 `Thread.uncaughtExceptionHandler` ，而後者依賴使用者消耗處理最終的異常，例如：透過 [await][Deferred.await] 或 [receive][ReceiveChannel.receive] ([produce][produce] 和 [receive][ReceiveChannel.receive] 在 [Channels](channels.md) 章節中稍後涵蓋) 。
+
+It can be demonstrated by a simple example that creates new coroutines in [GlobalScope][GlobalScope]:
+
+可以透過在 [GlobalScope][GlobalScope] 中創建新的協程的簡單例子展示它：
 
 ```kotlin
 import kotlinx.coroutines.*
 
 fun main() = runBlocking {
+    
+    // GlobalScope 發射協程並在之中丟出異常
     val job = GlobalScope.launch {
         println("Throwing exception from launch")
         throw IndexOutOfBoundsException() // Will be printed to the console by Thread.defaultUncaughtExceptionHandler
     }
     job.join()
     println("Joined failed job")
+    
+    // GlobalScope 發射異步協程，等待使用者調用 await 時捕獲異常
     val deferred = GlobalScope.async {
         println("Throwing exception from async")
         throw ArithmeticException() // Nothing is printed, relying on user to call await
@@ -75,11 +57,13 @@ fun main() = runBlocking {
 }
 ```
 
-</div>
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-exceptions-01.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-exceptions-01.kt)獲取完整的代碼
 
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-exceptions-01.kt)
+The output of this code is (with [debug](coroutine-context-and-dispatchers.md#debugging-coroutines-and-threads)):
 
-The output of this code is (with [debug](https://github.com/Kotlin/kotlinx.coroutines/blob/master/docs/coroutine-context-and-dispatchers.md#debugging-coroutines-and-threads)):
+這些代碼的輸出是 (使用 [debug](coroutine-context-and-dispatchers.md#debugging-coroutines-and-threads) 模式)：
 
 ```text
 Throwing exception from launch
@@ -88,8 +72,6 @@ Joined failed job
 Throwing exception from async
 Caught ArithmeticException
 ```
-
-<!--- TEST EXCEPTION-->
 
 ### CoroutineExceptionHandler
 
