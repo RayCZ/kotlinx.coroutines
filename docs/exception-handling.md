@@ -20,11 +20,11 @@ This section covers exception handling and cancellation on exceptions. We alread
 
 ### Exception propagation
 
-Exception propagation ：異常傳播
+Exception propagation ：異常傳播 (丟出、拋出)
 
 Coroutine builders come in two flavors: propagating exceptions automatically ([launch][launch] and [actor][actor]) or exposing them to users ([async][async] and [produce][produce]). The former treat exceptions as unhandled, similar to Java's `Thread.uncaughtExceptionHandler`, while the latter are relying on the user to consume the final exception, for example via [await][Deferred.await] or [receive][ReceiveChannel.receive] ([produce][produce] and [receive][ReceiveChannel.receive] are covered later in [Channels](channels.md) section).
 
-協程建造者有兩種風格：自動的傳播異常 ([launch][launch] 和 [actor][actor]) 或揭露它們給使用者 ([async][async] 和 [produce][produce]) 。前者視異常未處理，類似於 Java 的 `Thread.uncaughtExceptionHandler` ，而後者依賴使用者消耗處理最終的異常，例如：透過 [await][Deferred.await] 或 [receive][ReceiveChannel.receive] ([produce][produce] 和 [receive][ReceiveChannel.receive] 在 [Channels](channels.md) 章節中稍後涵蓋) 。
+協程建造者有兩種風格：自動的傳播 (丟出) 異常 ([launch][launch] 和 [actor][actor]) 或揭露它們給使用者 ([async][async] 和 [produce][produce]) 。前者視異常未處理，類似於 Java 的 `Thread.uncaughtExceptionHandler` ，而後者依賴使用者去消耗處理最終的異常，例如：透過 [await][Deferred.await] 或 [receive][ReceiveChannel.receive] ([produce][produce] 和 [receive][ReceiveChannel.receive] 在 [Channels](channels.md) 章節中稍後涵蓋) 函數去捕獲異常。
 
 It can be demonstrated by a simple example that creates new coroutines in [GlobalScope][GlobalScope]:
 
@@ -48,6 +48,8 @@ fun main() = runBlocking {
         println("Throwing exception from async")
         throw ArithmeticException() // Nothing is printed, relying on user to call await
     }
+    
+    // async 需要 await() ，處理最終的異常
     try {
         deferred.await()
         println("Unreached")
@@ -87,7 +89,7 @@ On JVM it is possible to redefine global exception handler for all coroutines by
 
 [CoroutineExceptionHandler][CoroutineExceptionHandler] is invoked only on exceptions which are not expected to be handled by the user, so registering it in [async][async] builder and the like of it has no effect.
 
-[CoroutineExceptionHandler][CoroutineExceptionHandler] 只在由使用者處理非預期的異常上調用，所以在 [async][async] 建造者註冊它並且它的相似之處沒有效果。
+[CoroutineExceptionHandler][CoroutineExceptionHandler] 只在由使用者處理非預期的異常上調用，所以在 [async][async] 建造者註冊它並且同樣於它沒有效果。
 
 ```kotlin
 import kotlinx.coroutines.*
