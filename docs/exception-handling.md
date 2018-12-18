@@ -172,7 +172,7 @@ fun main() = runBlocking {
         println("Parent is not cancelled")
     }
     
-    // 1.第一個協程中，等待第二協程完成才繼續執行
+    // 1.在第一個協程中，等待第二協程完成才繼續執行
     job.join()
 //sampleEnd    
 }
@@ -236,7 +236,7 @@ fun main() = runBlocking {
         }
     }
     
-    // 1.第一個協程中，等待第二協程完成才繼續執行
+    // 1.在第一個協程中，等待第二協程完成才繼續執行
     job.join()
 //sampleEnd    
 }
