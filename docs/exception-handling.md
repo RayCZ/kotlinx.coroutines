@@ -207,7 +207,6 @@ import kotlinx.coroutines.*
 fun main() = runBlocking {
 //sampleStart
     
-    //
     val handler = CoroutineExceptionHandler { _, exception -> 
         println("Caught $exception") 
     }
