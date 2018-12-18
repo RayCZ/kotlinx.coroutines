@@ -33,25 +33,26 @@ It can be demonstrated by a simple example that creates new coroutines in [Globa
 ```kotlin
 import kotlinx.coroutines.*
 
+// 第一個協程
 fun main() = runBlocking {
     
-    // GlobalScope 發射協程並在之中丟出異常
+    // 2.第二個協程，GlobalScope 發射協程並在之中丟出異常
     val job = GlobalScope.launch {
         println("Throwing exception from launch")
         throw IndexOutOfBoundsException() // Will be printed to the console by Thread.defaultUncaughtExceptionHandler
     }
     
-    // 等待 lanch 處理完回到協程
+    // 1.等待第二個協程完成，完成後才繼續
     job.join()
     println("Joined failed job")
     
-    // GlobalScope 發射異步協程，等待使用者調用 await 時捕獲異常
+    // 3.第三個協程，GlobalScope 發射異步協程，等待使用者調用 await 時捕獲異常
     val deferred = GlobalScope.async {
         println("Throwing exception from async")
         throw ArithmeticException() // Nothing is printed, relying on user to call await
     }
     
-    // async 需要 await() ，處理最終的異常
+    // 4.async 需要 await() ，處理最終的異常
     try {
         deferred.await()
         println("Unreached")
@@ -104,15 +105,17 @@ fun main() = runBlocking {
         println("Caught $exception") 
     }
     
-    // 協程發射時順便帶入
+    // 協程發射時順便帶入，丟出 AssertionError
     val job = GlobalScope.launch(handler) {
         throw AssertionError()
     }
     
-    // 協程發射時順便帶入
+    // 協程發射時順便帶入，丟出 ArithmeticException ，由於沒有呼 await 所以都不會執行
     val deferred = GlobalScope.async(handler) {
         throw ArithmeticException() // Nothing will be printed, relying on user to call deferred.await()
     }
+    
+    // 等待所有協程完成
     joinAll(job, deferred)
 //sampleEnd    
 }
@@ -157,7 +160,7 @@ fun main() = runBlocking {
             }
         }
         
-        // 2.第二協程讓出協程執行權，讓第三協程先執行待等
+        // 2.第二協程讓出協程執行權，讓第三協程先執行等待
         yield()
         println("Cancelling child")
         
@@ -258,7 +261,7 @@ Caught java.lang.ArithmeticException
 
 ### Exceptions aggregation
 
-Exceptions aggregation ：異常的聚集，表示當發生多異常會以那個異常處理
+Exceptions aggregation ：異常的聚集，表示當發生多個異常，以那個異常處理
 
 What happens if multiple children of a coroutine throw an exception? The general rule is "the first exception wins", so the first thrown exception is exposed to the handler. But that may cause lost exceptions, for example if coroutine throws an exception in its `finally` block. So, additional exceptions are suppressed. 
 
@@ -339,14 +342,13 @@ fun main() = runBlocking {
     // 造成外部中止
     val job = GlobalScope.launch(handler) {
         
-        // 以內層方式創建協程，但發生異常，還是會一層一層的丟出來 (解開)
         // 造成外部中止
         val inner = launch {
             
             // 造成外部中止
             launch {
                 
-                // 內部丟出異常
+                // 以內層方式創建協程，但發生異常，還是會一層一層的丟出來 (解開)
                 launch {
                     throw IOException()
                 }
@@ -381,22 +383,27 @@ Caught original java.io.IOException
 
 ## Supervision
 
-As we have studied before, cancellation is a bidirectional relationship propagating through the whole
-coroutines hierarchy. But what if unidirectional cancellation is required? 
+Supervision ：監督
 
-Good example of such requirement can be a UI component with the job defined in its scope. If any of UI's child task
-has failed, it is not always necessary to cancel (effectively kill) the whole UI component,
-but if UI component is destroyed (and its job is cancelled), then it is necessary to fail all children jobs as their result is no longer required.
+As we have studied before, cancellation is a bidirectional relationship propagating through the whole coroutines hierarchy. But what if unidirectional cancellation is required? 
 
-Another example is a server process that spawns several children jobs and needs to _supervise_
-their execution, tracking their failures and restarting just those children jobs that had failed.
+如我們之前已研究的，取消是透過整個的協程階層雙向關係的傳播。但如果需要單向傳播怎麼辦？
+
+Good example of such requirement can be a UI component with the job defined in its scope. If any of UI's child task has failed, it is not always necessary to cancel (effectively kill) the whole UI component, but if UI component is destroyed (and its job is cancelled), then it is necessary to fail all children jobs as their result is no longer required.
+
+這種需求的良好例子可以在它的範圍中定義 Job 的 UI 元件。如果任何 UI 的子任務已失敗，取消 (有效的殺死) 整個 UI 元件不總是需要的，但如果 UI 元件被銷毀 (並且它的 Job 被取消) ，接著所有子 Job 失敗是必須的，因為它們的結果不再需要。
+
+Another example is a server process that spawns several children jobs and needs to _supervise_ their execution, tracking their failures and restarting just those children jobs that had failed.
+
+另一個例子是伺服器進程，它產生幾個後代 Job ，並且需要監督它們的執行、追蹤它們的失敗，並且重新啟動那些已失敗的子 Job 。
 
 ### Supervision job
 
-For these purposes [SupervisorJob][SupervisorJob()] can be used. It is similar to a regular [Job][Job()] with the only exception that cancellation is propagated
-only downwards. It is easy to demonstrate with an example:
+Supervision job ：監督工作的 API
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+For these purposes [SupervisorJob][SupervisorJob()] can be used. It is similar to a regular [Job][Job()] with the only exception that cancellation is propagated only downwards. It is easy to demonstrate with an example:
+
+對於這些目的，可以使用 [SupervisorJob][SupervisorJob()] 。它類似於常規的 [Job][Job()] ，而唯一的例外，取消只向下傳播。透過一個例子很容易證明：
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -404,11 +411,14 @@ import kotlinx.coroutines.*
 fun main() = runBlocking {
     val supervisor = SupervisorJob()
     with(CoroutineScope(coroutineContext + supervisor)) {
-        // launch the first child -- its exception is ignored for this example (don't do this in practice!)
+        
+        // launch the first child 
+        // -- its exception is ignored for this example (don't do this in practice!)
         val firstChild = launch(CoroutineExceptionHandler { _, _ ->  }) {
             println("First child is failing")
             throw AssertionError("First child is cancelled")
         }
+        
         // launch the second child
         val secondChild = launch {
             firstChild.join()
@@ -430,11 +440,13 @@ fun main() = runBlocking {
 }
 ```
 
-</div>
-
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-supervision-01.kt)
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-supervision-01.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-supervision-01.kt)獲取完整的代碼
 
 The output of this code is:
+
+這些代碼的輸出是：
 
 ```text
 First child is failing
@@ -442,8 +454,6 @@ First child is cancelled: true, but second one is still active
 Cancelling supervisor
 Second child is cancelled because supervisor is cancelled
 ```
-<!--- TEST-->
-
 
 ### Supervision scope
 
