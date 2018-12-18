@@ -259,9 +259,15 @@ Caught java.lang.ArithmeticException
 
 ### Exceptions aggregation
 
+Exceptions aggregation ：異常的聚集，表示當發生多異常會以那個異常處理
+
 What happens if multiple children of a coroutine throw an exception? The general rule is "the first exception wins", so the first thrown exception is exposed to the handler. But that may cause lost exceptions, for example if coroutine throws an exception in its `finally` block. So, additional exceptions are suppressed. 
 
-> One of the solutions would have been to report each exception separately, but then [Deferred.await] should have had the same mechanism to avoid behavioural inconsistency and this would cause implementation details of a coroutines (whether it had delegated parts of its work to its children or not) to leak to its exception handler.
+如果一個協程的多個子協程丟出異常會發生什麼事？一般規則是 "第一個異常獲勝" ，所以第一個丟出異常是揭露給處理器。但這樣可能導致遺失異常，例如，如果協程在它的 `final` 區域中丟出異常。所以，額外異常被抑制了。
+
+> One of the solutions would have been to report each exception separately, but then [Deferred.await][Deferred.await] should have had the same mechanism to avoid behavioural inconsistency and this would cause implementation details of a coroutines (whether it had delegated parts of its work to its children or not) to leak to its exception handler.
+>
+> 已有的解決方式之一，是單獨報告每個異常，而接著 [Deferred.await][Deferred.await] 應該有相同的機制來避免行為不一致，並且這會導致協程的實作細節 (是否已委外它部分的工作給它的子協程或否) 會洩漏給它的異常處理器。
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -271,7 +277,11 @@ fun main() = runBlocking {
     val handler = CoroutineExceptionHandler { _, exception ->
         println("Caught $exception with suppressed ${exception.suppressed.contentToString()}")
     }
+    
+    // 設置協程處理器
     val job = GlobalScope.launch(handler) {
+        
+        // 2.第一個協程先等待，並讓第二個協程丟出錯誤，中止整個協程
         launch {
             try {
                 delay(Long.MAX_VALUE)
@@ -279,29 +289,43 @@ fun main() = runBlocking {
                 throw ArithmeticException()
             }
         }
+        
+        // 1.第二個協程先丟出 IOException ，造成第一個協程中止也丟出 throw ArithmeticException()
         launch {
             delay(100)
             throw IOException()
         }
         delay(Long.MAX_VALUE)
     }
+    
+    // 等待子協程完成
     job.join()  
 }
 ```
 
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-exceptions-05.kt)
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-exceptions-05.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-exceptions-05.kt)獲取完整的代碼
 
 > Note: This above code will work properly only on JDK7+ that supports `suppressed` exceptions
+>
+> 注意：以上代碼只適用於支援 `suppressed` 異常的 JDK7+ 。
 
 The output of this code is:
+
+這些代碼的輸出是：
 
 ```text
 Caught java.io.IOException with suppressed [java.lang.ArithmeticException]
 ```
 
 > Note, this mechanism currently works only on Java version 1.7+. Limitation on JS and Native is temporary and will be fixed in the future.
+>
+> 注意：目前這種機制只適用於 Java 版本 1.7+ 。對於 JS 和 Native 版本暫時限制，並且將在未來修正。
 
 Cancellation exceptions are transparent and unwrapped by default:
+
+取消異常是透明的並且根據預設解開：
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -312,9 +336,18 @@ fun main() = runBlocking {
     val handler = CoroutineExceptionHandler { _, exception ->
         println("Caught original $exception")
     }
+    
+    // 造成外部中止
     val job = GlobalScope.launch(handler) {
+        
+        // 以內層方式創建協程，但發生異常，還是會一層一層的丟出來 (解開)
+        // 造成外部中止
         val inner = launch {
+            
+            // 造成外部中止
             launch {
+                
+                // 內部丟出異常
                 launch {
                     throw IOException()
                 }
@@ -324,6 +357,8 @@ fun main() = runBlocking {
             inner.join()
         } catch (e: CancellationException) {
             println("Rethrowing CancellationException with original cause")
+            
+            // 重丟異常，但取得的還是 IOException ，而不是 CancellationException
             throw e
         }
     }
@@ -332,9 +367,13 @@ fun main() = runBlocking {
 }
 ```
 
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-exceptions-06.kt)
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-exceptions-06.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-exceptions-06.kt)獲取完整的代碼
 
 The output of this code is:
+
+這些代碼的輸出是：
 
 ```text
 Rethrowing CancellationException with original cause

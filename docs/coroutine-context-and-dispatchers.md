@@ -508,7 +508,7 @@ Cancellation via explicit job ：經由明確的 job 物件取消
 
 Let us put our knowledge about contexts, children and jobs together. Assume that our application has an object with a lifecycle, but that object is not a coroutine. For example, we are writing an Android application and launch various coroutines in the context of an Android activity to perform asynchronous operations to fetch and update data, do animations, etc. All of these coroutines must be cancelled when activity is destroyed to avoid memory leaks. 
 
-讓我們把有關環境、子協程、[Job][Job] 的知識放一起。假設我們的應用程式有一個生命週期的物件，但該物件不是協程。例如，我們正在寫 Android 應用程式並在 Android Activity 的環境中發射各種協程，去執行異步的操作去獲取或更新資料、做動畫等等。當 Activity 被銷毀時，這些所有的協程必須被取消，來避免記憶體溢漏。
+讓我們把有關環境、子協程、[Job][Job] 的知識放一起。假設我們的應用程式有一個生命週期的物件，但該物件不是協程。例如，我們正在寫 Android 應用程式並在 Android Activity 的環境中發射各種協程，去執行異步的操作去獲取或更新資料、做動畫等等。當 Activity 被銷毀時，這些所有的協程必須被取消，來避免記憶體洩漏。
 
 We manage a lifecycle of our coroutines by creating an instance of [Job][Job] that is tied to the lifecycle of our activity. A job instance is created using [Job()][Job()] factory function when activity is created and it is cancelled when an activity is destroyed like this:
 
