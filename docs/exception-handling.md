@@ -16,7 +16,7 @@ Exception handling ：異常處理
 
 This section covers exception handling and cancellation on exceptions. We already know that cancelled coroutine throws [CancellationException][CancellationException] in suspension points and that it is ignored by coroutines machinery. But what happens if an exception is thrown during cancellation or multiple children of the same coroutine throw an exception?
 
-這個章節涵蓋異常處理和在異常中取消。我們已經知道在在懸掛點中取消協程會丟出 [CancellationException][CancellationException] 並且被協程機制忽略。但是如果異常在取消期間丟出異常，或相同協程的多個子協程丟出異常會發生什麼事？
+這個章節涵蓋異常處理和在異常中取消。我們已經知道在懸掛點中取消協程會丟出 [CancellationException][CancellationException] 並且被協程機制忽略。但是如果異常在取消期間丟出異常，或相同協程的多個子協程丟出異常會發生什麼事？
 
 ### Exception propagation
 
@@ -132,20 +132,23 @@ Caught java.lang.AssertionError
 
 ### Cancellation and exceptions
 
-Cancellation is tightly bound with exceptions. Coroutines internally use `CancellationException` for cancellation, these
-exceptions are ignored by all handlers, so they should be used only as the source of additional debug information, which can
-be obtained by `catch` block.
-When a coroutine is cancelled using [Job.cancel] without a cause, it terminates, but it does not cancel its parent.
-Cancelling without cause is a mechanism for parent to cancel its children without cancelling itself. 
+Cancellation and exceptions ：取消和異常
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+Cancellation is tightly bound with exceptions. Coroutines internally use `CancellationException` for cancellation, these exceptions are ignored by all handlers, so they should be used only as the source of additional debug information, which can be obtained by `catch` block. When a coroutine is cancelled using [Job.cancel][Job.cancel] without a cause, it terminates, but it does not cancel its parent. Cancelling without cause is a mechanism for parent to cancel its children without cancelling itself. 
+
+取消與異常緊密相關。協程內部使用 `CancellationException` 用於取消，所有處理器忽略這些異常，所以它們應用只能被用為額外除錯資訊的來源，透過 `catch` 區域獲取這些資訊。當沒有理由使用 [Job.cancel][Job.cancel] 取消協程時，它被終止，但它不會取消它的父協程。沒有理由取消是一種機制，用於父協程去取它的子協程，父協程無法取消本身。
 
 ```kotlin
 import kotlinx.coroutines.*
 
+// 第一個協程 runBlocking
 fun main() = runBlocking {
 //sampleStart
+    
+    // 第二個協程
     val job = launch {
+        
+        // 3.第三個協程持續的等待
         val child = launch {
             try {
                 delay(Long.MAX_VALUE)
@@ -153,23 +156,35 @@ fun main() = runBlocking {
                 println("Child is cancelled")
             }
         }
+        
+        // 2.第二協程讓出協程執行權，讓第三協程先執行待等
         yield()
         println("Cancelling child")
+        
+        // 4.第二協程拿回執行權，取消第三協程持續等待，並發生 CancellationException
         child.cancel()
+        
+        // 5.等待第三協程處理完訊息才繼續執行
         child.join()
+        
+        // 6.第二協程讓出執行權，但沒有人執行，又繼續執行
         yield()
         println("Parent is not cancelled")
     }
+    
+    // 1.第一個協程中，等待第二協程完成才繼續執行
     job.join()
 //sampleEnd    
 }
 ```
 
-</div>
-
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-exceptions-03.kt)
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-exceptions-03.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-exceptions-03.kt)獲取完整的代碼
 
 The output of this code is:
+
+這些代碼的輸出是：
 
 ```text
 Cancelling child
@@ -177,30 +192,30 @@ Child is cancelled
 Parent is not cancelled
 ```
 
-<!--- TEST-->
+If a coroutine encounters exception other than `CancellationException`, it cancels its parent with that exception. This behaviour cannot be overridden and is used to provide stable coroutines hierarchies for [structured concurrency](composing-suspending-functions.md#structured-concurrency-with-async) which do not depend on [CoroutineExceptionHandler][CoroutineExceptionHandler] implementation. The original exception is handled by the parent when all its children terminate.
 
-If a coroutine encounters exception other than `CancellationException`, it cancels its parent with that exception. 
-This behaviour cannot be overridden and is used to provide stable coroutines hierarchies for
-[structured concurrency](https://github.com/Kotlin/kotlinx.coroutines/blob/master/docs/composing-suspending-functions.md#structured-concurrency-with-async) which do not depend on 
-[CoroutineExceptionHandler] implementation.
-The original exception is handled by the parent when all its children terminate.
+如果協程遇到除了 `CancellationException` 之外的異常，它取消有異常的父協程。這個行為無法被覆寫並且用於[結構化並發](composing-suspending-functions.md#structured-concurrency-with-async)提供穩定的協程階層。它不依賴 [CoroutineExceptionHandler][CoroutineExceptionHandler] 實作。當所有它的子協程中止時，父協程處理原始異常。
 
-> This also a reason why, in these examples, [CoroutineExceptionHandler] is always installed to a coroutine
-that is created in [GlobalScope]. It does not make sense to install an exception handler to a coroutine that
-is launched in the scope of the main [runBlocking], since the main coroutine is going to be always cancelled
-when its child completes with exception despite the installed handler. 
-
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+> This also a reason why, in these examples, [CoroutineExceptionHandler][CoroutineExceptionHandler] is always installed to a coroutine that is created in [GlobalScope][GlobalScope]. It does not make sense to install an exception handler to a coroutine that is launched in the scope of the main [runBlocking][runBlocking], since the main coroutine is going to be always cancelled when its child completes with exception despite the installed handler. 
+>
+> 這也是為什麼在這些例子中，[CoroutineExceptionHandler][CoroutineExceptionHandler] 總是被設置到在 [GlobalScope][GlobalScope] 中創建的協程。設置一個異常處理器給在主要 [runBlocking][runBlocking] 協程範圍中發射的協程是無意義的，當它的子協程有異常完成時，儘管已設置處理器，主要協程將總是被取消。
 
 ```kotlin
 import kotlinx.coroutines.*
 
+// 第一個協程
 fun main() = runBlocking {
 //sampleStart
+    
+    //
     val handler = CoroutineExceptionHandler { _, exception -> 
         println("Caught $exception") 
     }
+    
+    // 第二個協程
     val job = GlobalScope.launch(handler) {
+        
+        // 2.第三個協程，持續的等待
         launch { // the first child
             try {
                 delay(Long.MAX_VALUE)
@@ -212,22 +227,28 @@ fun main() = runBlocking {
                 }
             }
         }
+        
+        // 3.第四個協程，丟出 ArithmeticException 異常，而不是 CancellationException 會使整個協程中止
         launch { // the second child
             delay(10)
             println("Second child throws an exception")
             throw ArithmeticException()
         }
     }
+    
+    // 1.第一個協程中，等待第二協程完成才繼續執行
     job.join()
 //sampleEnd    
 }
 ```
 
-</div>
-
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-exceptions-04.kt)
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-exceptions-04.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-exceptions-04.kt)獲取完整的代碼
 
 The output of this code is:
+
+這些代碼的輸出是：
 
 ```text
 Second child throws an exception
@@ -235,7 +256,6 @@ Children are cancelled, but exception is not handled until all children terminat
 The first child finished its non cancellable block
 Caught java.lang.ArithmeticException
 ```
-<!--- TEST-->
 
 ### Exceptions aggregation
 
