@@ -259,23 +259,9 @@ Caught java.lang.ArithmeticException
 
 ### Exceptions aggregation
 
-What happens if multiple children of a coroutine throw an exception?
-The general rule is "the first exception wins", so the first thrown exception is exposed to the handler.
-But that may cause lost exceptions, for example if coroutine throws an exception in its `finally` block.
-So, additional exceptions are suppressed. 
+What happens if multiple children of a coroutine throw an exception? The general rule is "the first exception wins", so the first thrown exception is exposed to the handler. But that may cause lost exceptions, for example if coroutine throws an exception in its `finally` block. So, additional exceptions are suppressed. 
 
-> One of the solutions would have been to report each exception separately, 
-but then [Deferred.await] should have had the same mechanism to avoid behavioural inconsistency and this 
-would cause implementation details of a coroutines (whether it had delegated parts of its work to its children or not)
-to leak to its exception handler.
-
-
-<!--- INCLUDE
-
-import kotlinx.coroutines.exceptions.*
--->
-
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+> One of the solutions would have been to report each exception separately, but then [Deferred.await] should have had the same mechanism to avoid behavioural inconsistency and this would cause implementation details of a coroutines (whether it had delegated parts of its work to its children or not) to leak to its exception handler.
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -303,8 +289,6 @@ fun main() = runBlocking {
 }
 ```
 
-</div>
-
 > You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-exceptions-05.kt)
 
 > Note: This above code will work properly only on JDK7+ that supports `suppressed` exceptions
@@ -315,14 +299,9 @@ The output of this code is:
 Caught java.io.IOException with suppressed [java.lang.ArithmeticException]
 ```
 
-<!--- TEST-->
-
-> Note, this mechanism currently works only on Java version 1.7+. 
-Limitation on JS and Native is temporary and will be fixed in the future.
+> Note, this mechanism currently works only on Java version 1.7+. Limitation on JS and Native is temporary and will be fixed in the future.
 
 Cancellation exceptions are transparent and unwrapped by default:
-
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -353,8 +332,6 @@ fun main() = runBlocking {
 }
 ```
 
-</div>
-
 > You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-exceptions-06.kt)
 
 The output of this code is:
@@ -363,7 +340,6 @@ The output of this code is:
 Rethrowing CancellationException with original cause
 Caught original java.io.IOException
 ```
-<!--- TEST-->
 
 ## Supervision
 
