@@ -399,7 +399,7 @@ Another example is a server process that spawns several children jobs and needs 
 
 ### Supervision job
 
-Supervision job ：監督工作的 API
+Supervision job ：SupervisorJob API 的使用
 
 For these purposes [SupervisorJob][SupervisorJob()] can be used. It is similar to a regular [Job][Job()] with the only exception that cancellation is propagated only downwards. It is easy to demonstrate with an example:
 
@@ -457,11 +457,11 @@ Second child is cancelled because supervisor is cancelled
 
 ### Supervision scope
 
-For *scoped* concurrency [supervisorScope] can be used instead of [coroutineScope] for the same purpose. It propagates cancellation 
-only in one direction and cancels all children only if it has failed itself. It also waits for all children before completion
-just like [coroutineScope] does.
+Supervision scope ：supervisorScope API 的使用
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+For *scoped* concurrency [supervisorScope][supervisorScope] can be used instead of [coroutineScope][coroutineScope] for the same purpose. It propagates cancellation only in one direction and cancels all children only if it has failed itself. It also waits for all children before completion just like [coroutineScope][coroutineScope] does.
+
+對於範圍的並發，可以使用 [supervisorScope][supervisorScope] 代替 [coroutineScope][coroutineScope] 用於相同目的。它只在一個方向上傳播取消，除非它本身已失敗時取消所有子協程。它也像 [coroutineScope][coroutineScope] 運作在完成之前等待所有子協程。
 
 ```kotlin
 import kotlin.coroutines.*
@@ -489,11 +489,13 @@ fun main() = runBlocking {
 }
 ```
 
-</div>
-
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-supervision-02.kt)
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-supervision-02.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-supervision-02.kt)獲取完整的代碼
 
 The output of this code is:
+
+這些代碼的輸出是：
 
 ```text
 Child is sleeping
@@ -501,15 +503,10 @@ Throwing exception from scope
 Child is cancelled
 Caught assertion error
 ```
-<!--- TEST-->
 
 ### Exceptions in supervised coroutines
 
-Another crucial difference between regular and supervisor jobs is exception handling.
-Every child should handle its exceptions by itself via exception handling mechanisms.
-This difference comes from the fact that child's failure is not propagated to the parent.
-
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+Another crucial difference between regular and supervisor jobs is exception handling. Every child should handle its exceptions by itself via exception handling mechanisms. This difference comes from the fact that child's failure is not propagated to the parent.
 
 ```kotlin
 import kotlin.coroutines.*
@@ -530,8 +527,6 @@ fun main() = runBlocking {
 }
 ```
 
-</div>
-
 > You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-supervision-03.kt)
 
 The output of this code is:
@@ -542,7 +537,6 @@ Child throws an exception
 Caught java.lang.AssertionError
 Scope is completed
 ```
-<!--- TEST-->
 
 <!--- MODULE kotlinx-coroutines-core -->
 <!--- INDEX kotlinx.coroutines -->
