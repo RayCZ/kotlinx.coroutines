@@ -1,25 +1,5 @@
-<!--- INCLUDE .*/example-([a-z]+)-([0-9a-z]+)\.kt 
-/*
- * Copyright 2016-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
-// This file was automatically generated from coroutines-guide.md by Knit tool. Do not edit.
-package kotlinx.coroutines.guide.$$1$$2
--->
-<!--- KNIT     ../core/kotlinx-coroutines-core/test/guide/.*\.kt -->
-<!--- TEST_OUT ../core/kotlinx-coroutines-core/test/guide/test/SelectGuideTest.kt
-// This file was automatically generated from coroutines-guide.md by Knit tool. Do not edit.
-package kotlinx.coroutines.guide.test
-
-import org.junit.Test
-
-class SelectGuideTest {
---> 
-
 
 ## Table of contents
-
-<!--- TOC -->
 
 * [Select expression (experimental)](#select-expression-experimental)
   * [Selecting from channels](#selecting-from-channels)
@@ -28,24 +8,28 @@ class SelectGuideTest {
   * [Selecting deferred values](#selecting-deferred-values)
   * [Switch over a channel of deferred values](#switch-over-a-channel-of-deferred-values)
 
-<!--- END_TOC -->
-
-
-
 ## Select expression (experimental)
+
+Select expression (experimental) ： Select 表達式 (實驗性)
 
 Select expression makes it possible to await multiple suspending functions simultaneously and _select_
 the first one that becomes available.
 
+Select 表達式可以同時等待多個懸掛函數，並且選擇第一個可用的懸掛函數。
+
 > Select expressions are an experimental feature of `kotlinx.coroutines`. Their API is expected to 
-evolve in the upcoming updates of the `kotlinx.coroutines` library with potentially
-breaking changes.
+> evolve in the upcoming updates of the `kotlinx.coroutines` library with potentially
+> breaking changes.
+>
+> Select 表達式是 `kotlinx.coroutines` 的實驗性功能。他們的 API 預期在即將到來的 `kotlinx.coroutines` 函式庫更新中發展，可能會發生重大變化。
 
 ### Selecting from channels
 
+Selecting from channels ：從多個通道中選擇
+
 Let us have two producers of strings: `fizz` and `buzz`. The `fizz` produces "Fizz" string every 300 ms:
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+讓我們有兩個字串的生產者： `fizz` 和 `buzz` 。 `fizz` 每 0.3 秒產生 "Fizz" 字串：
 
 ```kotlin
 fun CoroutineScope.fizz() = produce<String> {
@@ -56,11 +40,9 @@ fun CoroutineScope.fizz() = produce<String> {
 }
 ```
 
-</div>
-
 And the `buzz` produces "Buzz!" string every 500 ms:
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+而 `buzz` 每 0.5 秒產生 "Buzz!" ：
 
 ```kotlin
 fun CoroutineScope.buzz() = produce<String> {
@@ -71,13 +53,9 @@ fun CoroutineScope.buzz() = produce<String> {
 }
 ```
 
-</div>
+Using [receive][ReceiveChannel.receive] suspending function we can receive _either_ from one channel or the other. But [select][select] expression allows us to receive from _both_ simultaneously using its [onReceive][ReceiveChannel.onReceive] clauses:
 
-Using [receive][ReceiveChannel.receive] suspending function we can receive _either_ from one channel or the
-other. But [select] expression allows us to receive from _both_ simultaneously using its
-[onReceive][ReceiveChannel.onReceive] clauses:
-
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+使用 [receive][ReceiveChannel.receive] 懸掛函數，我們可以接收來自一個通道或其他的通道。但 [select][select] 表達式允許我們使用它的 [onReceive][ReceiveChannel.onReceive] 子句，去同時去接收來自兩者。
 
 ```kotlin
 suspend fun selectFizzBuzz(fizz: ReceiveChannel<String>, buzz: ReceiveChannel<String>) {
@@ -92,19 +70,16 @@ suspend fun selectFizzBuzz(fizz: ReceiveChannel<String>, buzz: ReceiveChannel<St
 }
 ```
 
-</div>
-
 Let us run it all seven times:
 
-<!--- CLEAR -->
-
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+讓我們運行它所有七次：
 
 ```kotlin
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.selects.*
 
+// 生產者，產生 "Fizz" 字串，回傳 ReceiveChannel 類型
 fun CoroutineScope.fizz() = produce<String> {
     while (true) { // sends "Fizz" every 300 ms
         delay(300)
@@ -112,6 +87,7 @@ fun CoroutineScope.fizz() = produce<String> {
     }
 }
 
+// 生產者，產生 "Buzz!" 字串，回傳 ReceiveChannel 類型
 fun CoroutineScope.buzz() = produce<String> {
     while (true) { // sends "Buzz!" every 500 ms
         delay(500)
@@ -119,11 +95,18 @@ fun CoroutineScope.buzz() = produce<String> {
     }
 }
 
+// 兩個生產者在 select 表達式中做處理，類似 when 、 if
 suspend fun selectFizzBuzz(fizz: ReceiveChannel<String>, buzz: ReceiveChannel<String>) {
+    
+    // select 表達式
     select<Unit> { // <Unit> means that this select expression does not produce any result 
+        
+        // 對應 fizz 生產者
         fizz.onReceive { value ->  // this is the first select clause
             println("fizz -> '$value'")
         }
+        
+        // 對應 buzz 生產者
         buzz.onReceive { value ->  // this is the second select clause
             println("buzz -> '$value'")
         }
@@ -137,16 +120,20 @@ fun main() = runBlocking<Unit> {
     repeat(7) {
         selectFizzBuzz(fizz, buzz)
     }
+    
+    // 環境直接取消所有的子協程
     coroutineContext.cancelChildren() // cancel fizz & buzz coroutines
 //sampleEnd        
 }
 ```
 
-</div>
-
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-select-01.kt)
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-select-01.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-select-01.kt)獲取完整的代碼
 
 The result of this code is: 
+
+這些代碼的結果是： 
 
 ```text
 fizz -> 'Fizz'
@@ -158,16 +145,13 @@ fizz -> 'Fizz'
 buzz -> 'Buzz!'
 ```
 
-<!--- TEST -->
-
 ### Selecting on close
 
-The [onReceive][ReceiveChannel.onReceive] clause in `select` fails when the channel is closed causing the corresponding
-`select` to throw an exception. We can use [onReceiveOrNull][ReceiveChannel.onReceiveOrNull] clause to perform a
-specific action when the channel is closed. The following example also shows that `select` is an expression that returns 
-the result of its selected clause:
+Selecting on close ：
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+The [onReceive][ReceiveChannel.onReceive] clause in `select` fails when the channel is closed causing the corresponding `select` to throw an exception. We can use [onReceiveOrNull][ReceiveChannel.onReceiveOrNull] clause to perform a specific action when the channel is closed. The following example also shows that `select` is an expression that returns the result of its selected clause:
+
+當通道被關閉時，在 `select` 中的 [onReceive][ReceiveChannel.onReceive] 子句失敗，造成對應的 `select` 丟出異常。當通道被關閉時，我們可以使用 [onReceiveOrNull][ReceiveChannel.onReceiveOrNull] 去執行動作。以下範例也顯示 `select` 表達式回傳它已選子句的結果。
 
 ```kotlin
 suspend fun selectAorB(a: ReceiveChannel<String>, b: ReceiveChannel<String>): String =
@@ -187,14 +171,9 @@ suspend fun selectAorB(a: ReceiveChannel<String>, b: ReceiveChannel<String>): St
     }
 ```
 
-</div>
+Let's use it with channel `a` that produces "Hello" string four times and channel `b` that produces "World" four times:
 
-Let's use it with channel `a` that produces "Hello" string four times and 
-channel `b` that produces "World" four times:
-
-<!--- CLEAR -->
-
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+讓我們使用 `select` 表達式配合通道 `a` 產生 "Hello" 字串 4 次，並且通道 `b` 產生 "world" 字串 4 次：
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -203,12 +182,16 @@ import kotlinx.coroutines.selects.*
 
 suspend fun selectAorB(a: ReceiveChannel<String>, b: ReceiveChannel<String>): String =
     select<String> {
+        
+        // a 關閉 value 值會 null 
         a.onReceiveOrNull { value -> 
             if (value == null) 
                 "Channel 'a' is closed" 
             else 
                 "a -> '$value'"
         }
+        
+         // b 關閉 value 值會 null
         b.onReceiveOrNull { value -> 
             if (value == null) 
                 "Channel 'b' is closed"
@@ -219,12 +202,18 @@ suspend fun selectAorB(a: ReceiveChannel<String>, b: ReceiveChannel<String>): St
     
 fun main() = runBlocking<Unit> {
 //sampleStart
+    
+    // 一個生產者協程，重覆產生 4 次
     val a = produce<String> {
         repeat(4) { send("Hello $it") }
     }
+    
+    // 一個生產者協程，重覆產生 4 次
     val b = produce<String> {
         repeat(4) { send("World $it") }
     }
+    
+    // 重覆 8 次
     repeat(8) { // print first eight results
         println(selectAorB(a, b))
     }
@@ -233,11 +222,13 @@ fun main() = runBlocking<Unit> {
 }    
 ```
 
-</div>
-
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-select-02.kt)
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-select-02.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-select-02.kt)獲取完整的代碼
 
 The result of this code is quite interesting, so we'll analyze it in mode detail:
+
+這些代碼的結果相當有趣，所以我們將在模式細節中分析它：
 
 ```text
 a -> 'Hello 0'
@@ -250,17 +241,17 @@ Channel 'a' is closed
 Channel 'a' is closed
 ```
 
-<!--- TEST -->
-
 There are couple of observations to make out of it. 
 
-First of all, `select` is _biased_ to the first clause. When several clauses are selectable at the same time, 
-the first one among them gets selected. Here, both channels are constantly producing strings, so `a` channel,
-being the first clause in select, wins. However, because we are using unbuffered channel, the `a` gets suspended from
-time to time on its [send][SendChannel.send] invocation and gives a chance for `b` to send, too.
+有幾點觀察去理解它。
 
-The second observation, is that [onReceiveOrNull][ReceiveChannel.onReceiveOrNull] gets immediately selected when the 
-channel is already closed.
+First of all, `select` is _biased_ to the first clause. When several clauses are selectable at the same time, the first one among them gets selected. Here, both channels are constantly producing strings, so `a` channel, being the first clause in select, wins. However, because we are using unbuffered channel, the `a` gets suspended from time to time on its [send][SendChannel.send] invocation and gives a chance for `b` to send, too.
+
+首先， `select` 是偏向第一個子句。當在同時間可選多個子句時，在它們之中的第一個被選中。這裡，兩個生產者通道不斷的產生字串，所以 `a` 通道，在 `select` 中成為第一個子句獲勝。然而，因為我們使用未緩衝的通道， `a` 生產者通道在它的 [send][SendChannel.send] 有時被懸掛，且對 `b` 也有機會去發送。
+
+The second observation, is that [onReceiveOrNull][ReceiveChannel.onReceiveOrNull] gets immediately selected when the channel is already closed.
+
+第二個觀察，當通道已經被關閉， [onReceiveOrNull][ReceiveChannel.onReceiveOrNull] 中立刻被選中為 null 。
 
 ### Selecting to send
 
@@ -324,11 +315,11 @@ fun main() = runBlocking<Unit> {
 ```
 
 </div> 
- 
+
 > You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-select-03.kt)
-  
+
 So let us see what happens:
- 
+
 ```text
 Consuming 1
 Side channel has 2
