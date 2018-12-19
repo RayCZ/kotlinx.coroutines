@@ -12,11 +12,11 @@
 
 ## Exception handling
 
-Exception handling ：異常處理
+Exception handling ：異常 (例外) 處理
 
 This section covers exception handling and cancellation on exceptions. We already know that cancelled coroutine throws [CancellationException][CancellationException] in suspension points and that it is ignored by coroutines machinery. But what happens if an exception is thrown during cancellation or multiple children of the same coroutine throw an exception?
 
-這個章節涵蓋異常處理和在異常中取消。我們已經知道在懸掛點中取消協程會丟出 [CancellationException][CancellationException] 並且被協程機制忽略。但是如果異常在取消期間丟出異常，或相同協程的多個子協程丟出異常會發生什麼事？
+這個章節涵蓋在異常中取消和異常 (例外) 處理。我們已經知道在懸掛點中取消協程會丟出 [CancellationException][CancellationException] 並且被協程機制忽略。但是如果異常在取消期間丟出異常，或相同協程的多個子協程丟出異常會發生什麼事？
 
 ### Exception propagation
 
@@ -139,7 +139,7 @@ Cancellation and exceptions ：取消和異常
 
 Cancellation is tightly bound with exceptions. Coroutines internally use `CancellationException` for cancellation, these exceptions are ignored by all handlers, so they should be used only as the source of additional debug information, which can be obtained by `catch` block. When a coroutine is cancelled using [Job.cancel][Job.cancel] without a cause, it terminates, but it does not cancel its parent. Cancelling without cause is a mechanism for parent to cancel its children without cancelling itself. 
 
-取消與異常緊密相關。協程內部使用 `CancellationException` 用於取消，所有處理器忽略這些異常，所以它們應用只能被用為額外除錯資訊的來源，透過 `catch` 區域獲取這些資訊。當沒有理由使用 [Job.cancel][Job.cancel] 取消協程時，它被終止，但它不會取消它的父協程。沒有理由取消是一種機制，用於父協程去取它的子協程，父協程無法取消本身。
+取消與異常緊密相關。協程內部使用 `CancellationException` 用於取消，所有處理器忽略這些異常，所以它們應用只能被用為額外除錯資訊的來源，透過 `catch` 區域獲取這些資訊。當沒有理由使用 [Job.cancel][Job.cancel] 取消協程時，它被終止，但它不會取消它的父協程。沒有理由取消是一種機制，用於父協程去取消它的子協程，父協程無法取消本身。
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -214,7 +214,7 @@ fun main() = runBlocking {
         println("Caught $exception") 
     }
     
-    // 第二個協程
+    // 第二個協程，帶入異常處理器
     val job = GlobalScope.launch(handler) {
         
         // 2.第三個協程，持續的等待
@@ -295,7 +295,7 @@ fun main() = runBlocking {
             }
         }
         
-        // 1.第二個協程先丟出 IOException ，造成第一個協程中止也丟出 throw ArithmeticException()
+        // 1.第二個協程先丟出 IOException ，造成第一個協程取消中止也丟出 throw ArithmeticException()
         launch {
             delay(100)
             throw IOException()
@@ -380,7 +380,7 @@ Caught original java.io.IOException
 
 ## Supervision
 
-Supervision ：監督
+Supervision ：監督，單獨的處理每個協程的錯誤，不會造成整個協程環境壞掉
 
 As we have studied before, cancellation is a bidirectional relationship propagating through the whole coroutines hierarchy. But what if unidirectional cancellation is required? 
 
@@ -388,7 +388,7 @@ As we have studied before, cancellation is a bidirectional relationship propagat
 
 Good example of such requirement can be a UI component with the job defined in its scope. If any of UI's child task has failed, it is not always necessary to cancel (effectively kill) the whole UI component, but if UI component is destroyed (and its job is cancelled), then it is necessary to fail all children jobs as their result is no longer required.
 
-這種需求的良好例子可以在它的範圍中定義 Job 的 UI 元件。如果任何 UI 的子任務已失敗，取消 (有效的殺死) 整個 UI 元件不總是需要的，但如果 UI 元件被銷毀 (並且它的 Job 被取消) ，接著所有子 Job 失敗是必須的，因為它們的結果不再需要。
+這種需求的良好例子可以在監督的範圍中定義 Job 的 UI 元件。如果任何 UI 的子任務已失敗，取消 (有效的殺死) 整個 UI 元件不總是需要的，但如果 UI 元件被銷毀 (並且它的 Job 被取消) ，接著所有子 Job 失敗是必須的，因為它們的結果不再需要。
 
 Another example is a server process that spawns several children jobs and needs to _supervise_ their execution, tracking their failures and restarting just those children jobs that had failed.
 
@@ -396,7 +396,7 @@ Another example is a server process that spawns several children jobs and needs 
 
 ### Supervision job
 
-Supervision job ：SupervisorJob API 的使用
+Supervision job ：監督工作，各自處理協程的異常，不會影響到其他的協程， SupervisorJob API 的使用
 
 For these purposes [SupervisorJob][SupervisorJob()] can be used. It is similar to a regular [Job][Job()] with the only exception that cancellation is propagated only downwards. It is easy to demonstrate with an example:
 
@@ -406,6 +406,7 @@ For these purposes [SupervisorJob][SupervisorJob()] can be used. It is similar t
 import kotlinx.coroutines.*
 
 fun main() = runBlocking {
+    // SupervisorJob 配合一般的協程環境
     val supervisor = SupervisorJob()
     with(CoroutineScope(coroutineContext + supervisor)) {
         
@@ -458,7 +459,7 @@ Second child is cancelled because supervisor is cancelled
 
 ### Supervision scope
 
-Supervision scope ：supervisorScope API 的使用
+Supervision scope ：監督範圍，自定義監範圍，自己捕獲異常， supervisorScope API 的使用
 
 For *scoped* concurrency [supervisorScope][supervisorScope] can be used instead of [coroutineScope][coroutineScope] for the same purpose. It propagates cancellation only in one direction and cancels all children only if it has failed itself. It also waits for all children before completion just like [coroutineScope][coroutineScope] does.
 
@@ -473,6 +474,8 @@ fun main() = runBlocking {
     // 利用 supervisorScope 捕獲異常
     try {
         supervisorScope {
+            
+            // 因為丟出異常，會造成別的協程取消中止
             val child = launch {
                 try {
                     println("Child is sleeping")
@@ -511,17 +514,23 @@ Caught assertion error
 
 ### Exceptions in supervised coroutines
 
+Exceptions in supervised coroutines ：監督協程中的例外情況
+
 Another crucial difference between regular and supervisor jobs is exception handling. Every child should handle its exceptions by itself via exception handling mechanisms. This difference comes from the fact that child's failure is not propagated to the parent.
+
+在常規和監督者工作之間的另一個關鍵區別是異常處理。每個後代透過異常處理機制，單獨地處理它們的異常。這種差異來自後代的失敗不會傳播到父親。
 
 ```kotlin
 import kotlin.coroutines.*
 import kotlinx.coroutines.*
 
 fun main() = runBlocking {
+    // 建立異常處理器
     val handler = CoroutineExceptionHandler { _, exception -> 
         println("Caught $exception") 
     }
-    supervisorScope {
+    
+    supervisorScope { // 建立 supervisorScope 在裡面各個協程的錯誤各自處理
         val child = launch(handler) {
             println("Child throws an exception")
             throw AssertionError()
@@ -532,9 +541,13 @@ fun main() = runBlocking {
 }
 ```
 
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-supervision-03.kt)
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-supervision-03.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-supervision-03.kt)獲取完整的代碼
 
 The output of this code is:
+
+這些代碼的輸出是：
 
 ```text
 Scope is completing
