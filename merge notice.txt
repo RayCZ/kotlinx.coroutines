@@ -1,0 +1,3 @@
+﻿Commit: a53565683c590d33b88d1de930ac9d6955ecae88 [a535656]
+
+利用這個 commit 與最新的 master commit 比較出異動的部分，更改 ray branch 
