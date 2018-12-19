@@ -265,7 +265,7 @@ Exceptions aggregation ：異常的聚集，表示當發生多個異常，以那
 
 What happens if multiple children of a coroutine throw an exception? The general rule is "the first exception wins", so the first thrown exception is exposed to the handler. But that may cause lost exceptions, for example if coroutine throws an exception in its `finally` block. So, additional exceptions are suppressed. 
 
-如果一個協程的多個子協程丟出異常會發生什麼事？一般規則是 "第一個異常獲勝" ，所以第一個丟出異常是揭露給處理器。但這樣可能導致遺失異常，例如，如果協程在它的 `final` 區域中丟出異常。所以，額外異常被抑制了。
+如果一個協程的多個子協程丟出異常會發生什麼事？一般規則是 "第一個異常獲勝" ，所以第一個丟出異常是揭露給異常處理器。但這樣可能導致遺失異常，例如，如果協程在它的 `final` 區域中丟出異常。所以，額外異常被抑制了。
 
 > One of the solutions would have been to report each exception separately, but then [Deferred.await][Deferred.await] should have had the same mechanism to avoid behavioural inconsistency and this would cause implementation details of a coroutines (whether it had delegated parts of its work to its children or not) to leak to its exception handler.
 >
@@ -288,6 +288,9 @@ fun main() = runBlocking {
             try {
                 delay(Long.MAX_VALUE)
             } finally {
+                
+                // 第一個協程已丟出 IOException ，而現在又丟出 ArithmeticException 但被抑制了
+                // handler 捕獲的異常是第一個 IOException
                 throw ArithmeticException()
             }
         }
@@ -338,28 +341,22 @@ fun main() = runBlocking {
     val handler = CoroutineExceptionHandler { _, exception ->
         println("Caught original $exception")
     }
-    
-    // 造成外部中止
-    val job = GlobalScope.launch(handler) {
-        
-        // 造成外部中止
-        val inner = launch {
-            
-            // 造成外部中止
-            launch {
-                
-                // 以內層方式創建協程，但發生異常，還是會一層一層的丟出來 (解開)
-                launch {
+    val job = GlobalScope.launch(handler) { // 內部造成外部中止
+        val inner = launch { // 內部造成外部中止
+            launch { // 內部造成外部中止
+                launch { // 以內層方式創建協程，但發生異常，還是會一層一層的丟出來 (解開)
                     throw IOException()
                 }
             }
         }
+        
         try {
-            inner.join()
+            inner.join() // 等待 inner 完成
         } catch (e: CancellationException) {
             println("Rethrowing CancellationException with original cause")
             
-            // 重丟異常，但取得的還是 IOException ，而不是 CancellationException
+            // 重丟異常，但取得的還是最原始的 IOException ，而不是 CancellationException
+            // 所以異常是以第一個為先
             throw e
         }
     }
@@ -412,6 +409,8 @@ fun main() = runBlocking {
     val supervisor = SupervisorJob()
     with(CoroutineScope(coroutineContext + supervisor)) {
         
+        // 1.發射一個協程，使用一般的 coroutine context ，如果丟出 AssertionError 整個程式會壞掉
+        // 而今天使用 SupervisorJob 可以讓單一個協程壞掉被取消
         // launch the first child 
         // -- its exception is ignored for this example (don't do this in practice!)
         val firstChild = launch(CoroutineExceptionHandler { _, _ ->  }) {
@@ -419,11 +418,13 @@ fun main() = runBlocking {
             throw AssertionError("First child is cancelled")
         }
         
+        // 2.發射第二個，不會因為第一個壞掉而影響，這就是 SupervisorJob 的好處
         // launch the second child
         val secondChild = launch {
             firstChild.join()
             // Cancellation of the first child is not propagated to the second child
             println("First child is cancelled: ${firstChild.isCancelled}, but second one is still active")
+            // 3.印出第一個協程的訊息後，等待 SupervisorJob 取消
             try {
                 delay(Long.MAX_VALUE)
             } finally {
@@ -461,13 +462,15 @@ Supervision scope ：supervisorScope API 的使用
 
 For *scoped* concurrency [supervisorScope][supervisorScope] can be used instead of [coroutineScope][coroutineScope] for the same purpose. It propagates cancellation only in one direction and cancels all children only if it has failed itself. It also waits for all children before completion just like [coroutineScope][coroutineScope] does.
 
-對於範圍的並發，可以使用 [supervisorScope][supervisorScope] 代替 [coroutineScope][coroutineScope] 用於相同目的。它只在一個方向上傳播取消，除非它本身已失敗時取消所有子協程。它也像 [coroutineScope][coroutineScope] 運作在完成之前等待所有子協程。
+對於範圍的並發，可以使用 [supervisorScope][supervisorScope] 代替 [coroutineScope][coroutineScope] 用於相同目的。它只在一個方向中傳播取消，除非它本身已失敗時取消所有子協程。它也像 [coroutineScope][coroutineScope] 運作在完成之前等待所有子協程。
 
 ```kotlin
 import kotlin.coroutines.*
 import kotlinx.coroutines.*
 
 fun main() = runBlocking {
+    
+    // 利用 supervisorScope 捕獲異常
     try {
         supervisorScope {
             val child = launch {
@@ -478,6 +481,8 @@ fun main() = runBlocking {
                     println("Child is cancelled")
                 }
             }
+            
+            // 執行權讓給 child 執行
             // Give our child a chance to execute and print using yield 
             yield()
             println("Throwing exception from scope")
