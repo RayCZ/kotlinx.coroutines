@@ -12,6 +12,8 @@
 
 Select expression (experimental) ： Select 表達式 (實驗性)
 
+**Select 表達式的應用可以想成在多個協程同時競爭中選擇一個**
+
 Select expression makes it possible to await multiple suspending functions simultaneously and _select_
 the first one that becomes available.
 
@@ -25,7 +27,7 @@ Select 表達式可以同時等待多個懸掛函數，並且選擇第一個可�
 
 ### Selecting from channels
 
-Selecting from channels ：從多個通道中選擇
+Selecting from channels ：從多個通道中選擇其中一個
 
 Let us have two producers of strings: `fizz` and `buzz`. The `fizz` produces "Fizz" string every 300 ms:
 
@@ -98,7 +100,7 @@ fun CoroutineScope.buzz() = produce<String> {
 // 兩個生產者在 select 表達式中做處理，類似 when 、 if
 suspend fun selectFizzBuzz(fizz: ReceiveChannel<String>, buzz: ReceiveChannel<String>) {
     
-    // select 表達式
+    // select 表達式，兩個發送同時還擇一個接收
     select<Unit> { // <Unit> means that this select expression does not produce any result 
         
         // 對應 fizz 生產者
@@ -147,7 +149,7 @@ buzz -> 'Buzz!'
 
 ### Selecting on close
 
-Selecting on close ：
+Selecting on close ：在通道關閉中選擇一個
 
 The [onReceive][ReceiveChannel.onReceive] clause in `select` fails when the channel is closed causing the corresponding `select` to throw an exception. We can use [onReceiveOrNull][ReceiveChannel.onReceiveOrNull] clause to perform a specific action when the channel is closed. The following example also shows that `select` is an expression that returns the result of its selected clause:
 
@@ -181,7 +183,7 @@ import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.selects.*
 
 suspend fun selectAorB(a: ReceiveChannel<String>, b: ReceiveChannel<String>): String =
-    select<String> {
+    select<String> { // select 表達式，兩個發送同時還擇一個接收
         
         // a 關閉 value 值會 null 
         a.onReceiveOrNull { value -> 
@@ -203,12 +205,12 @@ suspend fun selectAorB(a: ReceiveChannel<String>, b: ReceiveChannel<String>): St
 fun main() = runBlocking<Unit> {
 //sampleStart
     
-    // 一個生產者協程，重覆產生 4 次
+    // 一個生產者協程，重覆產生 4 個數字，超過就沒有
     val a = produce<String> {
         repeat(4) { send("Hello $it") }
     }
     
-    // 一個生產者協程，重覆產生 4 次
+    // 一個生產者協程，重覆產生 4 個數字，超過就沒有
     val b = produce<String> {
         repeat(4) { send("World $it") }
     }
@@ -255,13 +257,15 @@ The second observation, is that [onReceiveOrNull][ReceiveChannel.onReceiveOrNull
 
 ### Selecting to send
 
-Select expression has [onSend][SendChannel.onSend] clause that can be used for a great good in combination 
-with a biased nature of selection.
+Selecting to send ： 選擇性發送
 
-Let us write an example of producer of integers that sends its values to a `side` channel when 
-the consumers on its primary channel cannot keep up with it:
+Select expression has [onSend][SendChannel.onSend] clause that can be used for a great good in combination with a biased nature of selection.
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+`select` 表達式有 [onSend][SendChannel.onSend] 子句，可以與選擇的偏好性良好的結合使用。
+
+Let us write an example of producer of integers that sends its values to a `side` channel when the consumers on its primary channel cannot keep up with it:
+
+讓我們寫一個整數生產者的範例，當在消費者的主要通道中消費者跟不上 `side` 時，生產者發送它的值到 `side` 通道。
 
 ```kotlin
 fun CoroutineScope.produceNumbers(side: SendChannel<Int>) = produce<Int> {
@@ -275,50 +279,61 @@ fun CoroutineScope.produceNumbers(side: SendChannel<Int>) = produce<Int> {
 }
 ```
 
-</div>
-
 Consumer is going to be quite slow, taking 250 ms to process each number:
 
-<!--- CLEAR -->
-
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+消費者將相當的慢，花費 0.25 秒去處理每個數值：
 
 ```kotlin
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.selects.*
 
+// 第三個協程，生產者，產生 1~10 每 0.1 秒發送，生產者會回傳 ReceiveChannel 物件
 fun CoroutineScope.produceNumbers(side: SendChannel<Int>) = produce<Int> {
     for (num in 1..10) { // produce 10 numbers from 1 to 10
         delay(100) // every 100 ms
+        
+        // 利用 select 表達式送數字
         select<Unit> {
+            // 送給 primary (ReceiveChannel 類型物件)
             onSend(num) {} // Send to the primary channel
+            
+            // 送給 side (Channel 類型物件) 
             side.onSend(num) {} // or to the side channel     
         }
     }
 }
 
+// 第一個協程
 fun main() = runBlocking<Unit> {
 //sampleStart
-    val side = Channel<Int>() // allocate side channel
+    val side = Channel<Int>() // allocate side channel 
+    
+    // 第二個協程，負責 side 無間隔消費 (Channel 類型物件)
     launch { // this is a very fast consumer for the side channel
         side.consumeEach { println("Side channel has $it") }
     }
-    produceNumbers(side).consumeEach { 
+    
+    // 在第一個協程中，負責 primary 間隔 0.25 秒消費 (ReceiveChannel 類型物件)
+    val primary = produceNumbers(side)
+    primary.consumeEach { 
         println("Consuming $it")
         delay(250) // let us digest the consumed number properly, do not hurry
     }
+    
     println("Done consuming")
     coroutineContext.cancelChildren()  
 //sampleEnd      
 }
 ```
 
-</div> 
-
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-select-03.kt)
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-select-03.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-select-03.kt)獲取完整的代碼
 
 So let us see what happens:
+
+所以讓我們看發生什麼事：
 
 ```text
 Consuming 1
@@ -334,15 +349,13 @@ Consuming 10
 Done consuming
 ```
 
-<!--- TEST -->
-
 ### Selecting deferred values
 
-Deferred values can be selected using [onAwait][Deferred.onAwait] clause. 
-Let us start with an async function that returns a deferred string value after 
-a random delay:
+Selecting deferred values ： 選擇其中一個的推遲值
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+Deferred values can be selected using [onAwait][Deferred.onAwait] clause. Let us start with an async function that returns a deferred string value after a random delay:
+
+可以使用 [onAwait][Deferred.onAwait] 子句選擇推遲的值。讓我們以 async 函數開始，在隨機 delay 之後回傳推遲字串值。
 
 ```kotlin
 fun CoroutineScope.asyncString(time: Int) = async {
@@ -351,11 +364,9 @@ fun CoroutineScope.asyncString(time: Int) = async {
 }
 ```
 
-</div>
-
 Let us start a dozen of them with a random delay.
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+讓我們使用隨機延遲開始它們的一打 (12個) 。
 
 ```kotlin
 fun CoroutineScope.asyncStringsList(): List<Deferred<String>> {
@@ -364,27 +375,23 @@ fun CoroutineScope.asyncStringsList(): List<Deferred<String>> {
 }
 ```
 
-</div>
+Now the main function awaits for the first of them to complete and counts the number of deferred values that are still active. Note, that we've used here the fact that `select` expression is a Kotlin DSL, so we can provide clauses for it using an arbitrary code. In this case we iterate over a list of deferred values to provide `onAwait` clause for each deferred value.
 
-Now the main function awaits for the first of them to complete and counts the number of deferred values
-that are still active. Note, that we've used here the fact that `select` expression is a Kotlin DSL, 
-so we can provide clauses for it using an arbitrary code. In this case we iterate over a list
-of deferred values to provide `onAwait` clause for each deferred value.
-
-<!--- CLEAR -->
-
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+注意：主函數等待它們的第一個函數完成，並且計算仍處於活動狀態的推遲值數值。注意，我們在這裡使用 `select` 表達式是一個 Kotlin DSL ，所以我們可以為它使用隨便的代碼提供子句。在這樣的情況下，我們遍歷一個推遲值的列表，為每個推遲值提供 `onAwait` 子句。
 
 ```kotlin
 import kotlinx.coroutines.*
 import kotlinx.coroutines.selects.*
 import java.util.*
     
+// async 函數，回傳 Deferred 類型，依參數做隨機的等待，等待完後，回傳等待的時間 "Waited for $time ms"
 fun CoroutineScope.asyncString(time: Int) = async {
+    // println("wait $time") 便於查看等待時間
     delay(time.toLong())
     "Waited for $time ms"
 }
 
+// 1.產生 12 個 隨機等待 0.003 ~ 1 秒的 Deferred 值到 List
 fun CoroutineScope.asyncStringsList(): List<Deferred<String>> {
     val random = Random(3)
     return List(12) { asyncString(random.nextInt(1000)) }
@@ -394,7 +401,11 @@ fun main() = runBlocking<Unit> {
 //sampleStart
     val list = asyncStringsList()
     val result = select<String> {
+        
+        // 2.withIndex 讓 forEach 有 index 參數
         list.withIndex().forEach { (index, deferred) ->
+                                  
+            // 3.遍歷 12 個 Deferred，每個都調用 onAwait 等待結果，選擇那個等待時間最少回傳字串
             deferred.onAwait { answer ->
                 "Deferred $index produced answer '$answer'"
             }
@@ -407,18 +418,18 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-</div>
-
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-select-04.kt)
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-select-04.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-select-04.kt)獲取完整的代碼
 
 The output is:
+
+輸出是：
 
 ```text
 Deferred 4 produced answer 'Waited for 128 ms'
 11 coroutines are still active
 ```
-
-<!--- TEST -->
 
 ### Switch over a channel of deferred values
 
