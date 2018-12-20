@@ -519,7 +519,7 @@ Buffered channels ：緩衝的通道
 
 The channels shown so far had no buffer. Unbuffered channels transfer elements when sender and receiver meet each other (aka rendezvous). If send is invoked first, then it is suspended until receive is invoked, if receive is invoked first, it is suspended until send is invoked.
 
-到目前為止展示的通道沒有緩衝。當發送者跟接收著彼此相遇 (又名會合) 時，無緩衝通道傳輸元素。如果首先調用發送 ，接著它是懸掛的，直到接收者調用，如果首先調用接收，它是懸掛的，直到發送者調用。
+到目前為止展示的通道沒有緩衝。當發送者跟接收著彼此相遇 (又名會合) 時，無緩衝通道傳輸元素。如果首先調用發送 ，接著在調用接收之前它是懸掛的，如果首先調用接收，在調用發送之前它是懸掛的，。
 
 Both [Channel()][Channel()] factory function and [produce][produce] builder take an optional `capacity` parameter to specify _buffer size_. Buffer allows senders to send multiple elements before suspending, similar to the `BlockingQueue` with a specified capacity, which blocks when buffer is full.
 
