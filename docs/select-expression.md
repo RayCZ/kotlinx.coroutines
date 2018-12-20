@@ -12,7 +12,7 @@
 
 Select expression (experimental) ： Select 表達式 (實驗性)
 
-**Select 表達式的應用可以想成在多個協程同時競爭中選擇一個**
+**Select 表達式同時等待多個掛起函數的結果，應用上可以想成在多個協程同時競爭中選擇一個**
 
 Select expression makes it possible to await multiple suspending functions simultaneously and _select_
 the first one that becomes available.
@@ -100,7 +100,7 @@ fun CoroutineScope.buzz() = produce<String> {
 // 兩個生產者在 select 表達式中做處理，類似 when 、 if
 suspend fun selectFizzBuzz(fizz: ReceiveChannel<String>, buzz: ReceiveChannel<String>) {
     
-    // select 表達式，兩個發送同時還擇一個接收
+    // select 表達式同時等待多個掛起函數的結果，兩個發送同時還擇一個接收
     select<Unit> { // <Unit> means that this select expression does not produce any result 
         
         // 對應 fizz 生產者
