@@ -437,7 +437,7 @@ Switch over a channel of deferred values ：轉換
 
 Let us write a channel producer function that consumes a channel of deferred string values, waits for each received deferred value, but only until the next deferred value comes over or the channel is closed. This example puts together [onReceiveOrNull][ReceiveChannel.onReceiveOrNull] and [onAwait][Deferred.onAwait] clauses in the same `select`:
 
-讓我們寫一個通道生產者函數，該函數消費推遲類型字串值的通道，等待每個已收到的推遲類型值，但只有在下個推遲之值過來或通道被關閉之前。這個範例在相同的 `select` 表達式放置 [onReceiveOrNull][ReceiveChannel.onReceiveOrNull] 和 [onAwait][Deferred.onAwait] 子句在之一起：
+讓我們寫一個通道生產者函數，該函數消費推遲類型字串值的通道，等待每個已收到的推遲類型值，但只有在下個推遲之值過來或通道被關閉之前。這個範例在相同的 `select` 表達式放置 [onReceiveOrNull][ReceiveChannel.onReceiveOrNull] 和 [onAwait][Deferred.onAwait] 子句在一起：
 
 ```kotlin
 fun CoroutineScope.switchMapDeferreds(input: ReceiveChannel<Deferred<String>>) = produce<String> {
