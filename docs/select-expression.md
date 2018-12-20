@@ -533,9 +533,13 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-select-05.kt)
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-select-05.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-select-05.kt)獲取完整的代碼
 
 The result of this code:
+
+這些代碼的結果：
 
 ```text
 BEGIN
