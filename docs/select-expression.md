@@ -100,15 +100,15 @@ fun CoroutineScope.buzz() = produce<String> {
 // 兩個生產者在 select 表達式中做處理，類似 when 、 if
 suspend fun selectFizzBuzz(fizz: ReceiveChannel<String>, buzz: ReceiveChannel<String>) {
     
-    // select 表達式同時等待多個掛起函數的結果，兩個發送同時還擇一個接收
+    // select 表達式同時等待多個掛起函數的結果，兩個同時接收
     select<Unit> { // <Unit> means that this select expression does not produce any result 
         
-        // 對應 fizz 生產者
+        // 對應 fizz 生產者，在接收中
         fizz.onReceive { value ->  // this is the first select clause
             println("fizz -> '$value'")
         }
         
-        // 對應 buzz 生產者
+        // 對應 buzz 生產者，在接收中
         buzz.onReceive { value ->  // this is the second select clause
             println("buzz -> '$value'")
         }
@@ -489,7 +489,8 @@ fun CoroutineScope.switchMapDeferreds(input: ReceiveChannel<Deferred<String>>) =
             input.onReceiveOrNull { update ->
                 update // replaces next value to wait
             }
-            current.onAwait { value ->  
+            current.onAwait { value ->
+                // 為 produce 的 send 方法，讓回傳的 ReceiveChannel 類似物件可以印出
                 send(value) // send value that current deferred has produced
                 input.receiveOrNull() // and use the next deferred from the input channel
             }
