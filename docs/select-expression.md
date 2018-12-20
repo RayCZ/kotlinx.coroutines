@@ -490,7 +490,7 @@ fun CoroutineScope.switchMapDeferreds(input: ReceiveChannel<Deferred<String>>) =
                 update // replaces next value to wait
             }
             current.onAwait { value ->
-                // 為 produce 的 send 方法，讓回傳的 ReceiveChannel 類似物件可以印出
+                // 為 produce 的 send 方法，讓回傳的 ReceiveChannel 類型物件可以印出
                 send(value) // send value that current deferred has produced
                 input.receiveOrNull() // and use the next deferred from the input channel
             }
