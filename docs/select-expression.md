@@ -433,11 +433,11 @@ Deferred 4 produced answer 'Waited for 128 ms'
 
 ### Switch over a channel of deferred values
 
-Switch over a channel of deferred values ：轉換
+Switch over a channel of deferred values ：轉換推遲類型值的通道
 
 Let us write a channel producer function that consumes a channel of deferred string values, waits for each received deferred value, but only until the next deferred value comes over or the channel is closed. This example puts together [onReceiveOrNull][ReceiveChannel.onReceiveOrNull] and [onAwait][Deferred.onAwait] clauses in the same `select`:
 
-讓我們寫一個通道生產者函數，該函數消費推遲類型字串值的通道，等待每個已收到的推遲類型值，但只有在下個推遲之值過來或通道被關閉之前。這個範例在相同的 `select` 表達式放置 [onReceiveOrNull][ReceiveChannel.onReceiveOrNull] 和 [onAwait][Deferred.onAwait] 子句在一起：
+讓我們寫一個通道生產者函數，該函數消費推遲類型字串值的通道，等待每個已收到的推遲類型值，但只有在下個推遲類型值過來或通道被關閉之前。這個範例在相同的 `select` 表達式放置 [onReceiveOrNull][ReceiveChannel.onReceiveOrNull] 和 [onAwait][Deferred.onAwait] 子句在一起：
 
 ```kotlin
 fun CoroutineScope.switchMapDeferreds(input: ReceiveChannel<Deferred<String>>) = produce<String> {
@@ -481,17 +481,23 @@ main 函數只是發射一個協程去印出 `switchMapDeferreds` 的結果並�
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.selects.*
-    
+
+// produce 協程，讓通道有兩個以上時做競爭的選擇，要印出那個
 fun CoroutineScope.switchMapDeferreds(input: ReceiveChannel<Deferred<String>>) = produce<String> {
     var current = input.receive() // start with first received deferred value
     while (isActive) { // loop while not cancelled/closed
         val next = select<Deferred<String>?> { // return next deferred value from this select or null
+            // input channel 有兩個以上 Deferred 才會進去，只有一個時都是 Unit
             input.onReceiveOrNull { update ->
                 update // replaces next value to wait
             }
+            
+            // 向 asyncString 回傳的 Deferred 類型取值
             current.onAwait { value ->
                 // 為 produce 的 send 方法，讓回傳的 ReceiveChannel 類型物件可以印出
                 send(value) // send value that current deferred has produced
+                             
+                // input通道取值
                 input.receiveOrNull() // and use the next deferred from the input channel
             }
         }
@@ -504,6 +510,7 @@ fun CoroutineScope.switchMapDeferreds(input: ReceiveChannel<Deferred<String>>) =
     }
 }
 
+// 建立一個 async 協程，回傳的 ReceiveChannel 類型取得參數字串
 fun CoroutineScope.asyncString(str: String, time: Long) = async {
     delay(time)
     str
@@ -520,12 +527,20 @@ fun main() = runBlocking<Unit> {
     }
     
     // 在主協程負責發送訊息和 async 函數之中的等待時間
+    
+    //
     chan.send(asyncString("BEGIN", 100))
     delay(200) // enough time for "BEGIN" to be produced
+    
+    // 由於 "Slow" 需要 0.5 秒完成，而只延遲 0.1 秒，不夠時間處理
+    // 接著又送出 "Replace" 需要 0.1 秒完成，而延遲 0.5 秒
+    // 會造成 "Replace" 送出會有兩個 Deferred 同時在 channel
+    // 這時才會跑 input.onReceiveOrNull
     chan.send(asyncString("Slow", 500))
     delay(100) // not enough time to produce slow
     chan.send(asyncString("Replace", 100))
     delay(500) // give it time before the last one
+    
     chan.send(asyncString("END", 500))
     delay(1000) // give it time to process
     chan.close() // close the channel ... 
