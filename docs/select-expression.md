@@ -433,11 +433,11 @@ Deferred 4 produced answer 'Waited for 128 ms'
 
 ### Switch over a channel of deferred values
 
-Let us write a channel producer function that consumes a channel of deferred string values, waits for each received
-deferred value, but only until the next deferred value comes over or the channel is closed. This example puts together 
-[onReceiveOrNull][ReceiveChannel.onReceiveOrNull] and [onAwait][Deferred.onAwait] clauses in the same `select`:
+Switch over a channel of deferred values ：轉換
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+Let us write a channel producer function that consumes a channel of deferred string values, waits for each received deferred value, but only until the next deferred value comes over or the channel is closed. This example puts together [onReceiveOrNull][ReceiveChannel.onReceiveOrNull] and [onAwait][Deferred.onAwait] clauses in the same `select`:
+
+讓我們寫一個通道生產者函數，該函數消費推遲類型字串值的通道，等待每個已收到的推遲類型值，但只有在下個推遲之值過來或通道被關閉之前。這個範例在相同的 `select` 表達式放置 [onReceiveOrNull][ReceiveChannel.onReceiveOrNull] 和 [onAwait][Deferred.onAwait] 子句在之一起：
 
 ```kotlin
 fun CoroutineScope.switchMapDeferreds(input: ReceiveChannel<Deferred<String>>) = produce<String> {
@@ -462,12 +462,9 @@ fun CoroutineScope.switchMapDeferreds(input: ReceiveChannel<Deferred<String>>) =
 }
 ```
 
-</div>
-
 To test it, we'll use a simple async function that resolves to a specified string after a specified time:
 
-
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+為了測試它，我們將使用一個簡單的 async 函數，在指定的時間後解析 (回傳) 指定的字串：
 
 ```kotlin
 fun CoroutineScope.asyncString(str: String, time: Long) = async {
@@ -476,14 +473,9 @@ fun CoroutineScope.asyncString(str: String, time: Long) = async {
 }
 ```
 
-</div>
+The main function just launches a coroutine to print results of `switchMapDeferreds` and sends some test data to it:
 
-The main function just launches a coroutine to print results of `switchMapDeferreds` and sends some test
-data to it:
-
-<!--- CLEAR -->
-
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+main 函數只是發射一個協程去印出 `switchMapDeferreds` 的結果並發送一些測試資料給它：
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -519,10 +511,14 @@ fun CoroutineScope.asyncString(str: String, time: Long) = async {
 fun main() = runBlocking<Unit> {
 //sampleStart
     val chan = Channel<Deferred<String>>() // the channel for test
+    
+    // 負責印出訊息的協程
     launch { // launch printing coroutine
         for (s in switchMapDeferreds(chan)) 
             println(s) // print each received string
     }
+    
+    // 在主協程負責發送訊息和 async 函數之中的等待時間
     chan.send(asyncString("BEGIN", 100))
     delay(200) // enough time for "BEGIN" to be produced
     chan.send(asyncString("Slow", 500))
@@ -537,8 +533,6 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-</div>
-
 > You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-select-05.kt)
 
 The result of this code:
@@ -549,8 +543,6 @@ Replace
 END
 Channel was closed
 ```
-
-<!--- TEST -->
 
 <!--- MODULE kotlinx-coroutines-core -->
 <!--- INDEX kotlinx.coroutines -->
