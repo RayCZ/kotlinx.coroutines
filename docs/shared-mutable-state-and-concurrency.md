@@ -327,6 +327,9 @@ fun main() = runBlocking<Unit> {
     println("Counter = $counter")
 //sampleEnd    
 }
+//ans:
+//Completed 100000 actions in 45 ms
+//Counter = 100000
 ```
 
 > You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-sync-05.kt)
@@ -384,6 +387,9 @@ fun main() = runBlocking<Unit> {
     println("Counter = $counter")
 //sampleEnd    
 }
+//ans:
+//Completed 100000 actions in 1157 ms
+//Counter = 100000
 ```
 
 > You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-sync-06.kt)
@@ -396,22 +402,15 @@ The locking in this example is fine-grained, so it pays the price. However, it i
 
 ### Actors
 
-An [actor](https://en.wikipedia.org/wiki/Actor_model) is an entity made up of a combination of a coroutine, the state that is confined and encapsulated into this coroutine,
-and a channel to communicate with other coroutines. A simple actor can be written as a function, 
-but an actor with a complex state is better suited for a class. 
+An [actor](https://en.wikipedia.org/wiki/Actor_model) is an entity made up of a combination of a coroutine, the state that is confined and encapsulated into this coroutine, and a channel to communicate with other coroutines. A simple actor can be written as a function, but an actor with a complex state is better suited for a class. 
 
-There is an [actor] coroutine builder that conveniently combines actor's mailbox channel into its 
-scope to receive messages from and combines the send channel into the resulting job object, so that a 
-single reference to the actor can be carried around as its handle.
+[actor](https://en.wikipedia.org/wiki/Actor_model) 是由協程組合而成的實例，共享的狀態被限制和被封裝到這個協程，並且一個通道與其他的協程溝通。一個簡單的演員被寫為函數，但是一個複雜狀態適合為一個類別的演員。
 
-The first step of using an actor is to define a class of messages that an actor is going to process.
-Kotlin's [sealed classes](https://kotlinlang.org/docs/reference/sealed-classes.html) are well suited for that purpose.
-We define `CounterMsg` sealed class with `IncCounter` message to increment a counter and `GetCounter` message
-to get its value. The later needs to send a response. A [CompletableDeferred] communication
-primitive, that represents a single value that will be known (communicated) in the future,
-is used here for that purpose.
+There is an [actor][actor] coroutine builder that conveniently combines actor's mailbox channel into its scope to receive messages from and combines the send channel into the resulting job object, so that a single reference to the actor can be carried around as its handle.
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+有一個 [actor][actor] 協程建造者方便的結合演員信箱通道到它的範圍中去接收訊息
+
+The first step of using an actor is to define a class of messages that an actor is going to process. Kotlin's [sealed classes](https://kotlinlang.org/docs/reference/sealed-classes.html) are well suited for that purpose. We define `CounterMsg` sealed class with `IncCounter` message to increment a counter and `GetCounter` message to get its value. The later needs to send a response. A [CompletableDeferred] communication primitive, that represents a single value that will be known (communicated) in the future, is used here for that purpose.
 
 ```kotlin
 // Message types for counterActor
@@ -420,11 +419,7 @@ object IncCounter : CounterMsg() // one-way message to increment counter
 class GetCounter(val response: CompletableDeferred<Int>) : CounterMsg() // a request with reply
 ```
 
-</div>
-
 Then we define a function that launches an actor using an [actor] coroutine builder:
-
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
 
 ```kotlin
 // This function launches a new counter actor
@@ -439,13 +434,7 @@ fun CoroutineScope.counterActor() = actor<CounterMsg> {
 }
 ```
 
-</div>
-
 The main code is straightforward:
-
-<!--- CLEAR -->
-
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -497,25 +486,13 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-</div>
-
 > You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-sync-07.kt)
 
-<!--- TEST ARBITRARY_TIME
-Completed 100000 actions in xxx ms
-Counter = 100000
--->
+It does not matter (for correctness) what context the actor itself is executed in. An actor is a coroutine and a coroutine is executed sequentially, so confinement of the state to the specific coroutine works as a solution to the problem of shared mutable state. Indeed, actors may modify their own private state, but can only affect each other through messages (avoiding the need for any locks).
 
-It does not matter (for correctness) what context the actor itself is executed in. An actor is
-a coroutine and a coroutine is executed sequentially, so confinement of the state to the specific coroutine
-works as a solution to the problem of shared mutable state. Indeed, actors may modify their own private state, but can only affect each other through messages (avoiding the need for any locks).
+Actor is more efficient than locking under load, because in this case it always has work to do and it does not have to switch to a different context at all.
 
-Actor is more efficient than locking under load, because in this case it always has work to do and it does not 
-have to switch to a different context at all.
-
-> Note, that an [actor] coroutine builder is a dual of [produce] coroutine builder. An actor is associated 
-  with the channel that it receives messages from, while a producer is associated with the channel that it 
-  sends elements to.
+> Note, that an [actor] coroutine builder is a dual of [produce] coroutine builder. An actor is associated with the channel that it receives messages from, while a producer is associated with the channel that it  sends elements to.
 
 <!--- MODULE kotlinx-coroutines-core -->
 <!--- INDEX kotlinx.coroutines -->
