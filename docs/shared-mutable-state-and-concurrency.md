@@ -402,15 +402,19 @@ The locking in this example is fine-grained, so it pays the price. However, it i
 
 ### Actors
 
+Actors ：執行者，通道類型，與 produce 相反，函數內負責消費，回傳類型負責生產
+
 An [actor](https://en.wikipedia.org/wiki/Actor_model) is an entity made up of a combination of a coroutine, the state that is confined and encapsulated into this coroutine, and a channel to communicate with other coroutines. A simple actor can be written as a function, but an actor with a complex state is better suited for a class. 
 
-[actor](https://en.wikipedia.org/wiki/Actor_model) 是由協程組合而成的實例，共享的狀態被限制和被封裝到這個協程，並且一個通道與其他的協程溝通。一個簡單的演員被寫為函數，但是一個複雜狀態適合為一個類別的演員。
+[actor](https://en.wikipedia.org/wiki/Actor_model) 是由協程組合而成的實例，共享的狀態被限制並被封裝到這個協程，並且使用一個通道與其他的協程溝通。一個簡單的 actor 被寫為函數，而一個複雜狀態的適合為一個類別讓 actor 判斷使用。
 
 There is an [actor][actor] coroutine builder that conveniently combines actor's mailbox channel into its scope to receive messages from and combines the send channel into the resulting job object, so that a single reference to the actor can be carried around as its handle.
 
-有一個 [actor][actor] 協程建造者方便的結合演員信箱通道到它的範圍中去接收訊息
+有一個 [actor][actor] 協程建造者，將 actor 的接收通道結合到 [ActorScope](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-actor-scope/index.html) 去接收訊息 `actory<CounterMsg> { ... for (msg in channel) ...}`，並將發送通道結合到結果的工作物件 `val counter = counterActor()`，以便於 actor 的單一引用 channel 可以被作為它的句柄攜帶。
 
-The first step of using an actor is to define a class of messages that an actor is going to process. Kotlin's [sealed classes](https://kotlinlang.org/docs/reference/sealed-classes.html) are well suited for that purpose. We define `CounterMsg` sealed class with `IncCounter` message to increment a counter and `GetCounter` message to get its value. The later needs to send a response. A [CompletableDeferred] communication primitive, that represents a single value that will be known (communicated) in the future, is used here for that purpose.
+The first step of using an actor is to define a class of messages that an actor is going to process. Kotlin's [sealed classes](https://github.com/RayCZ/kotlin-web-site/blob/ray/pages/docs/reference/sealed-classes.md) are well suited for that purpose. We define `CounterMsg` sealed class with `IncCounter` message to increment a counter and `GetCounter` message to get its value. The later needs to send a response. A [CompletableDeferred][CompletableDeferred] communication primitive, that represents a single value that will be known (communicated) in the future, is used here for that purpose.
+
+使用 actor 的第一步是定義 actor 將要處理的訊息類別。 Kotlin 的[密封類別](https://github.com/RayCZ/kotlin-web-site/blob/ray/pages/docs/reference/sealed-classes.md)非常適合這個目的。我們使用 `IncCounter` 訊息類別去增量計數器，並 `GetCounter` 訊息類別去獲取它的結果值，具體的定義 `CounterMsg` 密封類別。後者 (`GetCounter`) 需要發送一個回應 `msg.response.complete(counter) ` 。 [CompletableDeferred][CompletableDeferred] 類型通訊原始資料，表示在將來已知 (通訊) 的單一值，此處用於此目的。
 
 ```kotlin
 // Message types for counterActor
@@ -419,7 +423,9 @@ object IncCounter : CounterMsg() // one-way message to increment counter
 class GetCounter(val response: CompletableDeferred<Int>) : CounterMsg() // a request with reply
 ```
 
-Then we define a function that launches an actor using an [actor] coroutine builder:
+Then we define a function that launches an actor using an [actor][actor] coroutine builder:
+
+接著我們定義一個函數，該函數使用一個 [actor][actor] 協程建造者發射一個 actor。 
 
 ```kotlin
 // This function launches a new counter actor
@@ -435,6 +441,8 @@ fun CoroutineScope.counterActor() = actor<CounterMsg> {
 ```
 
 The main code is straightforward:
+
+主要代碼直截了當 (簡單、坦率的)：
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -455,47 +463,83 @@ suspend fun CoroutineScope.massiveRun(action: suspend () -> Unit) {
     println("Completed ${n * k} actions in $time ms")    
 }
 
+
+// 定義訊息類別
 // Message types for counterActor
 sealed class CounterMsg
 object IncCounter : CounterMsg() // one-way message to increment counter
 class GetCounter(val response: CompletableDeferred<Int>) : CounterMsg() // a request with reply
 
+// actor 函數回傳 SendChannel 類型，所以可以讓別的協程負責送資料，而 actor 負責消費處理
 // This function launches a new counter actor
 fun CoroutineScope.counterActor() = actor<CounterMsg> {
     var counter = 0 // actor state
+    
+    // 當 channel 有東西進來時，判斷類型做處理
     for (msg in channel) { // iterate over incoming messages
         when (msg) {
-            is IncCounter -> counter++
-            is GetCounter -> msg.response.complete(counter)
+            
+            // 增量處理
+            is IncCounter -> counter++ 
+            
+            // CompletableDeferred 類型送出結果，await 才能取值
+            is GetCounter -> msg.response.complete(counter) 
         }
     }
 }
 
 fun main() = runBlocking<Unit> {
 //sampleStart
+    
+    // 回傳一個通道讓別的協程可以送資料
     val counter = counterActor() // create the actor
+    
+    // 利用通道送出大量的送 IncCounter 訊息類
+    // 在 actor 程式內判斷類型是 IncCounter 就做數字增量
     GlobalScope.massiveRun {
         counter.send(IncCounter)
     }
+    
+    // CompletableDeferred 類型讓別的協程呼叫 complete 帶上參數結果，讓 await 取值
     // send a message to get a counter value from an actor
     val response = CompletableDeferred<Int>()
+    
+    // 利用通道送出 GetCounter 訊息類 (包含 CompletableDeferred 類型)
+    // 在 actor 程式內判斷類型是 GetCounter 就做結果處理
     counter.send(GetCounter(response))
+    
+    // 在 main 協程持續的等待結果， CompletableDeferred 必須呼叫 complete() 才會有結果
     println("Counter = ${response.await()}")
     counter.close() // shutdown the actor
 //sampleEnd    
 }
 ```
 
-> You can get full code [here](../core/kotlinx-coroutines-core/test/guide/example-sync-07.kt)
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-sync-07.kt)
+>
+> 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-sync-07.kt)獲取完整的代碼
 
 It does not matter (for correctness) what context the actor itself is executed in. An actor is a coroutine and a coroutine is executed sequentially, so confinement of the state to the specific coroutine works as a solution to the problem of shared mutable state. Indeed, actors may modify their own private state, but can only affect each other through messages (avoiding the need for any locks).
 
+actor 本身執行在什麼環境不重要。 actor 是一個協程並且一個協程被依序執行 (因為是 Channel 負責處理訊息)，所以狀態限制到特定協程適用共享可變狀態問題的解決方式。實際上 ，actor 可以修改它們擁有的私有狀態，只能透過訊息互相影響 (避免任何鎖)。
+
+**actor 本身是一個 Channel 類型，已經採用依序性的執行方式。**
+
 Actor is more efficient than locking under load, because in this case it always has work to do and it does not have to switch to a different context at all.
 
-> Note, that an [actor] coroutine builder is a dual of [produce] coroutine builder. An actor is associated with the channel that it receives messages from, while a producer is associated with the channel that it  sends elements to.
+Actor 在負載下比鎖的方式更有效，因為在這種情況下它總是有工作去做，並且它根本不必切換到不同的協程環境。
+
+> Note, that an [actor][actor] coroutine builder is a dual of [produce][produce] coroutine builder. An actor is associated with the channel that it receives messages from, while a producer is associated with the channel that it  sends elements to.
+>
+> 注意： 一個 [actor][actor] 協程建造者是一個 [produce][produce] 協程建造者的雙重。一個執行者與通道連繫，執行者從通道接收訊息，而一個生產者與通道連繫，生產者發送元素到通道。
+>
+> **actor 函數內負責消費 / 消耗，回傳類型負責生產 / 發送**
+>
+> **produce 函數內負責生產 / 發送，回傳類型負責消費 / 消耗**
 
 <!--- MODULE kotlinx-coroutines-core -->
 <!--- INDEX kotlinx.coroutines -->
+
 [Dispatchers.Default]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-dispatchers/-default.html
 [GlobalScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-global-scope/index.html
 [withContext]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-context.html
