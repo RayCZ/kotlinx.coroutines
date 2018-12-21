@@ -218,7 +218,7 @@ There is a better solution. We can use structured concurrency in our code. Inste
 
 In our example, we have `main` function that is turned into a coroutine using [runBlocking][runBlocking] coroutine builder. Every coroutine builder, including `runBlocking`, adds an instance of [CoroutineScope][-CoroutineScope] to the scope of its code block. We can launch coroutines in this scope without having to `join` them explicitly, because an outer coroutine (`runBlocking` in our example) does not complete until all the coroutines launched in its scope complete. Thus, we can make our example simpler:
 
-在我們的範例中，我們使用 [runBlocking][runBlocking] 協程建造者將 `main` 函數轉換到協程。每個協程建造者，包括  `runBlocking` ， 添加 [CoroutineScope][-CoroutineScope] 的實例到 `runBlocking` 的代碼區域的圍範。我們可以在 `runBlocking` 範圍內發射協程，不必明確的 `join` 它們，因為外部的協程不會完成執行 (在我們的範例中 `runBlocking`) ，直到在 `runBlocking` 範圍內所有已發射的協程完成。
+在我們的範例中，我們使用 [runBlocking][runBlocking] 協程建造者將 `main` 函數轉換到協程。每個協程建造者，包括  `runBlocking` ， 添加 [CoroutineScope][-CoroutineScope] 的實例到 `runBlocking` 的代碼區塊的範圍。我們可以在 `runBlocking` 範圍內發射協程，不必明確的 `join` 它們，因為外部的協程不會完成執行 (在我們的範例中 `runBlocking`) ，直到在 `runBlocking` 範圍內所有已發射的協程完成。
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -294,7 +294,7 @@ Extract function refactoring ：提取函數重構
 
 Let's extract the block of code inside `launch { ... }` into a separate function. When you perform "Extract function" refactoring on this code you get a new function with `suspend` modifier. That is your first _suspending function_. Suspending functions can be used inside coroutines just like regular functions, but their additional feature is that they can, in turn, use other suspending functions, like `delay` in this example, to _suspend_ execution of a coroutine.
 
-讓我們提取 `launch { ... }` 內的代碼區域到單獨函數。當你在這份代碼執行 "提取函數" 重構時，你使用 `suspend` 修飾符取得新的函數。這是你第一個**懸掛函數**。懸掛函數可以用在協程內就像常規函數，但它們的額外功能是它們可以反過來使用其他的懸掛函數，像是在範例中的 `delay` ，懸掛 (暫停) 協程的執行。
+讓我們提取 `launch { ... }` 內的代碼區塊到單獨函數。當你在這份代碼執行 "提取函數" 重構時，你使用 `suspend` 修飾符取得新的函數。這是你第一個**懸掛函數**。懸掛函數可以用在協程內就像常規函數，但它們的額外功能是它們可以反過來使用其他的懸掛函數，像是在範例中的 `delay` ，懸掛 (暫停) 協程的執行。
 
 **Suspend ：懸掛函數，不是以阻塞的方式來處理線程，而是讓線程暫停「懸起來」跟「掛回去」的某種機制，賦與線程某種生命週期。 Suspend 英文上是指正在進行中的事暫停，尤其強調短時間的停止。**
 
