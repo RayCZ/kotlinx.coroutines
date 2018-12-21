@@ -11,7 +11,7 @@
 
 ## Shared mutable state and concurrency
 
-Shared mutable state and concurrency ：異享的可變狀態與並發
+Shared mutable state and concurrency ：共享的可變狀態與並發
 
 Coroutines can be executed concurrently using a multi-threaded dispatcher like the [Dispatchers.Default][Dispatchers.Default]. It presents all the usual concurrency problems. The main problem being synchronization of access to **shared mutable state**. Some solutions to this problem in the land of coroutines are similar to the solutions in the multi-threaded world, but others are unique.
 
