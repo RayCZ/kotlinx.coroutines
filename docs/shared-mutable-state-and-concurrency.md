@@ -513,6 +513,10 @@ fun main() = runBlocking<Unit> {
     counter.close() // shutdown the actor
 //sampleEnd    
 }
+
+//ans:
+//Completed 100000 actions in 1031 ms
+//Counter = 100000
 ```
 
 > You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-sync-07.kt)
