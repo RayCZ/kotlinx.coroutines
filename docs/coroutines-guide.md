@@ -20,10 +20,10 @@ In order to use coroutines as well as follow the examples in this guide, you nee
 * [Cancellation and timeouts](cancellation-and-timeouts.md) (取消和超時)
 * [Composing suspending functions](composing-suspending-functions.md) (組合懸掛函數)
 * [Coroutine context and dispatchers](coroutine-context-and-dispatchers.md) (協程環境和分配器)
-* [Exception handling and supervision](exception-handling.md)
+* [Exception handling and supervision](exception-handling.md) (異常處理和監督)
 * [Channels (experimental)](channels.md) (通道)
-* [Shared mutable state and concurrency](shared-mutable-state-and-concurrency.md)
-* [Select expression (experimental)](select-expression.md)
+* [Shared mutable state and concurrency](shared-mutable-state-and-concurrency.md) (共享的可變狀態和並發)
+* [Select expression (experimental)](select-expression.md) (Select 表示法)
 
 ## Additional references
 
