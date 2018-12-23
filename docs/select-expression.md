@@ -483,11 +483,17 @@ fun CoroutineScope.switchMapDeferreds(input: ReceiveChannel<Deferred<String>>) =
     var current = input.receive() // start with first received deferred value
     while (isActive) { // loop while not cancelled/closed
         val next = select<Deferred<String>?> { // return next deferred value from this select or null
+            // 異步執行，只有 while 迴圈第二次會進 
             input.onReceiveOrNull { update ->
                 update // replaces next value to wait
             }
+            
+            // 異步執行，Deferred 類型等待取值
             current.onAwait { value ->
+                // 印出內容
                 send(value) // send value that current deferred has produced
+                             
+                // 等待並取下一個值，沒資料進來一直卡在這
                 input.receiveOrNull() // and use the next deferred from the input channel
             }
         }
@@ -515,6 +521,7 @@ fun main() = runBlocking<Unit> {
         for (s in switchMapDeferreds(chan)) 
             println(s) // print each received string
     }
+    
     chan.send(asyncString("BEGIN", 100))
     delay(200) // enough time for "BEGIN" to be produced
     chan.send(asyncString("Slow", 500))
@@ -544,8 +551,49 @@ END
 Channel was closed
 ```
 
+詳細解說：
+
+current 一開始不在 while 中取得 `var current = input.receive()`
+
+###while 執行第一次
+
+沒進 `input.onReceiveOrNull { update -> update }` ，因為通道沒資料
+
+接著進 `current.onAwait { value -> ... }` 印出內容 "BEGIN"，並從通道取得下一個 asyncString("Slow", 500) 
+
+current = asyncString("Slow", 500) 
+
+###while 執行第二次
+
+因為主協程的 delay 只有 100 ms ，進 `input.onReceiveOrNull { update -> update }` 
+
+asyncString("Replace", 100) 回傳當 select (next) 的結果
+
+沒進 `current.onAwait { value -> ... }` ，因為取值的時候還在等待 (Slow 的 500 ms)，沒有印出 "Slow"
+
+current = asyncString("Replace", 100)
+
+###while 執行第三次
+
+主協程的 delay 500 ms ，沒進 `input.onReceiveOrNull { update -> update }` 
+
+**這時的 onAwait 會有 asyncString("Slow", 500) 跟 asyncString("Replace", 100) 看那個等待最少，最快取得**
+
+進 `current.onAwait { value -> ... }` 印出內容 "Replace"，並從通道取得下一個 asyncString("END", 500)
+
+current  = asyncString("END", 500)
+
+###while 執行第四次
+
+主協程的 delay 1000 ms ，沒進 `input.onReceiveOrNull { update -> update }` 
+
+進 `current.onAwait { value -> ... }` 印出內容 "END" ，等待主協程的 delay 1000 ms 到，從通道取得下一個 null
+
+印出 "Channel was closed"
+
 <!--- MODULE kotlinx-coroutines-core -->
 <!--- INDEX kotlinx.coroutines -->
+
 [Deferred.onAwait]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-deferred/on-await.html
 <!--- INDEX kotlinx.coroutines.channels -->
 [ReceiveChannel.receive]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-receive-channel/receive.html
