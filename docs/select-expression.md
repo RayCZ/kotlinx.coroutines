@@ -103,12 +103,10 @@ suspend fun selectFizzBuzz(fizz: ReceiveChannel<String>, buzz: ReceiveChannel<St
     // select 表達式同時等待多個掛起函數的結果，兩個同時接收
     select<Unit> { // <Unit> means that this select expression does not produce any result 
         
-        // 對應 fizz 生產者，在接收中
+        // select 會馬上結束這個區塊，異步的等待兩個 onReceive 看那個最先收到值，為 select 的結果
         fizz.onReceive { value ->  // this is the first select clause
             println("fizz -> '$value'")
         }
-        
-        // 對應 buzz 生產者，在接收中
         buzz.onReceive { value ->  // this is the second select clause
             println("buzz -> '$value'")
         }
@@ -138,13 +136,13 @@ The result of this code is:
 這些代碼的結果是： 
 
 ```text
-fizz -> 'Fizz'
-buzz -> 'Buzz!'
-fizz -> 'Fizz'
-fizz -> 'Fizz'
-buzz -> 'Buzz!'
-fizz -> 'Fizz'
-buzz -> 'Buzz!'
+fizz -> 'Fizz' 第一次，Fizz 等 300 ms (滿 300 ms) ， Buzz 再等 200 ms
+buzz -> 'Buzz!' 第二次， Fizz 再等 100 ms ， Buzz 等 200 ms (滿 500 ms)
+fizz -> 'Fizz' 第三次， Fizz 等 100 (滿 300 ms) ， Buzz 再等 400 ms
+fizz -> 'Fizz' 第四次， Fizz 等 300 (滿 300 ms) ， Buzz 再等 100 ms
+buzz -> 'Buzz!' 第五次， Fizz 再等 200 ms ， Buzz 等 100 ms (滿 500 ms)
+fizz -> 'Fizz' 第六次， Fizz 等 200 ms (滿 300 ms) ， Buzz 再等 300 ms 
+buzz -> 'Buzz!' 第七次， Fizz 再等 300 ms ， Buzz 等 300 ms (滿 500 ms) ，最後一個可能會衝突，由於 Fizz上輪已輸出，需要重新執行程式，會有些執行時間加長幾個 ms ，會是 Buzz 快一點
 ```
 
 ### Selecting on close
@@ -185,15 +183,14 @@ import kotlinx.coroutines.selects.*
 suspend fun selectAorB(a: ReceiveChannel<String>, b: ReceiveChannel<String>): String =
     select<String> { // select 表達式，兩個發送同時還擇一個接收
         
-        // a 關閉 value 值會 null 
+        // select 會馬上結束這個區塊，異步的等待兩個 onReceiveOrNull 看那個最先收到值，為 select 的結果
+        // a 或 b 的 onReceiveOrNull 是在某個時間點同時的調用，所以 a 會有先執行的優勢
         a.onReceiveOrNull { value -> 
             if (value == null) 
                 "Channel 'a' is closed" 
             else 
                 "a -> '$value'"
         }
-        
-         // b 關閉 value 值會 null
         b.onReceiveOrNull { value -> 
             if (value == null) 
                 "Channel 'b' is closed"
@@ -215,7 +212,7 @@ fun main() = runBlocking<Unit> {
         repeat(4) { send("World $it") }
     }
     
-    // 重覆 8 次
+    // 8 次異步的競爭選擇
     repeat(8) { // print first eight results
         println(selectAorB(a, b))
     }
@@ -240,7 +237,7 @@ a -> 'Hello 2'
 a -> 'Hello 3'
 b -> 'World 1'
 Channel 'a' is closed
-Channel 'a' is closed
+Channel 'a' is closed 
 ```
 
 There are couple of observations to make out of it. 
@@ -293,7 +290,7 @@ fun CoroutineScope.produceNumbers(side: SendChannel<Int>) = produce<Int> {
     for (num in 1..10) { // produce 10 numbers from 1 to 10
         delay(100) // every 100 ms
         
-        // 利用 select 表達式送數字
+        // 利用 select 表達式同時送數字，但 primary 的 onSend 比較早執行，所以會贏過 side
         select<Unit> {
             // 送給 primary (ReceiveChannel 類型物件)
             onSend(num) {} // Send to the primary channel
@@ -336,7 +333,7 @@ So let us see what happens:
 所以讓我們看發生什麼事：
 
 ```text
-Consuming 1
+Consuming 1 第一次 select 同時送 primary 跟 side ，但 primary 的 onSend 比較早執行，所以一開始是它
 Side channel has 2
 Side channel has 3
 Consuming 4
