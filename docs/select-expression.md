@@ -555,7 +555,7 @@ Channel was closed
 
 current 一開始不在 while 中取得 `var current = input.receive()`
 
-###while 執行第一次
+### while 執行第一次
 
 沒進 `input.onReceiveOrNull { update -> update }` ，因為通道沒資料
 
@@ -563,7 +563,7 @@ current 一開始不在 while 中取得 `var current = input.receive()`
 
 current = asyncString("Slow", 500) 
 
-###while 執行第二次
+### while 執行第二次
 
 因為主協程的 delay 只有 100 ms ，進 `input.onReceiveOrNull { update -> update }` 
 
@@ -573,7 +573,7 @@ asyncString("Replace", 100) 回傳當 select (next) 的結果
 
 current = asyncString("Replace", 100)
 
-###while 執行第三次
+### while 執行第三次
 
 主協程的 delay 500 ms ，沒進 `input.onReceiveOrNull { update -> update }` 
 
@@ -583,7 +583,7 @@ current = asyncString("Replace", 100)
 
 current  = asyncString("END", 500)
 
-###while 執行第四次
+### while 執行第四次
 
 主協程的 delay 1000 ms ，沒進 `input.onReceiveOrNull { update -> update }` 
 
