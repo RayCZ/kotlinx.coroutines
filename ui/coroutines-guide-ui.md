@@ -1,87 +1,26 @@
-<!--- INCLUDE .*/example-ui-([a-z]+)-([0-9]+)\.kt 
-/*
- * Copyright 2016-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
-// This file was automatically generated from coroutines-guide-ui.md by Knit tool. Do not edit.
-package kotlinx.coroutines.javafx.guide.$$1$$2
-
-import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.*
-import kotlinx.coroutines.javafx.JavaFx as Main
-import javafx.application.Application
-import javafx.event.EventHandler
-import javafx.geometry.*
-import javafx.scene.*
-import javafx.scene.input.MouseEvent
-import javafx.scene.layout.StackPane
-import javafx.scene.paint.Color
-import javafx.scene.shape.Circle
-import javafx.scene.text.Text
-import javafx.stage.Stage
-
-fun main(args: Array<String>) {
-    Application.launch(ExampleApp::class.java, *args)
-}
-
-class ExampleApp : Application() {
-    val hello = Text("Hello World!").apply {
-        fill = Color.valueOf("#C0C0C0")
-    }
-
-    val fab = Circle(20.0, Color.valueOf("#FF4081"))
-
-    val root = StackPane().apply {
-        children += hello
-        children += fab
-        StackPane.setAlignment(hello, Pos.CENTER)
-        StackPane.setAlignment(fab, Pos.BOTTOM_RIGHT)
-        StackPane.setMargin(fab, Insets(15.0))
-    }
-
-    val scene = Scene(root, 240.0, 380.0).apply {
-        fill = Color.valueOf("#303030")
-    }
-
-    override fun start(stage: Stage) {
-        stage.title = "Example"
-        stage.scene = scene
-        stage.show()
-        setup(hello, fab)
-    }
-}
--->
-<!--- KNIT     kotlinx-coroutines-javafx/test/guide/.*\.kt -->
-
 # Guide to UI programming with coroutines
 
-This guide assumes familiarity with basic coroutine concepts that are 
-covered in [Guide to kotlinx.coroutines](../docs/coroutines-guide.md) and gives specific 
-examples on how to use coroutines in UI applications. 
+Guide to UI programming with coroutines ：使用協程的 UI 編程
 
-All UI application libraries have one thing in common. They have the single main thread where all state of the UI 
-is confined, and all updates to the UI has to happen in this particular thread. With respect to coroutines, 
-it means that you need an appropriate _coroutine dispatcher context_ that confines the coroutine 
-execution to this main UI thread. 
+This guide assumes familiarity with basic coroutine concepts that are covered in [Guide to kotlinx.coroutines](../docs/coroutines-guide.md) and gives specific examples on how to use coroutines in UI applications. 
 
-In particular, `kotlinx.coroutines` has three modules that provide coroutine context for 
-different UI application libraries:
- 
+這份指導假設您已熟悉在 [kotlinx.coroutines 指導](../docs/coroutines-guide.md)中涵蓋的基本協程觀念，並在 UI 應用程式中如何使用協程的具體範例。
+
+All UI application libraries have one thing in common. They have the single main thread where all state of the UI is confined, and all updates to the UI has to happen in this particular thread. With respect to coroutines, it means that you need an appropriate _coroutine dispatcher context_ that confines the coroutine execution to this main UI thread. 
+
+所有 UI 應用程式函式庫有一個共通點。它們都有單一主線程， UI 所有的狀態被限制於主線程，並且所有 UI 的更新必須發生在特定線程。關於協程，它意味著你需要一個適當的**協程分配器環境**，限制協程執行到這個主 UI 線程。
+
+In particular, `kotlinx.coroutines` has three modules that provide coroutine context for different UI application libraries:
+
 * [kotlinx-coroutines-android](kotlinx-coroutines-android) -- `Dispatchers.Main` context for Android applications.
 * [kotlinx-coroutines-javafx](kotlinx-coroutines-javafx) -- `Dispatchers.JavaFx` context for JavaFX UI applications.
 * [kotlinx-coroutines-swing](kotlinx-coroutines-swing) -- `Dispatchers.Swing` context for Swing UI applications.
 
-Also, UI dispatcher is available via `Dispatchers.Main` from `kotlinx-coroutines-core` and corresponding 
-implementation (Android, JavaFx or Swing) is discovered by [`ServiceLoader`](https://docs.oracle.com/javase/8/docs/api/java/util/ServiceLoader.html) API.
-For example, if you are writing JavaFx application, you can use either `Dispatchers.Main` or `Dispachers.JavaFx` extension, it will be the same object.
+Also, UI dispatcher is available via `Dispatchers.Main` from `kotlinx-coroutines-core` and corresponding implementation (Android, JavaFx or Swing) is discovered by [`ServiceLoader`](https://docs.oracle.com/javase/8/docs/api/java/util/ServiceLoader.html) API. For example, if you are writing JavaFx application, you can use either `Dispatchers.Main` or `Dispachers.JavaFx` extension, it will be the same object.
 
-This guide covers all UI libraries simultaneously, because each of these modules consists of just one
-object definition that is a couple of pages long. You can use any of them as an example to write the corresponding
-context object for your favourite UI library, even if it is not included out of the box here.
+This guide covers all UI libraries simultaneously, because each of these modules consists of just one object definition that is a couple of pages long. You can use any of them as an example to write the corresponding context object for your favourite UI library, even if it is not included out of the box here.
 
 ## Table of contents
-
-<!--- TOC -->
 
 * [Setup](#setup)
   * [JavaFx](#javafx)
@@ -99,8 +38,6 @@ context object for your favourite UI library, even if it is not included out of 
   * [Blocking operations](#blocking-operations)
 * [Advanced topics](#advanced-topics)
   * [Starting coroutine in UI event handlers without dispatch](#starting-coroutine-in-ui-event-handlers-without-dispatch)
-
-<!--- END_TOC -->
 
 ## Setup
 
@@ -184,11 +121,11 @@ The `kotlinx-coroutines-javafx` module contains
 dispatcher that dispatches coroutine execution to
 the JavaFx application thread. We import it as `Main` to make all the presented examples 
 easily portable to Android:
- 
+
 ```kotlin
 import kotlinx.coroutines.javafx.JavaFx as Main
 ```
- 
+
 <!--- CLEAR -->
 
 Coroutines confined to the main UI thread can freely update anything in UI and suspend without blocking the main thread.
@@ -284,7 +221,7 @@ fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
         }
     }
 }
-```  
+```
 
 > You can get full code [here](kotlinx-coroutines-javafx/test/guide/example-ui-actor-01.kt)
 
@@ -314,7 +251,7 @@ the countdown. However, it is generally not the best idea. The [cancel][Job.canc
 to abort a coroutine. Cancellation is cooperative and a coroutine may, at the moment, be doing something non-cancellable
 or otherwise ignore a cancellation signal. A better solution is to use an [actor] for tasks that should
 not be performed concurrently. Let us change `onClick` extension implementation:
-  
+
 ```kotlin
 fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
     // launch one actor to handle all events on this node
@@ -326,10 +263,10 @@ fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
         eventActor.offer(event)
     }
 }
-```  
+```
 
 > You can get full code [here](kotlinx-coroutines-javafx/test/guide/example-ui-actor-02.kt)
-  
+
 The key idea that underlies an integration of an actor coroutine and a regular event handler is that 
 there is an [offer][SendChannel.offer] function on [SendChannel] that does not wait. It sends an element to the actor immediately,
 if it is possible, or discards an element otherwise. An `offer` actually returns a `Boolean` result which we ignore here.
@@ -359,7 +296,7 @@ fun View.onClick(action: suspend (View) -> Unit) {
 
 
 ### Event conflation
- 
+
 Sometimes it is more appropriate to process the most recent event, instead of just ignoring events while we were busy
 processing the previous one.  The [actor] coroutine builder accepts an optional `capacity` parameter that 
 controls the implementation of the channel that this actor is using for its mailbox. The description of all 
@@ -379,7 +316,7 @@ fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
         eventActor.offer(event)
     }
 }
-```  
+```
 
 > You can get full JavaFx code [here](kotlinx-coroutines-javafx/test/guide/example-ui-actor-03.kt).
   On Android you need to update `val eventActor = ...` line from the previous example. 
@@ -411,12 +348,12 @@ block the main UI thread and cause the freeze up of the UI.
 <!--- INCLUDE .*/example-ui-blocking-([0-9]+).kt
 
 fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
-    val eventActor = GlobalScope.actor<MouseEvent>(Dispatchers.Main, capacity = Channel.CONFLATED) {
-        for (event in channel) action(event) // pass event to action
-    }
-    onMouseClicked = EventHandler { event ->
-        eventActor.offer(event)
-    }
+​    val eventActor = GlobalScope.actor<MouseEvent>(Dispatchers.Main, capacity = Channel.CONFLATED) {
+​        for (event in channel) action(event) // pass event to action
+​    }
+​    onMouseClicked = EventHandler { event ->
+​        eventActor.offer(event)
+​    }
 }
 -->
 
@@ -424,12 +361,12 @@ The following example illustrates the problem. We are going to use `onClick` ext
 event-conflating actor from the last section to process the last click in the main UI thread. 
 For this example, we are going to 
 perform naive computation of [Fibonacci numbers](https://en.wikipedia.org/wiki/Fibonacci_number):
- 
+
 ```kotlin
 fun fib(x: Int): Int =
     if (x <= 1) x else fib(x - 1) + fib(x - 2)
-``` 
- 
+```
+
 We'll be computing larger and larger Fibonacci number each time the circle is clicked. 
 To make the UI freeze more obvious, there is also a fast counting animation that is always running 
 and is constantly updating the text in the main UI dispatcher:
@@ -453,7 +390,7 @@ fun setup(hello: Text, fab: Circle) {
     }
 }
 ```
- 
+
 > You can get full JavaFx code [here](kotlinx-coroutines-javafx/test/guide/example-ui-blocking-01.kt).
   You can just copy the `fib` function and the body of the `setup` function to your Android project.
 
@@ -551,7 +488,7 @@ class ScopedPresenter(scope: CoroutineScope): CoroutineScope by scope {
 suspend fun CoroutineScope.launchInIO() = launch(Dispatchers.IO) {
    // Launched in the scope of the caller, but with IO dispatcher
 }
-``` 
+```
 
 Parent-child relation between jobs forms a hierarchy. A coroutine that performs some background job on behalf of
 the view and in its context can create further children coroutines. The whole tree of coroutines gets cancelled
@@ -571,21 +508,21 @@ it is invoked from anymore, but suspends its execution when the computation in t
 <!--- INCLUDE .*/example-ui-blocking-0[23].kt
 
 fun setup(hello: Text, fab: Circle) {
-    var result = "none" // the last result
-    // counting animation 
-    GlobalScope.launch(Dispatchers.Main) {
-        var counter = 0
-        while (true) {
-            hello.text = "${++counter}: $result"
-            delay(100) // update the text every 100ms
-        }
-    }
-    // compute next fibonacci number of each click
-    var x = 1
-    fab.onClick {
-        result = "fib($x) = ${fib(x)}"
-        x++
-    }
+​    var result = "none" // the last result
+​    // counting animation 
+​    GlobalScope.launch(Dispatchers.Main) {
+​        var counter = 0
+​        while (true) {
+​            hello.text = "${++counter}: $result"
+​            delay(100) // update the text every 100ms
+​        }
+​    }
+​    // compute next fibonacci number of each click
+​    var x = 1
+​    fab.onClick {
+​        result = "fib($x) = ${fib(x)}"
+​        x++
+​    }
 }
 -->
 
@@ -625,7 +562,7 @@ All we need is `withContext(Dispatchers.Default)`.
 Note, that because the `fib` function is invoked from the single actor in our code, there is at most one concurrent 
 computation of it at any given time, so this code has a natural limit on the resource utilization. 
 It can saturate at most one CPU core.
-  
+
 ## Advanced topics
 
 This section covers various advanced topics. 
@@ -650,11 +587,11 @@ fun setup(hello: Text, fab: Circle) {
     }
 }
 ```
- 
+
 > You can get full JavaFx code [here](kotlinx-coroutines-javafx/test/guide/example-ui-advanced-01.kt).
 
 When we start this code and click on a pinkish circle, the following messages are printed to the console:
- 
+
 ```text
 Before launch
 After launch
@@ -692,7 +629,7 @@ fun setup(hello: Text, fab: Circle) {
     }
 }
 ```
- 
+
 > You can get full JavaFx code [here](kotlinx-coroutines-javafx/test/guide/example-ui-advanced-02.kt).
 
 It prints the following messages on click, confirming that code in the coroutine starts to execute immediately:
@@ -703,7 +640,7 @@ Inside coroutine
 After launch
 After delay
 ```
-  
+
 <!--- MODULE kotlinx-coroutines-core -->
 <!--- INDEX kotlinx.coroutines -->
 [launch]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html
