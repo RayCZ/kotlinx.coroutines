@@ -12,9 +12,9 @@ All UI application libraries have one thing in common. They have the single main
 
 In particular, `kotlinx.coroutines` has three modules that provide coroutine context for different UI application libraries:
 
-* [kotlinx-coroutines-android](kotlinx-coroutines-android) -- `Dispatchers.Main` context for Android applications.
-* [kotlinx-coroutines-javafx](kotlinx-coroutines-javafx) -- `Dispatchers.JavaFx` context for JavaFX UI applications.
-* [kotlinx-coroutines-swing](kotlinx-coroutines-swing) -- `Dispatchers.Swing` context for Swing UI applications.
+* [kotlinx-coroutines-android](https://github.com/Kotlin/kotlinx.coroutines/tree/master/ui/kotlinx-coroutines-android) -- `Dispatchers.Main` context for Android applications.
+* [kotlinx-coroutines-javafx](https://github.com/Kotlin/kotlinx.coroutines/tree/master/ui/kotlinx-coroutines-javafx) -- `Dispatchers.JavaFx` context for JavaFX UI applications.
+* [kotlinx-coroutines-swing](https://github.com/Kotlin/kotlinx.coroutines/tree/master/ui/kotlinx-coroutines-swing) -- `Dispatchers.Swing` context for Swing UI applications.
 
 Also, UI dispatcher is available via `Dispatchers.Main` from `kotlinx-coroutines-core` and corresponding implementation (Android, JavaFx or Swing) is discovered by [`ServiceLoader`](https://docs.oracle.com/javase/8/docs/api/java/util/ServiceLoader.html) API. For example, if you are writing JavaFx application, you can use either `Dispatchers.Main` or `Dispachers.JavaFx` extension, it will be the same object.
 
