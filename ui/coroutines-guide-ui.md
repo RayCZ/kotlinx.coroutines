@@ -115,29 +115,32 @@ implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.0.1"
 
 You can clone [kotlinx.coroutines](https://github.com/Kotlin/kotlinx.coroutines) project from GitHub onto your workstation. The resulting template project for Android resides in [`ui/kotlinx-coroutines-android/example-app`](kotlinx-coroutines-android/example-app) directory. You can load it in Android Studio to follow this guide on Android.
 
-你可以從 Github 複製 [kotlinx.coroutines](https://github.com/Kotlin/kotlinx.coroutines) 到你的工作站。 Android 生成的模版專案位於 [`ui/kotlinx-coroutines-android/example-app`](kotlinx-coroutines-android/example-app) 目錄。你可以在 Android Studio 中載入它，並在 Android 上遵循這份指導。
+你可以從 Github 複製 [kotlinx.coroutines](https://github.com/Kotlin/kotlinx.coroutines) 到你的工作站。 Android 生成的模版專案位於 [`ui/kotlinx-coroutines-android/example-app`](kotlinx-coroutines-android/example-app) 目錄。你可以在 Android Studio 中載入它，並在 Android 上遵循這份指導。	
 
 ## Basic UI coroutines
 
+Basic UI coroutines ：基本 UI 協程
+
 This section shows basic usage of coroutines in UI applications.
+
+這個章節在 UI 應用程式上展示基本協程的用法。
 
 ### Launch UI coroutine
 
-The `kotlinx-coroutines-javafx` module contains 
-[Dispatchers.JavaFx][kotlinx.coroutines.Dispatchers.JavaFx] 
-dispatcher that dispatches coroutine execution to
-the JavaFx application thread. We import it as `Main` to make all the presented examples 
-easily portable to Android:
+Launch UI coroutine ：發射 UI 協程
+
+The `kotlinx-coroutines-javafx` module contains [Dispatchers.JavaFx][kotlinx.coroutines.Dispatchers.JavaFx] dispatcher that dispatches coroutine execution to
+the JavaFx application thread. We import it as `Main` to make all the presented examples easily portable to Android:
+
+`kotlinx-coroutines-javafx` 模組包含 [Dispatchers.JavaFx][kotlinx.coroutines.Dispatchers.JavaFx] 分配器，分配協程執行到 JavaFx 應用程式線程。我們匯入它作為 Main 別名，使所有展示的範例輕鬆得移植到 Android ：
 
 ```kotlin
 import kotlinx.coroutines.javafx.JavaFx as Main
 ```
 
-<!--- CLEAR -->
+Coroutines confined to the main UI thread can freely update anything in UI and suspend without blocking the main thread. For example, we can perform animations by coding them in imperative style. The following code updates the text with a 10 to 1 countdown twice a second, using [launch][launch] coroutine builder:
 
-Coroutines confined to the main UI thread can freely update anything in UI and suspend without blocking the main thread.
-For example, we can perform animations by coding them in imperative style. The following code updates the
-text with a 10 to 1 countdown twice a second, using [launch] coroutine builder:
+協程已限制在 main UI 線程可以在 UI 中自由的更新任何事情，並懸掛無阻塞 main 線程。例名，我們可以透過命令式風格編碼它們執行動畫。以下代碼使用 10 到 1 每秒兩次倒數的計數器更新文字，使用 [launch][launch] 協程建造者：
 
 ```kotlin
 fun setup(hello: Text, fab: Circle) {
@@ -151,19 +154,25 @@ fun setup(hello: Text, fab: Circle) {
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-javafx/test/guide/example-ui-basic-02.kt)
+> You can get full code [here](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/kotlinx-coroutines-javafx/test/guide/example-ui-basic-02.kt)
+>
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/kotlinx-coroutines-javafx/test/guide/example-ui-basic-02.kt)獲取完整的代碼
 
-So, what happens here? Because we are launching coroutine in the main UI context, we can freely update UI from 
-inside this coroutine and invoke _suspending functions_ like [delay] at the same time. UI is not frozen
-while `delay` waits, because it does not block the UI thread -- it just suspends the coroutine.
+So, what happens here? Because we are launching coroutine in the main UI context, we can freely update UI from inside this coroutine and invoke _suspending functions_ like [delay][delay] at the same time. UI is not frozen while `delay` waits, because it does not block the UI thread -- it just suspends the coroutine.
 
-> The corresponding code for Android application is the same. 
-  You just need to copy the body of `setup` function into the corresponding function of Android project. 
+所以，這裡發生什麼事？因為我們在 main UI 環境中發射協程，我們可以從 (在) 這個協程內自由的更新 UI，並在同時調用懸掛函數像是 [delay][delay] 。 當 `delay` 等待時， UI 不會凍結，因為它不會阻塞 UI 線程 -- 它只是懸掛 (暫停) 協程。
+
+> The corresponding code for Android application is the same. You just need to copy the body of `setup` function into the corresponding function of Android project. 
+>
+> Android 應用程式對應的代碼是相同方式。你只需要複製 `setup` 函數的內文到 Android 專案的對應函數。
 
 ### Cancel UI coroutine
 
-We can keep a reference to the [Job] object that `launch` function returns and use it to cancel
-coroutine when we want to stop it. Let us cancel the coroutine when pinkish circle is clicked:
+Cancel UI coroutine ：取消 UI 協程
+
+We can keep a reference to the [Job][Job] object that `launch` function returns and use it to cancel coroutine when we want to stop it. Let us cancel the coroutine when pinkish circle is clicked:
+
+我們可以持有 [Job][Job] 物件的參照，參照由 `launch` 函數回傳，並在我們想要停止它時，使用它去取消協程。當粉紅圈圈被點擊時，讓我們取消協程。
 
 ```kotlin
 fun setup(hello: Text, fab: Circle) {
@@ -178,20 +187,21 @@ fun setup(hello: Text, fab: Circle) {
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-javafx/test/guide/example-ui-basic-03.kt)
+> You can get full code [here](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/kotlinx-coroutines-javafx/test/guide/example-ui-basic-03.kt)
+>
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/kotlinx-coroutines-javafx/test/guide/example-ui-basic-03.kt)獲取完整的代碼
 
-Now, if the circle is clicked while countdown is still running, the countdown stops. 
-Note, that [Job.cancel] is completely thread-safe and non-blocking. It just signals the coroutine to cancel 
-its job, without waiting for it to actually terminate. It can be invoked from anywhere.
-Invoking it on a coroutine that was already cancelled or has completed does nothing. 
+Now, if the circle is clicked while countdown is still running, the countdown stops. Note, that [Job.cancel][Job.cancel] is completely thread-safe and non-blocking. It just signals the coroutine to cancel its job, without waiting for it to actually terminate. It can be invoked from anywhere. Invoking it on a coroutine that was already cancelled or has completed does nothing. 
+
+現在，如果當倒數還在執行時，點擊圈圈，倒數停止。注意 [Job.cancel][Job.cancel] 是完全線程安全並無阻塞。它只是示意協程去取消它的工作，而不是為它實際終止等待 (類似於通知)。可以從任何地方調用它。在一個已經被取消或已經完成的協程上調用它不會做任何事。
 
 > The corresponding line for Android is shown below: 
+>
+> Andrroid 的對應行數顯示如下：
 
 ```kotlin
 fab.setOnClickListener { job.cancel() }  // cancel coroutine on click
 ```
-
-<!--- CLEAR -->
 
 ## Using actors within UI context
 
