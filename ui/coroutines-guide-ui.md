@@ -12,13 +12,19 @@ All UI application libraries have one thing in common. They have the single main
 
 In particular, `kotlinx.coroutines` has three modules that provide coroutine context for different UI application libraries:
 
+特別是， `kotlinx.coroutines` 有三個模組為不同 UI 應用程式函式庫提供協程環境：
+
 * [kotlinx-coroutines-android](https://github.com/Kotlin/kotlinx.coroutines/tree/master/ui/kotlinx-coroutines-android) -- `Dispatchers.Main` context for Android applications.
 * [kotlinx-coroutines-javafx](https://github.com/Kotlin/kotlinx.coroutines/tree/master/ui/kotlinx-coroutines-javafx) -- `Dispatchers.JavaFx` context for JavaFX UI applications.
 * [kotlinx-coroutines-swing](https://github.com/Kotlin/kotlinx.coroutines/tree/master/ui/kotlinx-coroutines-swing) -- `Dispatchers.Swing` context for Swing UI applications.
 
 Also, UI dispatcher is available via `Dispatchers.Main` from `kotlinx-coroutines-core` and corresponding implementation (Android, JavaFx or Swing) is discovered by [`ServiceLoader`](https://docs.oracle.com/javase/8/docs/api/java/util/ServiceLoader.html) API. For example, if you are writing JavaFx application, you can use either `Dispatchers.Main` or `Dispachers.JavaFx` extension, it will be the same object.
 
+此外， UI 分配器從 `kotlinx-coroutines-core` 透過 `Dispatchers.Main` 可用，並透過 [`ServiceLoader`](https://docs.oracle.com/javase/8/docs/api/java/util/ServiceLoader.html) API 發現對應的實作 (Android 、 JavaFx 、 Swing) 。例如，如果你正在寫 JavaFx 應用程式，你可以使用 `Dispatchers.Main` 或 `Dispachers.JavaFx` 擴展，它將是同一個物件。
+
 This guide covers all UI libraries simultaneously, because each of these modules consists of just one object definition that is a couple of pages long. You can use any of them as an example to write the corresponding context object for your favourite UI library, even if it is not included out of the box here.
+
+這分指導同時涵蓋所有 UI 函式庫，因為這些模組每個只包含一個物件定義，每個定義幾頁的長度。你可以使用它們中的任何一個作為範例，為你喜歡的 UI 函式庫寫對應的環境物件，即使它在這裡不包括開箱即刻可用。
 
 ## Table of contents
 
@@ -41,20 +47,23 @@ This guide covers all UI libraries simultaneously, because each of these modules
 
 ## Setup
 
-The runnable examples in this guide are presented for JavaFx. The advantage is that all the examples can 
-be directly started on any OS without the need for emulators or anything like that and they are fully self-contained
-(each example is in one file). 
-There are separate notes on what changes need to be made (if any) to reproduce them on Android. 
+Setup ：設置
+
+The runnable examples in this guide are presented for JavaFx. The advantage is that all the examples can be directly started on any OS without the need for emulators or anything like that and they are fully self-contained (each example is in one file). There are separate notes on what changes need to be made (if any) to reproduce them on Android. 
+
+在這指導提供 JavaFX 中可運行的範例。優點是所有範例都可使直接開始使用在任何作業系統，不需要模擬器或任何類似的東西，並且它們完全自主獨立的 (每個範例都一個檔案中) 。在 Android 重現它們需要製作當有什麼改變時單獨的說明筆記。
 
 ### JavaFx
 
-The basic example application for JavaFx consists of a window with a text label named `hello` that initially
-contains "Hello World!" string and a pinkish circle in the bottom-right corner named `fab` (floating action button).
+The basic example application for JavaFx consists of a window with a text label named `hello` that initially contains "Hello World!" string and a pinkish circle in the bottom-right corner named `fab` (floating action button).
+
+JavaFx 基本範例應用程式包含使用命名 `Hello` 文字標籤的視窗，初始化包含 "Hello World!" 字串，並且在右下角的粉紅字圈圈命名 `fab` (浮動按鈕) 。
 
 ![UI example for JavaFx](ui-example-javafx.png)
 
-The `start` function of JavaFX application invokes `setup` function, passing it reference to `hello` and `fab`
-nodes. That is where various code is placed in the rest of this guide:
+The `start` function of JavaFX application invokes `setup` function, passing it reference to `hello` and `fab` nodes. That is where various code is placed in the rest of this guide:
+
+JavaFx 應用程式的 `start` 函數調用 `setup` 函數，傳遞它引用 `hello` 和 `fab` 的節點。這裡的各種代碼被放置到這份指導的其他部份 (地方) ：
 
 ```kotlin
 fun setup(hello: Text, fab: Circle) {
@@ -62,33 +71,33 @@ fun setup(hello: Text, fab: Circle) {
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-javafx/test/guide/example-ui-basic-01.kt)
+> You can get full code [here](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/kotlinx-coroutines-javafx/test/guide/example-ui-basic-01.kt)
+>
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/kotlinx-coroutines-javafx/test/guide/example-ui-basic-01.kt)獲取完整的代碼
 
-You can clone [kotlinx.coroutines](https://github.com/Kotlin/kotlinx.coroutines) project from GitHub onto your 
-workstation and open the project in IDE. All the examples from this guide are in the test folder of 
-[`ui/kotlinx-coroutines-javafx`](kotlinx-coroutines-javafx) module. 
-This way you'll be able to run and see how each example works and to 
-experiment with them by making changes.
+You can clone [kotlinx.coroutines](https://github.com/Kotlin/kotlinx.coroutines) project from GitHub onto your workstation and open the project in IDE. All the examples from this guide are in the test folder of [`ui/kotlinx-coroutines-javafx`](https://github.com/Kotlin/kotlinx.coroutines/tree/master/ui/kotlinx-coroutines-javafx) module. This way you'll be able to run and see how each example works and to experiment with them by making changes.
+
+你可以從 Github 複製 [kotlinx.coroutines](https://github.com/Kotlin/kotlinx.coroutines) 到你的工作站，並有 IDE 下打開專案。從這份指導的所有範例在 [`ui/kotlinx-coroutines-javafx`](https://github.com/Kotlin/kotlinx.coroutines/tree/master/ui/kotlinx-coroutines-javafx) 模組的 test 目錄。這種方式你將能執行並看到每個範例如何運行，以及透過修改程式碼試驗它們。
 
 ### Android
 
-Follow the guide on [Getting Started With Android and Kotlin](https://kotlinlang.org/docs/tutorials/kotlin-android.html)
-to create Kotlin project in Android Studio. You are also encouraged to add 
-[Kotlin Android Extensions](https://kotlinlang.org/docs/tutorials/android-plugin.html)
-to your application.
+Follow the guide on [Getting Started With Android and Kotlin](https://kotlinlang.org/docs/tutorials/kotlin-android.html) to create Kotlin project in Android Studio. You are also encouraged to add [Kotlin Android Extensions](https://kotlinlang.org/docs/tutorials/android-plugin.html) to your application.
+
+在 [Getting Started With Android and Kotlin](https://kotlinlang.org/docs/tutorials/kotlin-android.html) 中遵循這份指導，在 Android Studio 去創建  Kotlin 傳案 。也鼓勵你添加 [Kotlin Android Extensions](https://kotlinlang.org/docs/tutorials/android-plugin.html) 到你的應用程式。
 
 In Android Studio 2.3 you'll get an application that looks similarly to the one shown below:
 
+在 Android Studio 2.3 中，你將可以獲得一個類似於下圖所示的應用程式：
+
 ![UI example for Android](ui-example-android.png)
 
-Go to the `context_main.xml` of your application and assign an ID of "hello" to the text view with "Hello World!" string,
-so that it is available in your application as `hello` with Kotlin Android extensions. The pinkish floating
-action button is already named `fab` in the project template that gets created.
+Go to the `context_main.xml` of your application and assign an ID of "hello" to the text view with "Hello World!" string, so that it is available in your application as `hello` with Kotlin Android extensions. The pinkish floating action button is already named `fab` in the project template that gets created.
 
-In the `MainActivity.kt` of your application remove the block `fab.setOnClickListener { ... }` and instead
-add `setup(hello, fab)` invocation as the last line of `onCreate` function.
-Create a placeholder `setup` function at the end of the file. 
-That is where various code is placed in the rest of this guide:
+進到你的應用程式 `context_main.xml` 並分配一個 "hello" ID 到 TextView 使用 "Hello World!" 字串，以便它在你的應用程式作用 Kotlin Android 擴展的 `hello` 元件可用。粉紅色浮動按鈕在已創建的專案模版中已經命名 `fab` 。
+
+In the `MainActivity.kt` of your application remove the block `fab.setOnClickListener { ... }` and instead add `setup(hello, fab)` invocation as the last line of `onCreate` function. Create a placeholder `setup` function at the end of the file. That is where various code is placed in the rest of this guide:
+
+在你的應用程式 `MainActivity.kt` 中刪除 `fab.setOnClickListener { ... }` 區域，並取代添加 `setup(hello, fab)` 調用作為 `onCreate` 函數的最後一行。有檔案的尾端中創建一個佔位符 `setup` 。 這裡的各種代碼被放置到這份指導的其他部份 (地方) ：
 
 ```kotlin
 fun setup(hello: TextView, fab: FloatingActionButton) {
@@ -96,19 +105,17 @@ fun setup(hello: TextView, fab: FloatingActionButton) {
 }
 ```
 
-<!--- CLEAR -->
+Add dependencies on `kotlinx-coroutines-android` module to the `dependencies { ... }` section of `app/build.gradle` file:
 
-Add dependencies on `kotlinx-coroutines-android` module to the `dependencies { ... }` section of
-`app/build.gradle` file:
+添加 `kotlinx-coroutines-android` 模組依賴到 `app/build.gradle` 檔案的 `dependencies { ... }` 部份。
 
 ```groovy
 implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.0.1"
 ```
 
-You can clone [kotlinx.coroutines](https://github.com/Kotlin/kotlinx.coroutines) project from GitHub onto your 
-workstation. The resulting template project for Android resides in 
-[`ui/kotlinx-coroutines-android/example-app`](kotlinx-coroutines-android/example-app) directory. 
-You can load it in Android Studio to follow this guide on Android.
+You can clone [kotlinx.coroutines](https://github.com/Kotlin/kotlinx.coroutines) project from GitHub onto your workstation. The resulting template project for Android resides in [`ui/kotlinx-coroutines-android/example-app`](kotlinx-coroutines-android/example-app) directory. You can load it in Android Studio to follow this guide on Android.
+
+你可以從 Github 複製 [kotlinx.coroutines](https://github.com/Kotlin/kotlinx.coroutines) 到你的工作站。 Android 生成的模版專案位於 [`ui/kotlinx-coroutines-android/example-app`](kotlinx-coroutines-android/example-app) 目錄。你可以在 Android Studio 中載入它，並在 Android 上遵循這份指導。
 
 ## Basic UI coroutines
 
