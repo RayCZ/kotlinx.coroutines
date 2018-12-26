@@ -205,13 +205,19 @@ fab.setOnClickListener { job.cancel() }  // cancel coroutine on click
 
 ## Using actors within UI context
 
-In this section we show how UI applications can use actors within their UI context make sure that 
-there is no unbounded growth in the number of launched coroutines.
+Using actors within UI context ：在 UI 環境內使用執行者模式
+
+In this section we show how UI applications can use actors within their UI context make sure that there is no unbounded growth in the number of launched coroutines.
+
+在這個章節中，我們展示 UI 應用程式在它們的 UI 環境內如何使用執行者模式，確保在已發射協程的數量沒有無限的增長。
 
 ### Extensions for coroutines
 
-Our goal is to write an extension _coroutine builder_ function named `onClick`, 
-so that we can perform countdown animation every time when the circle is clicked with this simple code:
+Extensions for coroutines ：協程的擴展
+
+Our goal is to write an extension _coroutine builder_ function named `onClick`, so that we can perform countdown animation every time when the circle is clicked with this simple code:
+
+我們的目的是寫一個命名為 `onClick` 的擴展協程建造者函數，以便於使用這些簡單代碼點擊圈圈時，我們可以每次執行倒數動畫。
 
 ```kotlin
 fun setup(hello: Text, fab: Circle) {
@@ -225,10 +231,9 @@ fun setup(hello: Text, fab: Circle) {
 }
 ```
 
-<!--- INCLUDE .*/example-ui-actor-([0-9]+).kt -->
+Our first implementation for `onClick` just launches a new coroutine on each mouse event and passes the corresponding mouse event into the supplied action (just in case we need it):
 
-Our first implementation for `onClick` just launches a new coroutine on each mouse event and
-passes the corresponding mouse event into the supplied action (just in case we need it):
+我們對 `onClick` 的第一個實作，只是在每次滑鼠事件中發射一個新的協程，並且傳遞對應的滑鼠事件到提供的動作 (在這個例子我們需要它) ：
 
 ```kotlin
 fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
@@ -240,14 +245,17 @@ fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-javafx/test/guide/example-ui-actor-01.kt)
+> You can get full code [here](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/kotlinx-coroutines-javafx/test/guide/example-ui-actor-01.kt)
+>
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/kotlinx-coroutines-javafx/test/guide/example-ui-actor-01.kt)獲取完整的代碼
 
-Note, that each time the circle is clicked, it starts a new coroutine and they all compete to 
-update the text. Try it. It does not look very good. We'll fix it later.
+Note, that each time the circle is clicked, it starts a new coroutine and they all compete to update the text. Try it. It does not look very good. We'll fix it later.
 
-> On Android, the corresponding extension can be written for `View` class, so that the code
-  in `setup` function that is shown above can be used without changes. There is no `MouseEvent`
-  used in OnClickListener on Android, so it is omitted.
+注意，每次點擊圈圈，它啟動一個新協程並它們都競爭的去更新文字。嘗試它，它看起來不太好。稍後我們將修正它。
+
+> On Android, the corresponding extension can be written for `View` class, so that the code in `setup` function that is shown above can be used without changes. There is no `MouseEvent` used in OnClickListener on Android, so it is omitted.
+>
+> 在 Android 上，可以為 `View` 類別寫擴展函數，以便沒有改變的使用上述的 `setup` 函數中的代碼。在 Android 上的 OnClickListener 中沒有使用 `MouseEvent` ，所以它可以被省略。
 
 ```kotlin
 fun View.onClick(action: suspend () -> Unit) {
@@ -259,15 +267,13 @@ fun View.onClick(action: suspend () -> Unit) {
 }
 ```
 
-<!--- CLEAR -->
-
 ### At most one concurrent job
 
-We can cancel an active job before starting a new one to ensure that at most one coroutine is animating 
-the countdown. However, it is generally not the best idea. The [cancel][Job.cancel] function serves only as a signal
-to abort a coroutine. Cancellation is cooperative and a coroutine may, at the moment, be doing something non-cancellable
-or otherwise ignore a cancellation signal. A better solution is to use an [actor] for tasks that should
-not be performed concurrently. Let us change `onClick` extension implementation:
+At most one concurrent job ：最多一個並發 Job
+
+We can cancel an active job before starting a new one to ensure that at most one coroutine is animating the countdown. However, it is generally not the best idea. The [cancel][Job.cancel] function serves only as a signal to abort a coroutine. Cancellation is cooperative and a coroutine may, at the moment, be doing something non-cancellable or otherwise ignore a cancellation signal. A better solution is to use an [actor][actor] for tasks that should not be performed concurrently. Let us change `onClick` extension implementation:
+
+我們可以在啟動一個新的協程前，取消活動中的 Job，確保最多一個協程動畫倒數。然而，這通常不是最好的主意。 [cancel][Job.cancel] 函數只當作退出協程的訊號。取消是協作的，並且此刻的協程或許正在做些不可取消的事情或相反的忽略一個取消訊號。更好的解決方式是對任務使用 [actor][actor] 模式，不應該並發的執行。讓我們改變  `onClick` 擴展函數的實作。
 
 ```kotlin
 fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
@@ -282,45 +288,50 @@ fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-javafx/test/guide/example-ui-actor-02.kt)
+> You can get full code [here](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/kotlinx-coroutines-javafx/test/guide/example-ui-actor-02.kt)
+>
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/kotlinx-coroutines-javafx/test/guide/example-ui-actor-02.kt)獲取完整的代碼
 
-The key idea that underlies an integration of an actor coroutine and a regular event handler is that 
-there is an [offer][SendChannel.offer] function on [SendChannel] that does not wait. It sends an element to the actor immediately,
-if it is possible, or discards an element otherwise. An `offer` actually returns a `Boolean` result which we ignore here.
+The key idea that underlies an integration of an actor coroutine and a regular event handler is that there is an [offer][SendChannel.offer] function on [SendChannel][SendChannel] that does not wait. It sends an element to the actor immediately, if it is possible, or discards an element otherwise. An `offer` actually returns a `Boolean` result which we ignore here.
 
-Try clicking repeatedly on a circle in this version of the code. The clicks are just ignored while the countdown 
-animation is running. This happens because the actor is busy with an animation and does not receive from its channel.
-By default, an actor's mailbox is backed by `RendezvousChannel`, whose `offer` operation succeeds only when 
-the `receive` is active. 
+關鍵想法，作為 actor 協程和常規事件處理器的整合基礎，在 [SendChannel][SendChannel] 中有一個 [offer][SendChannel.offer] 函數不會等待。如果可能，它立即發送一個元素到 actor ，否則丟棄元素。 `offer` 實際上回傳一個 `Boolean` 結果，我們在這裡忽略結果。
 
-> On Android, there is `View` sent in OnClickListener, so we send the `View` to the actor as a signal. 
-  The corresponding extension for `View` class looks like this:
+Try clicking repeatedly on a circle in this version of the code. The clicks are just ignored while the countdown animation is running. This happens because the actor is busy with an animation and does not receive from its channel. By default, an actor's mailbox is backed by `RendezvousChannel`, whose `offer` operation succeeds only when the `receive` is active. 
+
+嘗試在這個版本的代碼中反覆點擊。當倒數動畫正在運行時，就忽略點擊。發生這種情況，因為 actor 忙於動畫以及沒有從它的通道接收。預設下，透過 `RendezvousChannel` 支援執行者的信箱，只當 `receive` 是活動的時，它的 `offer` 操作才會成功。
+
+> On Android, there is `View` sent in OnClickListener, so we send the `View` to the actor as a signal. The corresponding extension for `View` class looks like this:
+>
+> 在 Android 上，在 OnClickListener 中有 `View` 參數發送，所以我們發送 `View` 到執行者當作訊號。為 `View` 類別對應的擴展函數看起來像這樣：
 
 ```kotlin
 fun View.onClick(action: suspend (View) -> Unit) {
     // launch one actor
     val eventActor = GlobalScope.actor<View>(Dispatchers.Main) {
+        // 通道拿出來的每個事件 (訊號) 剛好就是一個 View
         for (event in channel) action(event)
     }
+    
+    // it 代表的是 View 是 setOnClickListener 的參數
     // install a listener to activate this actor
     setOnClickListener { 
+        // 負責發送 View 當訊號到通道
         eventActor.offer(it)
     }
 }
 ```
 
-<!--- CLEAR -->
-
-
 ### Event conflation
 
-Sometimes it is more appropriate to process the most recent event, instead of just ignoring events while we were busy
-processing the previous one.  The [actor] coroutine builder accepts an optional `capacity` parameter that 
-controls the implementation of the channel that this actor is using for its mailbox. The description of all 
-the available choices is given in documentation of the [`Channel()`][Channel] factory function.
+Event conflation ：事件合併
 
-Let us change the code to use `ConflatedChannel` by passing [Channel.CONFLATED] capacity value. The 
-change is only to the line that creates an actor:
+Sometimes it is more appropriate to process the most recent event, instead of just ignoring events while we were busy processing the previous one.  The [actor][actor] coroutine builder accepts an optional `capacity` parameter that  controls the implementation of the channel that this actor is using for its mailbox. The description of all the available choices is given in documentation of the [`Channel()`][Channel] factory function.
+
+有時處理最近的事件更適合的方式，而不是在我們忙於處理前一個事件，就忽略目前事件。 [actor][actor] 協程建造者接受一個可選的 `capacity` 參數，參數控制這個 actor 用於它的信箱通道實作。 
+
+Let us change the code to use `ConflatedChannel` by passing [Channel.CONFLATED][Channel.CONFLATED] capacity value. The change is only to the line that creates an actor:
+
+讓我們透過傳遞 [Channel.CONFLATED][Channel.CONFLATED] 容量值改變代碼去使用 `ConflatedChannel` 。這個變動只在創建 actor 那行。
 
 ```kotlin
 fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
@@ -335,20 +346,21 @@ fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
 }
 ```
 
-> You can get full JavaFx code [here](kotlinx-coroutines-javafx/test/guide/example-ui-actor-03.kt).
-  On Android you need to update `val eventActor = ...` line from the previous example. 
+> You can get full JavaFx code [here](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/kotlinx-coroutines-javafx/test/guide/example-ui-actor-03.kt). On Android you need to update `val eventActor = ...` line from the previous example. 
+>
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/kotlinx-coroutines-javafx/test/guide/example-ui-actor-03.kt)獲取完整 JavaFx 的代碼。在 Android 上你需要從上一個範例更新 `val eventActor = ...` 行。
 
-Now, if a circle is clicked while the animation is running, it restarts animation after the end of it. Just once. 
-Repeated clicks while the animation is running are _conflated_ and only the most recent event gets to be 
-processed. 
+Now, if a circle is clicked while the animation is running, it restarts animation after the end of it. Just once. Repeated clicks while the animation is running are _conflated_ and only the most recent event gets to be processed. 
 
-This is also a desired behaviour for UI applications that have to react to incoming high-frequency
-event streams by updating their UI based on the most recently received update. A coroutine that is using
-`ConflatedChannel` avoids delays that are usually introduced by buffering of events.
+現在，如果在動畫在運行時，點擊圈圈，在它結束後，它重新啟動動畫。就一次。當動畫在運行時重覆的點擊被合併，並且只有最近的事件被處理。
 
-You can experiment with `capacity` parameter in the above line to see how it affects the behaviour of the code.
-Setting `capacity = Channel.UNLIMITED` creates a coroutine with `LinkedListChannel` mailbox that buffers all 
-events. In this case, the animation runs as many times as the circle is clicked.
+This is also a desired behaviour for UI applications that have to react to incoming high-frequency event streams by updating their UI based on the most recently received update. A coroutine that is using `ConflatedChannel` avoids delays that are usually introduced by buffering of events.
+
+這也是 UI 應用程式期望的行為，透過基於最近收到的更新來更新它們的 UI，必須傳入高頻率事件串流做反應。正在使用 `ConflatedChannel` 的一個協程，來避免時常由多事件緩衝引入的延遲。
+
+You can experiment with `capacity` parameter in the above line to see how it affects the behaviour of the code. Setting `capacity = Channel.UNLIMITED` creates a coroutine with `LinkedListChannel` mailbox that buffers all events. In this case, the animation runs as many times as the circle is clicked.
+
+你可以在上面的行中試驗使用 `capacity` 參數，看它如何影響代碼的行為。設置 `capacity = Channel.UNLIMITED` 使用 `LinkedListChannel` 信箱來創建一個協程緩衝所有事件。有這種情況下，動畫運行和點擊圈圈一樣多次。
 
 ## Blocking operations
 
