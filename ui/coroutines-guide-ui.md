@@ -327,7 +327,7 @@ Event conflation ：事件合併
 
 Sometimes it is more appropriate to process the most recent event, instead of just ignoring events while we were busy processing the previous one.  The [actor][actor] coroutine builder accepts an optional `capacity` parameter that  controls the implementation of the channel that this actor is using for its mailbox. The description of all the available choices is given in documentation of the [`Channel()`][Channel] factory function.
 
-有時處理最近的事件更適合的方式，而不是在我們忙於處理前一個事件，就忽略目前事件。 [actor][actor] 協程建造者接受一個可選的 `capacity` 參數，參數控制這個 actor 用於它的信箱通道實作。 
+有時處理最近的事件更適合的方式，而不是在我們忙於處理前一個事件，就忽略目前事件。 [actor][actor] 協程建造者接受一個可選的 `capacity` 參數，參數控制這個 actor 用於它的信箱通道實作演算法。 
 
 Let us change the code to use `ConflatedChannel` by passing [Channel.CONFLATED][Channel.CONFLATED] capacity value. The change is only to the line that creates an actor:
 
@@ -356,7 +356,7 @@ Now, if a circle is clicked while the animation is running, it restarts animatio
 
 This is also a desired behaviour for UI applications that have to react to incoming high-frequency event streams by updating their UI based on the most recently received update. A coroutine that is using `ConflatedChannel` avoids delays that are usually introduced by buffering of events.
 
-這也是 UI 應用程式期望的行為，透過基於最近收到的更新來更新它們的 UI，必須傳入高頻率事件串流做反應。正在使用 `ConflatedChannel` 的一個協程，來避免時常由多事件緩衝引入的延遲。
+這也是 UI 應用程式期望的行為，透過根據最近收到的更新來更新它們的 UI，必須傳入高頻率事件串流做反應。正在使用 `ConflatedChannel` 的一個協程，來避免時常由多事件緩衝引入的延遲。
 
 You can experiment with `capacity` parameter in the above line to see how it affects the behaviour of the code. Setting `capacity = Channel.UNLIMITED` creates a coroutine with `LinkedListChannel` mailbox that buffers all events. In this case, the animation runs as many times as the circle is clicked.
 
