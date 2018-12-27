@@ -566,7 +566,7 @@ You can now enjoy full-speed naive Fibonacci computation without blocking the ma
 
 Note, that because the `fib` function is invoked from the single actor in our code, there is at most one concurrent computation of it at any given time, so this code has a natural limit on the resource utilization. It can saturate at most one CPU core.
 
-注意，那是因為在我們代碼中從單一執行者調用 `fib` 函數，在任何已給的時間點最多只有一個它的並發計算，所以這些代碼在資源利用上有自然的限制。它可以最多可以飽合一個 CPU 核心
+注意，那是因為在我們代碼中從單一執行者調用 `fib` 函數，在任何已給的時間點最多只有一個它的並發計算，所以這些代碼在資源利用上有自然的限制。它最多可以飽合一個 CPU 核心。
 
 ## Advanced topics
 
