@@ -140,7 +140,7 @@ import kotlinx.coroutines.javafx.JavaFx as Main
 
 Coroutines confined to the main UI thread can freely update anything in UI and suspend without blocking the main thread. For example, we can perform animations by coding them in imperative style. The following code updates the text with a 10 to 1 countdown twice a second, using [launch][launch] coroutine builder:
 
-協程已限制在 main UI 線程可以在 UI 中自由的更新任何事情，並懸掛無阻塞 main 線程。例名，我們可以透過命令式風格編碼它們執行動畫。以下代碼使用 10 到 1 每秒兩次倒數的計數器更新文字，使用 [launch][launch] 協程建造者：
+協程已限制在主要 UI 線程可以在 UI 中自由的更新任何事情，並懸掛無阻塞主要線程。例名，我們可以透過命令式風格編碼它們執行動畫。以下代碼使用 10 到 1 每秒兩次倒數的計數器更新文字，使用 [launch][launch] 協程建造者：
 
 ```kotlin
 fun setup(hello: Text, fab: Circle) {
@@ -160,7 +160,7 @@ fun setup(hello: Text, fab: Circle) {
 
 So, what happens here? Because we are launching coroutine in the main UI context, we can freely update UI from inside this coroutine and invoke _suspending functions_ like [delay][delay] at the same time. UI is not frozen while `delay` waits, because it does not block the UI thread -- it just suspends the coroutine.
 
-所以，這裡發生什麼事？因為我們在 main UI 環境中發射協程，我們可以從 (在) 這個協程內自由的更新 UI，並在同時調用懸掛函數像是 [delay][delay] 。 當 `delay` 等待時， UI 不會凍結，因為它不會阻塞 UI 線程 -- 它只是懸掛 (暫停) 協程。
+所以，這裡發生什麼事？因為我們在主 UI 環境中發射協程，我們可以從 (在) 這個協程內自由的更新 UI，並在同時調用懸掛函數像是 [delay][delay] 。 當 `delay` 等待時， UI 不會凍結，因為它不會阻塞 UI 線程 -- 它只是懸掛 (暫停) 協程。
 
 > The corresponding code for Android application is the same. You just need to copy the body of `setup` function into the corresponding function of Android project. 
 >
@@ -364,41 +364,28 @@ You can experiment with `capacity` parameter in the above line to see how it aff
 
 ## Blocking operations
 
+Blocking operations ：阻塞操作
+
 This section explains how to use UI coroutines with thread-blocking operations.
 
 ### The problem of UI freezes 
 
-It would have been great if all APIs out there were written as suspending functions that never blocks an 
-execution thread. However, it is quite often not the case. Sometimes you need to do a CPU-consuming computation
-or just need to invoke some 3rd party APIs for network access, for example, that blocks the invoker thread. 
-You cannot do that from the main UI thread nor from the UI-confined coroutine directly, because that would
-block the main UI thread and cause the freeze up of the UI.
+It would have been great if all APIs out there were written as suspending functions that never blocks an execution thread. However, it is quite often not the case. Sometimes you need to do a CPU-consuming computation or just need to invoke some 3rd party APIs for network access, for example, that blocks the invoker thread. You cannot do that from the main UI thread nor from the UI-confined coroutine directly, because that would block the main UI thread and cause the freeze up of the UI.
 
-<!--- INCLUDE .*/example-ui-blocking-([0-9]+).kt
+如果那裡所有的 API 被寫作永遠不會阻塞執行線程的懸掛函數，那就太棒了。然而，通常不是如此。有時我們需要執行 CPU 消耗的計算，或只需調用一些網路存取的第三方 API ，例如，阻塞調用者線程。你不可以直接的從主要 UI 線程，也不可從 UI 限制的協程執行，因為這樣可能阻塞主要 UI 線程，並造成 UI 凍結。
 
-fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
-​    val eventActor = GlobalScope.actor<MouseEvent>(Dispatchers.Main, capacity = Channel.CONFLATED) {
-​        for (event in channel) action(event) // pass event to action
-​    }
-​    onMouseClicked = EventHandler { event ->
-​        eventActor.offer(event)
-​    }
-}
--->
+The following example illustrates the problem. We are going to use `onClick` extension with UI-confined event-conflating actor from the last section to process the last click in the main UI thread. For this example, we are going to perform naive computation of [Fibonacci numbers](https://en.wikipedia.org/wiki/Fibonacci_number):
 
-The following example illustrates the problem. We are going to use `onClick` extension with UI-confined
-event-conflating actor from the last section to process the last click in the main UI thread. 
-For this example, we are going to 
-perform naive computation of [Fibonacci numbers](https://en.wikipedia.org/wiki/Fibonacci_number):
+以下範例解釋這個問題。我們將使用 `onClick` 擴展函數，從上一個章節 UI 限制的事件合併 actor 來處理在主要 UI 線程中最後一次點擊。對於這個例子，我們將執行 [Fibonacci numbers](https://en.wikipedia.org/wiki/Fibonacci_number) 的天真計算：
 
 ```kotlin
 fun fib(x: Int): Int =
     if (x <= 1) x else fib(x - 1) + fib(x - 2)
 ```
 
-We'll be computing larger and larger Fibonacci number each time the circle is clicked. 
-To make the UI freeze more obvious, there is also a fast counting animation that is always running 
-and is constantly updating the text in the main UI dispatcher:
+We'll be computing larger and larger Fibonacci number each time the circle is clicked. To make the UI freeze more obvious, there is also a fast counting animation that is always running and is constantly updating the text in the main UI dispatcher:
+
+我們將在每次點擊圈圈時計算越來越大的 Fibonacci number 。為了使 UI 凍結更明顯，也有一個快速計算總在執行中的動畫，並不斷的在主 UI 分配器協程中更新文字。
 
 ```kotlin
 fun setup(hello: Text, fab: Circle) {
@@ -420,29 +407,29 @@ fun setup(hello: Text, fab: Circle) {
 }
 ```
 
-> You can get full JavaFx code [here](kotlinx-coroutines-javafx/test/guide/example-ui-blocking-01.kt).
-  You can just copy the `fib` function and the body of the `setup` function to your Android project.
+> You can get full JavaFx code [here](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/kotlinx-coroutines-javafx/test/guide/example-ui-blocking-01.kt). You can just copy the `fib` function and the body of the `setup` function to your Android project.
+>
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/kotlinx-coroutines-javafx/test/guide/example-ui-blocking-01.kt)獲取完整 JavaFx 的代碼。你可以只是複製 `fib` 函數和 `setup` 的內文到你的 Android 專案。
 
-Try clicking on the circle in this example. After around 30-40th click our naive computation is going to become
-quite slow and you would immediately see how the main UI thread freezes, because the animation stops running 
-during UI freeze.
+Try clicking on the circle in this example. After around 30-40th click our naive computation is going to become quite slow and you would immediately see how the main UI thread freezes, because the animation stops running during UI freeze.
+
+嘗試點擊在這個範例中的圈圈。在大約 30-40 秒之後點擊我們天真的計算將變得相當慢，並且你可能立即看到主要 UI 線程如何凍結，因為動畫在 UI 凍結期間停止運行。
 
 ### Structured concurrency, lifecycle and coroutine parent-child hierarchy
 
-A typical UI application has a number of elements with a lifecycle. Windows, UI controls, activities, views, fragments
-and other visual elements are created and destroyed. A long-running coroutine, performing some IO or a background 
-computation, can retain references to the corresponding UI elements for longer than it is needed, preventing garbage 
-collection of the whole trees of UI objects that were already destroyed and will not be displayed anymore.
+Structured concurrency, lifecycle and coroutine parent-child hierarchy ：結構化並發、生命週期和協程父子層級
 
-The natural solution to this problem is to associate a [Job] object with each UI object that has a lifecycle and create
-all the coroutines in the context of this job. But passing associated job object to every coroutine builder is error-prone, 
-it is easy to forget it. For this purpose, [CoroutineScope] interface should be implemented by UI owner, and then every
-coroutine builder defined as an extension on [CoroutineScope] inherits UI job without explicitly mentioning it.
+A typical UI application has a number of elements with a lifecycle. Windows, UI controls, activities, views, fragments and other visual elements are created and destroyed. A long-running coroutine, performing some IO or a background computation, can retain references to the corresponding UI elements for longer than it is needed, preventing garbage collection of the whole trees of UI objects that were already destroyed and will not be displayed anymore.
 
-For example, in Android application an `Activity` is initially _created_ and is _destroyed_ when it is no longer 
-needed and when its memory must be released. A natural solution is to attach an 
-instance of a `Job` to an instance of an `Activity`:
-<!--- CLEAR -->
+典型的 UI 應用程式有許多生命週期的元素。 Windows 、 UI 控制、 Activity 、 View 、 Fragment 和其他的視覺元素被創建和銷毀。在執行某些 IO 或背景運算的長時間運行協程可以保留對應的 UI 元素引用超過它所需要的時間，防止整個 UI 物件樹狀的垃圾集合，這些 UI 物件已經被被銷毀，並且將不再被顯示。
+
+The natural solution to this problem is to associate a [Job][Job] object with each UI object that has a lifecycle and create all the coroutines in the context of this job. But passing associated job object to every coroutine builder is error-prone, it is easy to forget it. For this purpose, [CoroutineScope][CoroutineScope] interface should be implemented by UI owner, and then every coroutine builder defined as an extension on [CoroutineScope][CoroutineScope] inherits UI job without explicitly mentioning it.
+
+這個問題的自然解決方式是使用 [Job][Job] 物件聯繫每個有生命週期的 UI 物件，並在這個 job 物件的環境中創建所有協程。但是傳遞聯繫的 job 物件給每個協程建造者容易出錯，很容易忘記它。對於這個目的，應該透過 UI 擁有者實作[CoroutineScope][CoroutineScope] 介面，並接著在 [CoroutineScope][CoroutineScope] 中每個協程建造者定義為擴展函數，繼承 UI job 無明確的提及它。
+
+For example, in Android application an `Activity` is initially _created_ and is _destroyed_ when it is no longer needed and when its memory must be released. A natural solution is to attach an instance of a `Job` to an instance of an `Activity`:
+
+例如，在 Android 應用程式中最初創建一個 `Activity`，並當不再需要它並且必須釋放它的記憶體時銷毀它。一個自然的解決方式是附加一個 `Job` 的實例到 `Activity` 的實例：
 
 ```kotlin
 abstract class ScopedAppActivity: AppCompatActivity(), CoroutineScope {
@@ -464,6 +451,8 @@ abstract class ScopedAppActivity: AppCompatActivity(), CoroutineScope {
 
 Now, an activity that is associated with a job has to extend ScopedAppActivity
 
+現在， Activity 與 job 聯繫必須繼承 ScopedAppActivity
+
 ```kotlin
 class MainActivity : ScopedAppActivity() {
 
@@ -483,13 +472,20 @@ class MainActivity : ScopedAppActivity() {
 }
 ```
 
-Every coroutine launched from within a `MainActivity` has its job as a parent and is immediately cancelled when
-activity is destroyed.
+Every coroutine launched from within a `MainActivity` has its job as a parent and is immediately cancelled when activity is destroyed.
+
+從 `Mainactivity` 內發射每個協程，因父類別有它的 job 實例並在 Activity 被銷毀時立刻取消。
 
 To propagate activity scope to its views and presenters, multiple techniques can be used:
-- [coroutineScope] builder to provide a nested scope
-- Receive [CoroutineScope] in presenter method parameters
+
+傳播 Activity 的協程範圍到它的 View 、 Presenter ，可以使用多種技術：
+
+- [coroutineScope][coroutineScope] builder to provide a nested scope
+  提供內嵌協程範圍的 [coroutineScope][coroutineScope] 建造者
+- Receive [CoroutineScope][CoroutineScope] in presenter method parameters
+  在 Presenter 方法參數中接收 [CoroutineScope][CoroutineScope]
 - Make method extension on [CoroutineScope] (applicable only for top-level methods)
+  在 [CoroutineScope][CoroutineScope] 中製作方法擴展 (只適用於最高層的方法)
 
 ```kotlin
 class ActivityWithPresenters: ScopedAppActivity() {
@@ -519,41 +515,17 @@ suspend fun CoroutineScope.launchInIO() = launch(Dispatchers.IO) {
 }
 ```
 
-Parent-child relation between jobs forms a hierarchy. A coroutine that performs some background job on behalf of
-the view and in its context can create further children coroutines. The whole tree of coroutines gets cancelled
-when the parent job is cancelled. An example of that is shown in the
-["Children of a coroutine"](../docs/coroutine-context-and-dispatchers.md#children-of-a-coroutine) section of the guide to coroutines.
-<!--- CLEAR -->
+Parent-child relation between jobs forms a hierarchy. A coroutine that performs some background job on behalf of the view and in its context can create further children coroutines. The whole tree of coroutines gets cancelled when the parent job is cancelled. An example of that is shown in the ["Children of a coroutine"](../docs/coroutine-context-and-dispatchers.md#children-of-a-coroutine) section of the guide to coroutines.
+
+在 job 之間的父子關係形成層級。協程代表 View 執行某些背景工作，並且在它的環境中可以創建進一步的子協程。在父協程的 job 被取消時，整個協程的樹狀聯繫 job 都被取消。
 
 ### Blocking operations
 
-The fix for the blocking operations on the main UI thread is quite straightforward with coroutines. We'll 
-convert our "blocking" `fib` function to a non-blocking suspending function that runs the computation in 
-the background thread by using [withContext] function to change its execution context to [Dispatchers.Default] that is 
-backed by the background pool of threads. 
-Notice, that `fib` function is now marked with `suspend` modifier. It does not block the coroutine that
-it is invoked from anymore, but suspends its execution when the computation in the background thread is working:
+Blocking operations ：阻塞操作
 
-<!--- INCLUDE .*/example-ui-blocking-0[23].kt
+The fix for the blocking operations on the main UI thread is quite straightforward with coroutines. We'll convert our "blocking" `fib` function to a non-blocking suspending function that runs the computation in the background thread by using [withContext][withContext] function to change its execution context to [Dispatchers.Default][Dispatchers.Default] that is backed by the background pool of threads. Notice, that `fib` function is now marked with `suspend` modifier. It does not block the coroutine that it is invoked from anymore, but suspends its execution when the computation in the background thread is working:
 
-fun setup(hello: Text, fab: Circle) {
-​    var result = "none" // the last result
-​    // counting animation 
-​    GlobalScope.launch(Dispatchers.Main) {
-​        var counter = 0
-​        while (true) {
-​            hello.text = "${++counter}: $result"
-​            delay(100) // update the text every 100ms
-​        }
-​    }
-​    // compute next fibonacci number of each click
-​    var x = 1
-​    fab.onClick {
-​        result = "fib($x) = ${fib(x)}"
-​        x++
-​    }
-}
--->
+修正在主要 UI 線程的阻塞操作，使用協程相當直接了當。我們將我們的 "阻塞操作" `fib` 函數轉換到非阻塞的懸掛函數，此函數在背景線程中運行計算工作，透過使用 [withContext][withContext] 函數去改變它執行的環境到 [Dispatchers.Default][Dispatchers.Default] ，由背景線程池支援的 [Dispatchers.Default][Dispatchers.Default] 。注意，該 `fib` 函數現在使用 `suspend` 修飾符標記。它不會阻塞再次調協的協程，但是在背景線程中計算正在執行時，懸掛 (暫停) 它的執行
 
 ```kotlin
 suspend fun fib(x: Int): Int = withContext(Dispatchers.Default) {
@@ -561,18 +533,15 @@ suspend fun fib(x: Int): Int = withContext(Dispatchers.Default) {
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-javafx/test/guide/example-ui-blocking-02.kt).
+> You can get full code [here](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/kotlinx-coroutines-javafx/test/guide/example-ui-blocking-02.kt).
+>
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/kotlinx-coroutines-javafx/test/guide/example-ui-blocking-02.kt)獲取完整 JavaFx 的代碼
 
-You can run this code and verify that UI is not frozen while large Fibonacci numbers are being computed. 
-However, this code computes `fib` somewhat slower, because every recursive call to `fib` goes via `withContext`. This is 
-not a big problem in practice, because `withContext` is smart enough to check that the coroutine is already running
-in the required context and avoids overhead of dispatching coroutine to a different thread again. It is an 
-overhead nonetheless, which is visible on this primitive code that does nothing else, but only adds integers 
-in between invocations to `withContext`. For some more substantial code, the overhead of an extra `withContext` invocation is 
-not going to be significant.
+You can run this code and verify that UI is not frozen while large Fibonacci numbers are being computed. However, this code computes `fib` somewhat slower, because every recursive call to `fib` goes via `withContext`. This is not a big problem in practice, because `withContext` is smart enough to check that the coroutine is already running in the required context and avoids overhead of dispatching coroutine to a different thread again. It is an overhead nonetheless, which is visible on this primitive code that does nothing else, but only adds integers in between invocations to `withContext`. For some more substantial code, the overhead of an extra `withContext` invocation is not going to be significant.
 
-Still, this particular `fib` implementation can be made to run as fast as before, but in the background thread, by renaming
-the original `fib` function to `fibBlocking` and defining `fib` with `withContext` wrapper on top of `fibBlocking`:
+你可以運行此代碼，並驗證在計算大量 Fibonacci numbers 時不會凍結 UI ，然而，這些代碼計算 `fib` 有些慢，因為每個遞迴透過 `withContext` 調用 `fib`。在實踐中這不是大問題，因為 `withContext` 足夠聰明，去檢查協程已經在所需的環境中運行，並避免再次分配協程到不同的線程開銷。儘管如此，它是一個開銷，在這些原生代碼中顯示的，它不做其它的事情，而只在調 `withContext` 之間添加整數。對於一些更實質的代碼，額外的 `withContext` 調用開銷將不重要。
+
+Still, this particular `fib` implementation can be made to run as fast as before, but in the background thread, by renaming the original `fib` function to `fibBlocking` and defining `fib` with `withContext` wrapper on top of `fibBlocking`:
 
 ```kotlin
 suspend fun fib(x: Int): Int = withContext(Dispatchers.Default) {
@@ -585,12 +554,9 @@ fun fibBlocking(x: Int): Int =
 
 > You can get full code [here](kotlinx-coroutines-javafx/test/guide/example-ui-blocking-03.kt).
 
-You can now enjoy full-speed naive Fibonacci computation without blocking the main UI thread. 
-All we need is `withContext(Dispatchers.Default)`.
+You can now enjoy full-speed naive Fibonacci computation without blocking the main UI thread. All we need is `withContext(Dispatchers.Default)`.
 
-Note, that because the `fib` function is invoked from the single actor in our code, there is at most one concurrent 
-computation of it at any given time, so this code has a natural limit on the resource utilization. 
-It can saturate at most one CPU core.
+Note, that because the `fib` function is invoked from the single actor in our code, there is at most one concurrent computation of it at any given time, so this code has a natural limit on the resource utilization. It can saturate at most one CPU core.
 
 ## Advanced topics
 
