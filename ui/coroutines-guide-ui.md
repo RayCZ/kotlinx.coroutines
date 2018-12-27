@@ -273,7 +273,7 @@ At most one concurrent job ：最多一個並發 Job
 
 We can cancel an active job before starting a new one to ensure that at most one coroutine is animating the countdown. However, it is generally not the best idea. The [cancel][Job.cancel] function serves only as a signal to abort a coroutine. Cancellation is cooperative and a coroutine may, at the moment, be doing something non-cancellable or otherwise ignore a cancellation signal. A better solution is to use an [actor][actor] for tasks that should not be performed concurrently. Let us change `onClick` extension implementation:
 
-我們可以在啟動一個新的協程前，取消活動中的 Job，確保最多一個協程動畫倒數。然而，這通常不是最好的主意。 [cancel][Job.cancel] 函數只當作退出協程的訊號。取消是協作的，並且此刻的協程或許正在做些不可取消的事情或相反的忽略一個取消訊號。更好的解決方式是對任務使用 [actor][actor] 模式，不應該並發的執行。讓我們改變  `onClick` 擴展函數的實作。
+我們可以在啟動一個新的協程前，取消活動中的 Job，確保最多一個協程顯示動畫倒數。然而，這通常不是最好的主意。 [cancel][Job.cancel] 函數只當作退出協程的訊號。取消是協作的，並且此刻的協程或許正在做些不可取消的事情或相反的忽略一個取消訊號。更好的解決方式是對任務使用 [actor][actor] 模式，不應該並發的執行。讓我們改變  `onClick` 擴展函數的實作。
 
 ```kotlin
 fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
@@ -367,6 +367,8 @@ You can experiment with `capacity` parameter in the above line to see how it aff
 Blocking operations ：阻塞操作
 
 This section explains how to use UI coroutines with thread-blocking operations.
+
+這個章節解釋如何使用線程阻塞操作的 UI 協程
 
 ### The problem of UI freezes 
 
@@ -535,13 +537,15 @@ suspend fun fib(x: Int): Int = withContext(Dispatchers.Default) {
 
 > You can get full code [here](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/kotlinx-coroutines-javafx/test/guide/example-ui-blocking-02.kt).
 >
-> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/kotlinx-coroutines-javafx/test/guide/example-ui-blocking-02.kt)獲取完整 JavaFx 的代碼
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/kotlinx-coroutines-javafx/test/guide/example-ui-blocking-02.kt)獲取完整的代碼
 
 You can run this code and verify that UI is not frozen while large Fibonacci numbers are being computed. However, this code computes `fib` somewhat slower, because every recursive call to `fib` goes via `withContext`. This is not a big problem in practice, because `withContext` is smart enough to check that the coroutine is already running in the required context and avoids overhead of dispatching coroutine to a different thread again. It is an overhead nonetheless, which is visible on this primitive code that does nothing else, but only adds integers in between invocations to `withContext`. For some more substantial code, the overhead of an extra `withContext` invocation is not going to be significant.
 
 你可以運行此代碼，並驗證在計算大量 Fibonacci numbers 時不會凍結 UI ，然而，這些代碼計算 `fib` 有些慢，因為每個遞迴透過 `withContext` 調用 `fib`。在實踐中這不是大問題，因為 `withContext` 足夠聰明，去檢查協程已經在所需的環境中運行，並避免再次分配協程到不同的線程開銷。儘管如此，它是一個開銷，在這些原生代碼中顯示的，它不做其它的事情，而只在調 `withContext` 之間添加整數。對於一些更實質的代碼，額外的 `withContext` 調用開銷將不重要。
 
 Still, this particular `fib` implementation can be made to run as fast as before, but in the background thread, by renaming the original `fib` function to `fibBlocking` and defining `fib` with `withContext` wrapper on top of `fibBlocking`:
+
+仍然，這個特定的 `fib` 實作可以像以前一樣快的運行，但是在背景線程中，透過原始的 `fib` 函數重新命名為 `fibBlocking` 並在 `fibBlocking` 的上面使用 `withContext` 包裝來定義 `fib` 函數：
 
 ```kotlin
 suspend fun fib(x: Int): Int = withContext(Dispatchers.Default) {
@@ -552,11 +556,17 @@ fun fibBlocking(x: Int): Int =
     if (x <= 1) x else fibBlocking(x - 1) + fibBlocking(x - 2)
 ```
 
-> You can get full code [here](kotlinx-coroutines-javafx/test/guide/example-ui-blocking-03.kt).
+> You can get full code [here](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/kotlinx-coroutines-javafx/test/guide/example-ui-blocking-03.kt).
+>
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/kotlinx-coroutines-javafx/test/guide/example-ui-blocking-03.kt)獲取完整的代碼
 
 You can now enjoy full-speed naive Fibonacci computation without blocking the main UI thread. All we need is `withContext(Dispatchers.Default)`.
 
+你現在可以在無阻塞主要 UI 線程全速天真的 Fibonacci 運算。我們只需要 `withContext(Dispatchers.Default)` 。
+
 Note, that because the `fib` function is invoked from the single actor in our code, there is at most one concurrent computation of it at any given time, so this code has a natural limit on the resource utilization. It can saturate at most one CPU core.
+
+注意，那是因為在我們代碼中從單一執行者調用 `fib` 函數，在任何已給的時間點最多只有一個它的並發計算，所以這些代碼在資源利用上有自然的限制。它可以最多可以飽合一個 CPU 核心
 
 ## Advanced topics
 
