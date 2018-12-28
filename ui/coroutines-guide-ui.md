@@ -372,6 +372,8 @@ This section explains how to use UI coroutines with thread-blocking operations.
 
 ### The problem of UI freezes 
 
+The problem of UI freezes  ： UI 凍結的問題
+
 It would have been great if all APIs out there were written as suspending functions that never blocks an execution thread. However, it is quite often not the case. Sometimes you need to do a CPU-consuming computation or just need to invoke some 3rd party APIs for network access, for example, that blocks the invoker thread. You cannot do that from the main UI thread nor from the UI-confined coroutine directly, because that would block the main UI thread and cause the freeze up of the UI.
 
 如果那裡所有的 API 被寫作永遠不會阻塞執行線程的懸掛函數，那就太棒了。然而，通常不是如此。有時我們需要執行 CPU 消耗的計算，或只需調用一些網路存取的第三方 API ，例如，阻塞調用者線程。你不可以直接的從主要 UI 線程，也不可從 UI 限制的協程執行，因為這樣可能阻塞主要 UI 線程，並造成 UI 凍結。
