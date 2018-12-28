@@ -615,7 +615,7 @@ After delay
 
 As you can see, execution immediately continues after [launch][launch], while the coroutine gets posted onto the main UI thread for execution later. All UI dispatchers in `kotlinx.coroutines` are implemented this way. Why so? 
 
-如你所見，在 "After [launch][launch]" 之後協程立即執行，
+如你所見，在 "After [launch][launch]" 之後協程立即執行，而協程發怖到主要 UI 線程而稍後執行。在 `kotlinx.coroutines` 所有 UI 分配器以這種方式實作。為何這樣？
 
 Basically, the choice here is between "JS-style" asynchronous approach (async actions are always postponed to be executed later in the even dispatch thread) and "C#-style" approach (async actions are executed in the invoker thread until the first suspension point). While, C# approach seems to be more efficient, it ends up with recommendations like "use `yield` if you need to ....". This is error-prone. JS-style approach is more consistent and does not require programmers to think about whether they need to yield or not.
 
