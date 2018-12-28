@@ -269,11 +269,11 @@ fun View.onClick(action: suspend () -> Unit) {
 
 ### At most one concurrent job
 
-At most one concurrent job ：最多一個並發 Job
+At most one concurrent job ：最多並發 (同時) 一個 Job
 
 We can cancel an active job before starting a new one to ensure that at most one coroutine is animating the countdown. However, it is generally not the best idea. The [cancel][Job.cancel] function serves only as a signal to abort a coroutine. Cancellation is cooperative and a coroutine may, at the moment, be doing something non-cancellable or otherwise ignore a cancellation signal. A better solution is to use an [actor][actor] for tasks that should not be performed concurrently. Let us change `onClick` extension implementation:
 
-我們可以在啟動一個新的協程前，取消活動中的 Job，確保最多一個協程顯示動畫倒數。然而，這通常不是最好的主意。 [cancel][Job.cancel] 函數只當作退出協程的訊號。取消是協作的，並且此刻的協程或許正在做些不可取消的事情或相反的忽略一個取消訊號。更好的解決方式是對任務使用 [actor][actor] 模式，不應該並發的執行。讓我們改變  `onClick` 擴展函數的實作。
+我們可以在啟動一個新的協程前，取消活動中的 Job，確保最多一個協程顯示動畫倒數。然而，這通常不是最好的主意。 [cancel][Job.cancel] 函數只當作退出協程的訊號。取消是協作的，並且此刻的協程或許正在做些不可取消的事情或相反的忽略一個取消訊號。更好的解決方式是對任務使用 [actor][actor] 模式，任務不應該並發的執行。讓我們改變  `onClick` 擴展函數的實作。
 
 ```kotlin
 fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
