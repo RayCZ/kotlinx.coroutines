@@ -570,14 +570,19 @@ Note, that because the `fib` function is invoked from the single actor in our co
 
 ## Advanced topics
 
+Advanced topics ：進階主題
+
 This section covers various advanced topics. 
+
+這個章節涵蓋各種進階主題。
 
 ### Starting coroutine in UI event handlers without dispatch
 
-Let us write the following code in `setup` to visualize the order of execution when coroutine is launched
-from the UI thread:
+Starting coroutine in UI event handlers without dispatch ：
 
-<!--- CLEAR -->
+Let us write the following code in `setup` to visualize the order of execution when coroutine is launched from the UI thread:
+
+我我們在 `setup` 中寫以下的代碼，當從 UI 線程發射協程時，視覺化執行的順序：
 
 ```kotlin
 fun setup(hello: Text, fab: Circle) {
@@ -593,9 +598,13 @@ fun setup(hello: Text, fab: Circle) {
 }
 ```
 
-> You can get full JavaFx code [here](kotlinx-coroutines-javafx/test/guide/example-ui-advanced-01.kt).
+> You can get full JavaFx code [here](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/kotlinx-coroutines-javafx/test/guide/example-ui-advanced-01.kt).
+>
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/kotlinx-coroutines-javafx/test/guide/example-ui-advanced-01.kt)獲取完整的代碼
 
 When we start this code and click on a pinkish circle, the following messages are printed to the console:
+
+當我們啟動這個代碼並在粉紅圈圈點擊時，印出以下訊息到控制台：
 
 ```text
 Before launch
@@ -604,22 +613,17 @@ Inside coroutine
 After delay
 ```
 
-As you can see, execution immediately continues after [launch], while the coroutine gets posted onto the main UI thread
-for execution later. All UI dispatchers in `kotlinx.coroutines` are implemented this way. Why so? 
+As you can see, execution immediately continues after [launch][launch], while the coroutine gets posted onto the main UI thread for execution later. All UI dispatchers in `kotlinx.coroutines` are implemented this way. Why so? 
 
-Basically, the choice here is between "JS-style" asynchronous approach (async actions
-are always postponed to be executed later in the even dispatch thread) and "C#-style" approach
-(async actions are executed in the invoker thread until the first suspension point).
-While, C# approach seems to be more efficient, it ends up with recommendations like
-"use `yield` if you need to ....". This is error-prone. JS-style approach is more consistent
-and does not require programmers to think about whether they need to yield or not.
+如你所見，在 "After [launch][launch]" 之後協程立即執行，
 
-However, in this particular case when coroutine is started from an event handler and there is no other code around it,
-this extra dispatch does indeed add an extra overhead without bringing any additional value. 
-In this case an optional [CoroutineStart] parameter to [launch], [async] and [actor] coroutine builders 
-can be used for performance optimization. 
-Setting it to the value of [CoroutineStart.UNDISPATCHED] has the effect of starting to execute
-coroutine immediately until its first suspension point as the following example shows:
+Basically, the choice here is between "JS-style" asynchronous approach (async actions are always postponed to be executed later in the even dispatch thread) and "C#-style" approach (async actions are executed in the invoker thread until the first suspension point). While, C# approach seems to be more efficient, it ends up with recommendations like "use `yield` if you need to ....". This is error-prone. JS-style approach is more consistent and does not require programmers to think about whether they need to yield or not.
+
+基本上，這裡的選擇是在 "JS 風格" 異步方式之間 (異步動作總是被推遲的，在實際分配的線程中稍後執行) ，而 "C# 風格" 方式 (異步動作在調用者線程中執行，直到第一個懸掛點) 。雖然， C# 方式看起來更有效率，它最終的建議像是 "如果你需要.....，使用 `yield`" 。這是易於出錯的。 JS 風格方式是更一致並不會需要程式設計師去思考它們是否需要 `yield` 或不用。
+
+However, in this particular case when coroutine is started from an event handler and there is no other code around it, this extra dispatch does indeed add an extra overhead without bringing any additional value. In this case an optional [CoroutineStart][CoroutineStart] parameter to [launch][launch], [async][async] and [actor][actor] coroutine builders can be used for performance optimization. Setting it to the value of [CoroutineStart.UNDISPATCHED][CoroutineStart.UNDISPATCHED] has the effect of starting to execute coroutine immediately until its first suspension point as the following example shows:
+
+然而，在這種特殊情況下，當從事件處理者 `EventHandler` 中啟動協程並沒有其他的代碼在它週圍時，這個額外分配確實增加額外開銷沒有帶來任何額外的價值。在這種情況可選的 [CoroutineStart][CoroutineStart] 參數給 [launch][launch] 、 [async][async] 、 [actor][actor] 協程建造者可以用作效能優化。設置 [CoroutineStart.UNDISPATCHED][CoroutineStart.UNDISPATCHED] 的值有立即啟動執行協程的效果，直到它第一個懸掛點，如以下範例所示：
 
 ```kotlin
 fun setup(hello: Text, fab: Circle) {
@@ -635,9 +639,13 @@ fun setup(hello: Text, fab: Circle) {
 }
 ```
 
-> You can get full JavaFx code [here](kotlinx-coroutines-javafx/test/guide/example-ui-advanced-02.kt).
+> You can get full JavaFx code [here](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/kotlinx-coroutines-javafx/test/guide/example-ui-advanced-02.kt).
+>
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/kotlinx-coroutines-javafx/test/guide/example-ui-advanced-02.kt)獲取完整的代碼
 
 It prints the following messages on click, confirming that code in the coroutine starts to execute immediately:
+
+在點擊時它印出以下訊息，確認在協程中的代碼立即的啟動執行。
 
 ```text
 Before launch
