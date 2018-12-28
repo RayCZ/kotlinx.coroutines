@@ -1,51 +1,28 @@
-<!--- INCLUDE .*/example-reactive-([a-z]+)-([0-9]+)\.kt 
-/*
- * Copyright 2016-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
-// This file was automatically generated from coroutines-guide-reactive.md by Knit tool. Do not edit.
-package kotlinx.coroutines.rx2.guide.$$1$$2
-
--->
-<!--- KNIT     kotlinx-coroutines-rx2/test/guide/.*\.kt -->
-<!--- TEST_OUT kotlinx-coroutines-rx2/test/guide/test/GuideReactiveTest.kt
-// This file was automatically generated from coroutines-guide-reactive.md by Knit tool. Do not edit.
-package kotlinx.coroutines.rx2.guide.test
-
-import kotlinx.coroutines.guide.test.*
-import org.junit.Test
-
-class GuideReactiveTest : ReactiveTestBase() {
--->
-
 # Guide to reactive streams with coroutines
 
-This guide explains key differences between Kotlin coroutines and reactive streams and shows 
-how they can be used together for greater good. Prior familiarity with basic coroutine concepts
-that are covered in [Guide to kotlinx.coroutines](../docs/coroutines-guide.md) is not required, 
-but is a big plus. If you are familiar with reactive streams, you may find this guide
-a better introduction into the world of coroutines.
+Guide to reactive streams with coroutines ：使用協程配合 Reactive Streams 函式庫的指導
+
+This guide explains key differences between Kotlin coroutines and reactive streams and shows how they can be used together for greater good. Prior familiarity with basic coroutine concepts that are covered in [Guide to kotlinx.coroutines](../docs/coroutines-guide.md) is not required, but is a big plus. If you are familiar with reactive streams, you may find this guide a better introduction into the world of coroutines.
+
+這份指導解釋在 Kotlin 協程跟 Reactive Streams 函式庫的關鍵區別，並展示它們如何一起使用的更大好處。熟悉之前在 [kotlinx.coroutines 指導](../docs/coroutines-guide.md)章節涵蓋基本協程觀念不是必須的，但是一個大優勢。如果你熟悉使用 Reactive Streams 函式庫，你可以發現這份指導更好的介紹協程的世界。
 
 There are several modules in `kotlinx.coroutines` project that are related to reactive streams:
 
-* [kotlinx-coroutines-reactive](kotlinx-coroutines-reactive) -- utilities for [Reactive Streams](http://www.reactive-streams.org)
-* [kotlinx-coroutines-reactor](kotlinx-coroutines-reactor) -- utilities for [Reactor](https://projectreactor.io)
-* [kotlinx-coroutines-rx2](kotlinx-coroutines-rx2) -- utilities for [RxJava 2.x](https://github.com/ReactiveX/RxJava)
+在 `kotlinx.coroutines` 專案有幾個模組與 Reactive Streams 函式庫相關的。
 
-This guide is mostly based on [Reactive Streams](http://www.reactive-streams.org) specification and uses
-its `Publisher` interface with some examples based on [RxJava 2.x](https://github.com/ReactiveX/RxJava),
-which implements reactive streams specification.
+* [kotlinx-coroutines-reactive](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-reactive) -- utilities for [Reactive Streams](http://www.reactive-streams.org)
+* [kotlinx-coroutines-reactor](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-reactor) -- utilities for [Reactor](https://projectreactor.io)
+* [kotlinx-coroutines-rx2](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2) -- utilities for [RxJava 2.x](https://github.com/ReactiveX/RxJava)
 
-You are welcome to clone 
-[`kotlinx.coroutines` project](https://github.com/Kotlin/kotlinx.coroutines)
-from GitHub to your workstation in order to
-run all the presented examples. They are contained in 
-[reactive/kotlinx-coroutines-rx2/test/guide](kotlinx-coroutines-rx2/test/guide)
-directory of the project.
- 
+This guide is mostly based on [Reactive Streams](http://www.reactive-streams.org) specification and uses its `Publisher` interface with some examples based on [RxJava 2.x](https://github.com/ReactiveX/RxJava), which implements reactive streams specification.
+
+這份指導主要的根據 [Reactive Streams](http://www.reactive-streams.org) 規範，並根據 [RxJava 2.x](https://github.com/ReactiveX/RxJava) 使用它的 `Publisher` 介面與某些範例， Rxjava 2.x 實作 Reactive Streams 規範。
+
+You are welcome to clone [`kotlinx.coroutines` project](https://github.com/Kotlin/kotlinx.coroutines) from GitHub to your workstation in order to run all the presented examples. They are contained in [reactive/kotlinx-coroutines-rx2/test/guide](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide) directory of the project.
+
+歡迎你從 Github 複製 [`kotlinx.coroutines` 專案](https://github.com/Kotlin/kotlinx.coroutines) 到你的工作站，以便運行所有呈現的範例。他們被包含在 [reactive/kotlinx-coroutines-rx2/test/guide](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide) 專案的目錄下。
+
 ## Table of contents
-
-<!--- TOC -->
 
 * [Differences between reactive streams and channels](#differences-between-reactive-streams-and-channels)
   * [Basics of iteration](#basics-of-iteration)
@@ -64,36 +41,36 @@ directory of the project.
   * [Coroutine context to rule them all](#coroutine-context-to-rule-them-all)
   * [Unconfined context](#unconfined-context)
 
-<!--- END_TOC -->
-
 ## Differences between reactive streams and channels
+
+Differences between reactive streams and channels ：在 Reactive Streams 函式庫與 Channel 之間的區別
 
 This section outlines key differences between reactive streams and coroutine-based channels. 
 
+這個章節大綱在 Reactive Streams 函式庫與基於協程的 Channel 之間的關鍵區別。
+
 ### Basics of iteration
 
-The [Channel] is somewhat similar concept to the following reactive stream classes:
+The [Channel][Channel] is somewhat similar concept to the following reactive stream classes:
+
+[Channel][Channel] 與以下 Reactive Streams 類別有些相似：
 
 * Reactive stream [Publisher](https://github.com/reactive-streams/reactive-streams-jvm/blob/master/api/src/main/java/org/reactivestreams/Publisher.java);
 * Rx Java 1.x [Observable](http://reactivex.io/RxJava/javadoc/rx/Observable.html);
 * Rx Java 2.x [Flowable](http://reactivex.io/RxJava/2.x/javadoc/), which implements `Publisher`.
 
-They all describe an asynchronous stream of elements (aka items in Rx), either infinite or finite, 
-and all of them support backpressure.
-  
-However, the `Channel` always represents a _hot_ stream of items, using Rx terminology. Elements are being sent
-into the channel by producer coroutines and are received from it by consumer coroutines. 
-Every [receive][ReceiveChannel.receive] invocation consumes an element from the channel. 
-Let us illustrate it with the following example:
+They all describe an asynchronous stream of elements (aka items in Rx), either infinite or finite, and all of them support backpressure.
 
-<!--- INCLUDE
-import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.*
-import kotlin.coroutines.*
--->
+它們都描述一個異步的元素串流 (也就是在 Rx 中的項目) ，無限或有限，並且它們都支援背壓。
+
+However, the `Channel` always represents a _hot_ stream of items, using Rx terminology. Elements are being sent into the channel by producer coroutines and are received from it by consumer coroutines. Every [receive][ReceiveChannel.receive] invocation consumes an element from the channel. Let us illustrate it with the following example:
+
+然而， `Channel` 始終代表一個熱門項目的串流，以 Rx 術語來說。透過 producer 協程送來通道中並透過消費者協程從通道中接收。每個 [receive][ReceiveChannel.receive] 調用從通道中消耗一個元素。讓我們使用以下範例解釋它：
 
 ```kotlin
 fun main() = runBlocking<Unit> {
+    
+    // produce 協程建造者是一種通道類型也是一個協程，可以送資料到通道
     // create a channel that produces numbers from 1 to 3 with 200ms delays between them
     val source = produce<Int> {
         println("Begin") // mark the beginning of this coroutine in output
@@ -104,20 +81,28 @@ fun main() = runBlocking<Unit> {
     }
     // print elements from the source
     println("Elements:")
+    
+    // 回傳的通道做每次元素的消耗
     source.consumeEach { // consume elements from it
         println(it)
     }
     // print elements from the source AGAIN
     println("Again:")
+    
+    // consumeEach 會消耗掉一個元素，在上一個 consumeEach 就消耗光了
     source.consumeEach { // consume elements from it
         println(it)
     }
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-rx2/test/guide/example-reactive-basic-01.kt)
+> You can get full code [here](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-basic-01.kt)
+>
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-basic-01.kt)獲取完整的代碼
 
 This code produces the following output: 
+
+這些代碼產生以下輸出：
 
 ```text
 Elements:
@@ -128,26 +113,11 @@ Begin
 Again:
 ```
 
-<!--- TEST -->
+Notice, how "Begin" line was printed just once, because [produce][produce] _coroutine builder_, when it is executed, launches one coroutine to produce a stream of elements. All the produced elements are consumed with [ReceiveChannel.consumeEach][consumeEach] extension function. There is no way to receive the elements from this channel again. The channel is closed when the producer coroutine is over and the attempt to receive from it again cannot receive anything.
 
-Notice, how "Begin" line was printed just once, because [produce] _coroutine builder_, when it is executed,
-launches one coroutine to produce a stream of elements. All the produced elements are consumed 
-with [ReceiveChannel.consumeEach][consumeEach] 
-extension function. There is no way to receive the elements from this
-channel again. The channel is closed when the producer coroutine is over and the attempt to receive 
-from it again cannot receive anything.
 
-Let us rewrite this code using [publish] coroutine builder from `kotlinx-coroutines-reactive` module
-instead of [produce] from `kotlinx-coroutines-core` module. The code stays the same, 
-but where `source` used to have [ReceiveChannel] type, it now has reactive streams 
-[Publisher](http://www.reactive-streams.org/reactive-streams-1.0.0-javadoc/org/reactivestreams/Publisher.html) 
-type.
 
-<!--- INCLUDE
-import kotlinx.coroutines.*
-import kotlinx.coroutines.reactive.*
-import kotlin.coroutines.*
--->
+Let us rewrite this code using [publish] coroutine builder from `kotlinx-coroutines-reactive` module instead of [produce] from `kotlinx-coroutines-core` module. The code stays the same, but where `source` used to have [ReceiveChannel] type, it now has reactive streams [Publisher](http://www.reactive-streams.org/reactive-streams-1.0.0-javadoc/org/reactivestreams/Publisher.html) type.
 
 ```kotlin
 fun main() = runBlocking<Unit> {
@@ -190,25 +160,13 @@ Begin
 3
 ```
 
-<!--- TEST -->
+This example highlights the key difference between a reactive stream and a channel. A reactive stream is a higher-order functional concept. While the channel _is_ a stream of elements, the reactive stream defines a recipe on how the stream of elements is produced. It becomes the actual stream of elements on _subscription_. Each subscriber may receive the same or a different stream of elements, depending on how the corresponding implementation of `Publisher` works.
 
-This example highlights the key difference between a reactive stream and a channel. A reactive stream is a higher-order
-functional concept. While the channel _is_ a stream of elements, the reactive stream defines a recipe on how the stream of 
-elements is produced. It becomes the actual stream of elements on _subscription_. Each subscriber may receive the same or
-a different stream of elements, depending on how the corresponding implementation of `Publisher` works.
+The [publish] coroutine builder, that is used in the above example, launches a fresh coroutine on each subscription. Every [Publisher.consumeEach][org.reactivestreams.Publisher.consumeEach] invocation creates a fresh subscription. We have two of them in this code and that is why we see "Begin" printed twice. 
 
-The [publish] coroutine builder, that is used in the above example, launches a fresh coroutine on each subscription.
-Every [Publisher.consumeEach][org.reactivestreams.Publisher.consumeEach] invocation creates a fresh subscription.
-We have two of them in this code and that is why we see "Begin" printed twice. 
+In Rx lingo this is called a _cold_ publisher. Many standard Rx operators produce cold streams, too. We can iterate over them from a coroutine, and every subscription produces the same stream of elements.
 
-In Rx lingo this is called a _cold_ publisher. Many standard Rx operators produce cold streams, too. We can iterate
-over them from a coroutine, and every subscription produces the same stream of elements.
-
-**WARNING**: It is planned that in the future a second invocation of `consumeEach` method
-on an channel that is already being consumed is going to fail fast, that is
-immediately throw an `IllegalStateException`.
-See [this issue](https://github.com/Kotlin/kotlinx.coroutines/issues/167)
-for details.
+**WARNING**: It is planned that in the future a second invocation of `consumeEach` method on an channel that is already being consumed is going to fail fast, that is immediately throw an `IllegalStateException`. See [this issue](https://github.com/Kotlin/kotlinx.coroutines/issues/167) for details.
 
 > Note, that we can replicate the same behaviour that we saw with channels by using Rx 
 [publish](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Flowable.html#publish()) 
@@ -249,7 +207,7 @@ fun main() = runBlocking<Unit> {
 > You can get full code [here](kotlinx-coroutines-rx2/test/guide/example-reactive-basic-03.kt)
 
 It produces the following output:
- 
+
 ```text
 OnSubscribe
 1
@@ -259,7 +217,7 @@ Finally
 ```
 
 <!--- TEST -->
- 
+
 With an explicit `openSubscription` we should [cancel][ReceiveChannel.cancel] the corresponding 
 subscription to unsubscribe from the source. There is no need to invoke `cancel` explicitly -- under the hood
 `consume` does that for us.
@@ -381,7 +339,7 @@ one. Only after consumer processes the first item, producer sends the second one
 
 
 ### Rx Subject vs BroadcastChannel
- 
+
 RxJava has a concept of [Subject](https://github.com/ReactiveX/RxJava/wiki/Subject) which is an object that
 effectively broadcasts elements to all its subscribers. The matching concept in coroutines world is called a 
 [BroadcastChannel]. There is a variety of subjects in Rx with 
@@ -418,13 +376,13 @@ four
 <!--- TEST -->
 
 You can subscribe to subjects from a coroutine just as with any other reactive stream:
-   
+
 <!--- INCLUDE 
 import io.reactivex.subjects.BehaviorSubject
 import kotlinx.coroutines.*
 import kotlinx.coroutines.rx2.consumeEach
 -->   
-   
+
 ```kotlin
 fun main() = runBlocking<Unit> {
     val subject = BehaviorSubject.create<String>()
@@ -437,7 +395,7 @@ fun main() = runBlocking<Unit> {
     subject.onNext("three")
     subject.onNext("four")
 }
-```   
+```
 
 > You can get full code [here](kotlinx-coroutines-rx2/test/guide/example-reactive-basic-07.kt)
 
@@ -591,7 +549,7 @@ fun main() = runBlocking<Unit> {
 > You can get full code [here](kotlinx-coroutines-rx2/test/guide/example-reactive-operators-01.kt)
 
 The result of this code is quite expected:
-   
+
 ```text
 1
 2
@@ -636,7 +594,7 @@ by filtering for even numbers and mapping them to strings:
 <!--- INCLUDE
 
 fun CoroutineScope.range(start: Int, count: Int) = publish<Int> {
-    for (x in start until start + count) send(x)
+​    for (x in start until start + count) send(x)
 }
 -->
 
@@ -772,10 +730,10 @@ producer that sends its results twice with some delay:
 <!--- INCLUDE
 
 fun CoroutineScope.rangeWithInterval(time: Long, start: Int, count: Int) = publish<Int> {
-    for (x in start until start + count) { 
-        delay(time) // wait before sending each number
-        send(x)
-    }
+​    for (x in start until start + count) { 
+​        delay(time) // wait before sending each number
+​        send(x)
+​    }
 }
 -->
 
@@ -996,7 +954,7 @@ The resulting messages are going to be printed in the main thread:
 Most Rx operators do not have any specific thread (scheduler) associated with them and are working 
 in whatever thread that they happen to be invoked in. We've seen it on the example of `subscribe` operator 
 in the [threads with Rx](#threads-with-rx) section.
- 
+
 In the world of coroutines, [Dispatchers.Unconfined] context serves a similar role. Let us modify our previous example,
 but instead of iterating over the source `Flowable` from the `runBlocking` coroutine that is confined 
 to the main thread, we launch a new coroutine in `Dispatchers.Unconfined` context, while the main coroutine
