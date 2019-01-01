@@ -115,12 +115,16 @@ Again:
 
 Notice, how "Begin" line was printed just once, because [produce][produce] _coroutine builder_, when it is executed, launches one coroutine to produce a stream of elements. All the produced elements are consumed with [ReceiveChannel.consumeEach][consumeEach] extension function. There is no way to receive the elements from this channel again. The channel is closed when the producer coroutine is over and the attempt to receive from it again cannot receive anything.
 
+注意， 有關 "Begin" 行就被列印一次，因為 [produce][produce] 協程建造者，當它被執行時，發射一個產生元素串流的協程。所有已產生的元素使用 [ReceiveChannel.consumeEach][consumeEach] 擴展函數消耗。無法辦法再次從這個通道接收元素。當生產者協程結束時，通道被關閉，並且再次嘗試從通道接收，直到不可接收任何的東西。
 
+Let us rewrite this code using [publish][publish] coroutine builder from `kotlinx-coroutines-reactive` module instead of [produce][produce] from `kotlinx-coroutines-core` module. The code stays the same, but where `source` used to have [ReceiveChannel][ReceiveChannel] type, it now has reactive streams [Publisher](http://www.reactive-streams.org/reactive-streams-1.0.0-javadoc/org/reactivestreams/Publisher.html) type.
 
-Let us rewrite this code using [publish] coroutine builder from `kotlinx-coroutines-reactive` module instead of [produce] from `kotlinx-coroutines-core` module. The code stays the same, but where `source` used to have [ReceiveChannel] type, it now has reactive streams [Publisher](http://www.reactive-streams.org/reactive-streams-1.0.0-javadoc/org/reactivestreams/Publisher.html) type.
+讓我們從 `kotlinx-coroutines-reactive` 中使用 [publish][publish] 協程建造者重寫這些代碼，而不是從 `kotlinx-coroutines-core` 模組的 [produce][produce] 。代碼保持不變，但其中  `source` 之前有 [ReceiveChannel][ReceiveChannel] 類型，它現在有 Reactive Streams 函式庫 [Publisher](http://www.reactive-streams.org/reactive-streams-1.0.0-javadoc/org/reactivestreams/Publisher.html) 類型。
 
 ```kotlin
 fun main() = runBlocking<Unit> {
+    
+    //不同於之前是 ReceiveChannel 類型， publish 如同字面做發怖、發送的事情
     // create a publisher that produces numbers from 1 to 3 with 200ms delays between them
     val source = publish<Int> {
     //           ^^^^^^^  <---  Difference from the previous examples is here
@@ -132,20 +136,28 @@ fun main() = runBlocking<Unit> {
     }
     // print elements from the source
     println("Elements:")
+    
+    // 回傳的類型不會因為消耗而消失
     source.consumeEach { // consume elements from it
         println(it)
     }
     // print elements from the source AGAIN
     println("Again:")
+    
+    // 重覆再印一次
     source.consumeEach { // consume elements from it
         println(it)
     }
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-rx2/test/guide/example-reactive-basic-02.kt)
+> You can get full code [here](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-basic-02.kt)
+>
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-basic-02.kt)獲取完整的代碼
 
 Now the output of this code changes to:
+
+現在，這些代碼的輸出改變為：
 
 ```text
 Elements:
@@ -162,30 +174,31 @@ Begin
 
 This example highlights the key difference between a reactive stream and a channel. A reactive stream is a higher-order functional concept. While the channel _is_ a stream of elements, the reactive stream defines a recipe on how the stream of elements is produced. It becomes the actual stream of elements on _subscription_. Each subscriber may receive the same or a different stream of elements, depending on how the corresponding implementation of `Publisher` works.
 
-The [publish] coroutine builder, that is used in the above example, launches a fresh coroutine on each subscription. Every [Publisher.consumeEach][org.reactivestreams.Publisher.consumeEach] invocation creates a fresh subscription. We have two of them in this code and that is why we see "Begin" printed twice. 
+這個範例突顯在 Reactive Streams 函式庫和 Channel 關鍵的區別。 Reactive Streams 函式庫是高階函數的觀念。而 Channel 是元素的串流，Reactive Streams 函式庫定義關於如何產生元素串流的配方。它變成訂閱時的實際元素串流。每個訂閱者可以接收相同或不同的元素串流，取決於對應的 `Publisher` 如何實作運行。
+
+The [publish][publish] coroutine builder, that is used in the above example, launches a fresh coroutine on each subscription. Every [Publisher.consumeEach][org.reactivestreams.Publisher.consumeEach] invocation creates a fresh subscription. We have two of them in this code and that is why we see "Begin" printed twice. 
+
+在上面的範例中使用 [publish][publish] 協程建造者，在每個訂閱上發射一個全新的協程。每個 [Publisher.consumeEach][org.reactivestreams.Publisher.consumeEach] 調用創建一個全新的訂閱。我們在這些代碼中有 publish 和 consumeEach 它們兩個，並且這是為何我們看到 `Begin` 被印兩次。
 
 In Rx lingo this is called a _cold_ publisher. Many standard Rx operators produce cold streams, too. We can iterate over them from a coroutine, and every subscription produces the same stream of elements.
 
+在 Rx 行話中，這被稱為冷的發行者。很多標準的 Rx 運算符也產生冷的串流。我們可以從協程遍歷它們，以及每個訂閱產生相同的元素串流。
+
 **WARNING**: It is planned that in the future a second invocation of `consumeEach` method on an channel that is already being consumed is going to fail fast, that is immediately throw an `IllegalStateException`. See [this issue](https://github.com/Kotlin/kotlinx.coroutines/issues/167) for details.
 
-> Note, that we can replicate the same behaviour that we saw with channels by using Rx 
-[publish](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Flowable.html#publish()) 
-operator and [connect](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/flowables/ConnectableFlowable.html#connect())
-method with it.
+警告：計劃在將來在已消耗通道上第二次 `consumeEach` 方法調用將快速失敗，立即丟出 `IllegalStateException` 。更多細節參閱 [this issue](https://github.com/Kotlin/kotlinx.coroutines/issues/167) 。 
+
+> Note, that we can replicate the same behaviour that we saw with channels by using Rx [publish](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Flowable.html#publish()) operator and [connect](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/flowables/ConnectableFlowable.html#connect()) method with it.
+>
+> 注意，我們可以透過使用 Rx [publish](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Flowable.html#publish()) 運算符和它的 [connect](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/flowables/ConnectableFlowable.html#connect()) 方法，我們可以複製我們在通道中看到的相同行為。
 
 ### Subscription and cancellation
 
-An example in the previous section uses `source.consumeEach { ... }` snippet to open a subscription 
-and receive all the elements from it. If we need more control on how what to do with 
-the elements that are being received from the channel, we can use [Publisher.openSubscription][org.reactivestreams.Publisher.openSubscription]
-as shown in the following example:
+Subscription and cancellation ：訂閱和取消
 
-<!--- INCLUDE
-import io.reactivex.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.*
-import kotlinx.coroutines.reactive.*
--->
+An example in the previous section uses `source.consumeEach { ... }` snippet to open a subscription and receive all the elements from it. If we need more control on how what to do with the elements that are being received from the channel, we can use [Publisher.openSubscription][org.reactivestreams.Publisher.openSubscription] as shown in the following example:
+
+在前一個章節中範例使用 `source.consumeEach { ... }` 片段去打開訂閱並從它接收所有元素。如果我們需要更多控制如何處理從通道正在接收元素，我們可以使用 [Publisher.openSubscription][org.reactivestreams.Publisher.openSubscription] 如下所示範例：
 
 ```kotlin
 fun main() = runBlocking<Unit> {
@@ -194,6 +207,8 @@ fun main() = runBlocking<Unit> {
         .doOnComplete { println("OnComplete") }   // ...
         .doFinally { println("Finally") }         // ... into what's going on
     var cnt = 0 
+    
+    // openSubscription() 回傳 ReceiveChannel 做消耗
     source.openSubscription().consume { // open channel to the source
         for (x in this) { // iterate over the channel to receive elements from it
             println(x)
@@ -204,9 +219,13 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-rx2/test/guide/example-reactive-basic-03.kt)
+> You can get full code [here](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-basic-03.kt)
+>
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-basic-03.kt)獲取完整的代碼
 
 It produces the following output:
+
+它產生以下輸出：
 
 ```text
 OnSubscribe
@@ -216,25 +235,13 @@ OnSubscribe
 Finally
 ```
 
-<!--- TEST -->
+With an explicit `openSubscription` we should [cancel][ReceiveChannel.cancel] the corresponding subscription to unsubscribe from the source. There is no need to invoke `cancel` explicitly -- under the hood `consume` does that for us. The installed [doFinally](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Flowable.html#doFinally(io.reactivex.functions.Action)) listener prints "Finally" to confirm that the subscription is actually being closed. Note that "OnComplete" is never printed because we did not consume all of the elements.
 
-With an explicit `openSubscription` we should [cancel][ReceiveChannel.cancel] the corresponding 
-subscription to unsubscribe from the source. There is no need to invoke `cancel` explicitly -- under the hood
-`consume` does that for us.
-The installed 
-[doFinally](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Flowable.html#doFinally(io.reactivex.functions.Action))
-listener prints "Finally" to confirm that the subscription is actually being closed. Note that "OnComplete"
-is never printed because we did not consume all of the elements.
+明確的使用 `openSubscription` ，我們應該 [cancel][ReceiveChannel.cancel] 對應的訂閱從 `source` 取消訂閱。沒要必要明顯的調用 `cancel` -- `consume` 底層為我們做這事。已設置的 [doFinally](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Flowable.html#doFinally(io.reactivex.functions.Action)) 監聽者印出 "Finally" 去確認訂閱實際上正在被關閉。注意，因為我們不會消耗所有元素，所以 "onCompelete" 從不會被印出。
 
-We do not need to use an explicit `cancel` either if iteration is performed over all the items that are emitted 
-by the publisher, because it is being cancelled automatically by `consumeEach`:
+We do not need to use an explicit `cancel` either if iteration is performed over all the items that are emitted by the publisher, because it is being cancelled automatically by `consumeEach`:
 
-<!--- INCLUDE
-import io.reactivex.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.reactive.*
-import kotlin.coroutines.*
--->
+如果由 publisher 發射所有的項目執行遍歷，我們不需要明顯的使用 `cancel` ，因為它透過 `consumeEach` 正在被自動的取消：
 
 ```kotlin
 fun main() = runBlocking<Unit> {
@@ -242,14 +249,20 @@ fun main() = runBlocking<Unit> {
         .doOnSubscribe { println("OnSubscribe") } // provide some insight
         .doOnComplete { println("OnComplete") }   // ...
         .doFinally { println("Finally") }         // ... into what's going on
+    
+    // 完全遍歷 source ，包括訂閱 (Subscribe) 、完成 (Complete) 、最終 (Finally) 等週期
     // iterate over the source fully
     source.consumeEach { println(it) }
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-rx2/test/guide/example-reactive-basic-04.kt)
+> You can get full code [here](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-basic-04.kt)
+>
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-basic-04.kt)獲取完整的代碼
 
 We get the following output:
+
+我們獲得以下輸出：
 
 ```text
 OnSubscribe
@@ -262,15 +275,9 @@ Finally
 5
 ```
 
-<!--- TEST -->
+Notice, how "OnComplete" and "Finally" are printed before the last element "5". It happens because our `main` function in this example is a coroutine that we start with [runBlocking][runBlocking] coroutine builder. Our main coroutine receives on the channel using `source.consumeEach { ... }` expression. The main coroutine is _suspended_ while it waits for the source to emit an item. When the last item is emitted by `Flowable.range(1, 5)` it _resumes_ the main coroutine, which gets dispatched onto the main thread to print this last element at a later point in time, while the source completes and prints "Finally".
 
-Notice, how "OnComplete" and "Finally" are printed before the last element "5". It happens because our `main` function in this
-example is a coroutine that we start with [runBlocking] coroutine builder.
-Our main coroutine receives on the channel using `source.consumeEach { ... }` expression.
-The main coroutine is _suspended_ while it waits for the source to emit an item.
-When the last item is emitted by `Flowable.range(1, 5)` it
-_resumes_ the main coroutine, which gets dispatched onto the main thread to print this
- last element at a later point in time, while the source completes and prints "Finally".
+注意，在最後元素 "5" 之前 "OnComplete" 和 "Finally" 如何被印出。它發生是因為在這個範例中我們的 `main` 函數是協程，我們從 [runBlocking][runBlocking] 協程建造者開始。我們的 `main` 協程在通道中接收使用 `source.consumeEach { ... }` 表達式。在 `main` 等待 `source` 發射項目時， `main` 協程被懸掛。當透過 `Flowable.range(1, 5)` 發射最後項目時，它恢復 `main` 協程，協程被分配到主線程，在稍後的時間點印出這最後元素，同時 `source` 完成並印出 "Finally" 。
 
 ### Backpressure
 
