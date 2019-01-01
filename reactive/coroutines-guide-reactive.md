@@ -277,35 +277,27 @@ Finally
 
 Notice, how "OnComplete" and "Finally" are printed before the last element "5". It happens because our `main` function in this example is a coroutine that we start with [runBlocking][runBlocking] coroutine builder. Our main coroutine receives on the channel using `source.consumeEach { ... }` expression. The main coroutine is _suspended_ while it waits for the source to emit an item. When the last item is emitted by `Flowable.range(1, 5)` it _resumes_ the main coroutine, which gets dispatched onto the main thread to print this last element at a later point in time, while the source completes and prints "Finally".
 
-注意，在最後元素 "5" 之前 "OnComplete" 和 "Finally" 如何被印出。它發生是因為在這個範例中我們的 `main` 函數是協程，我們從 [runBlocking][runBlocking] 協程建造者開始。我們的 `main` 協程在通道中接收使用 `source.consumeEach { ... }` 表達式。在 `main` 等待 `source` 發射項目時， `main` 協程被懸掛。當透過 `Flowable.range(1, 5)` 發射最後項目時，它恢復 `main` 協程，協程被分配到主線程，在稍後的時間點印出這最後元素，同時 `source` 完成並印出 "Finally" 。
+注意，在最後元素 "5" 之前 "OnComplete" 和 "Finally" 如何被印出。它發生是因為在這個範例中我們的 `main` 函數是協程，我們從 [runBlocking][runBlocking] 協程建造者開始。我們的 `main` 協程在通道上使用 `source.consumeEach { ... }` 表達式接收。在 `main` 等待 `source` 發射項目時，同時 `main` 協程被懸掛。當透過 `Flowable.range(1, 5)` 發射最後項目時，它恢復 `main` 協程，協程被分配到主線程，在稍後的時間點印出這最後元素，同時 `source` 完成並印出 "Finally" 。
 
 ### Backpressure
 
-Backpressure is one of the most interesting and complex aspects of reactive streams. Coroutines can 
-_suspend_ and they provide a natural answer to handling backpressure. 
+Backpressure ：[背壓](http://terms.naer.edu.tw/detail/1325748/) ，類似於「發送」與「接收」的壓力測試
 
-In Rx Java 2.x a backpressure-capable class is called 
-[Flowable](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Flowable.html).
-In the following example we use [rxFlowable] coroutine builder from `kotlinx-coroutines-rx2` module to define a 
-flowable that sends three integers from 1 to 3. 
-It prints a message to the output before invocation of
-suspending [send][SendChannel.send] function, so that we can study how it operates.
+Backpressure is one of the most interesting and complex aspects of reactive streams. Coroutines can _suspend_ and they provide a natural answer to handling backpressure. 
 
-The integers are generated in the context of the main thread, but subscription is shifted 
-to another thread using Rx
-[observeOn](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Flowable.html#observeOn(io.reactivex.Scheduler,%20boolean,%20int))
-operator with a buffer of size 1. 
-The subscriber is slow. It takes 500 ms to process each item, which is simulated using `Thread.sleep`.
+背壓是 Reactive Streams 函式庫最有趣和最複雜的方面之一。協程可以被懸掛，並且他們提供自然的答案去處理背壓。
 
-<!--- INCLUDE
-import io.reactivex.schedulers.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.rx2.*
-import kotlin.coroutines.*
--->
+In Rx Java 2.x a backpressure-capable class is called [Flowable](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Flowable.html). In the following example we use [rxFlowable][rxFlowable] coroutine builder from `kotlinx-coroutines-rx2` module to define a flowable that sends three integers from 1 to 3. It prints a message to the output before invocation of suspending [send][SendChannel.send] function, so that we can study how it operates.
+
+在 Rx Java 2.x 中，背壓能力類別被稱為 [Flowable](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Flowable.html) 。在以下範例中，我們從 `kotlinx-coroutines-rx2` 模組中使用 [rxFlowable][rxFlowable] 協程建造者，去定義一個從 1 到 3 發送 3 個整數的 Flowable 。它在懸掛 [send][SendChannel.send] 函數調用之前，印出一個輸出訊息，以便我們研究它如何操作。
+
+The integers are generated in the context of the main thread, but subscription is shifted to another thread using Rx [observeOn](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Flowable.html#observeOn(io.reactivex.Scheduler,%20boolean,%20int)) operator with a buffer of size 1. The subscriber is slow. It takes 500 ms to process each item, which is simulated using `Thread.sleep`.
+
+在主線程的環境中產生 3 個整數，但訂閱被轉移到另一個線程，使用 Rx [observeOn](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Flowable.html#observeOn(io.reactivex.Scheduler,%20boolean,%20int)) 運算符和大小 1 的緩衝。訂閱者很慢，處理每個項目花費 0.5 秒，它使用 `Thread.sleep` 模擬。
 
 ```kotlin
 fun main() = runBlocking<Unit> { 
+    // 在主線程環境中快速產生元素
     // coroutine -- fast producer of elements in the context of the main thread
     val source = rxFlowable {
         for (x in 1..3) {
@@ -313,6 +305,7 @@ fun main() = runBlocking<Unit> {
             println("Sent $x") // print after successfully sent item
         }
     }
+    // Schedulers.io() 轉移到另一個線程
     // subscribe on another thread with a slow subscriber using Rx
     source
         .observeOn(Schedulers.io(), false, 1) // specify buffer size of 1 item
@@ -325,9 +318,13 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-rx2/test/guide/example-reactive-basic-05.kt)
+> You can get full code [here](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-basic-05.kt)
+>
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-basic-05.kt)獲取完整的代碼
 
 The output of this code nicely illustrates how backpressure works with coroutines:
+
+這些代碼的輸出很好的解釋背壓如何使用協程運行：
 
 ```text
 Sent 1
@@ -339,11 +336,9 @@ Processed 3
 Complete
 ```
 
-<!--- TEST -->
+We see here how producer coroutine puts the first element in the buffer and is suspended while trying to send another one. Only after consumer processes the first item, producer sends the second one and resumes, etc.
 
-We see here how producer coroutine puts the first element in the buffer and is suspended while trying to send another 
-one. Only after consumer processes the first item, producer sends the second one and resumes, etc.
-
+我們在這裡看到生產者協程如何放置第一個元素到緩衝，並在嘗試發送另一個元素時懸掛。只在消費者處理第一個元素之後，生產者發送第二個元素並恢復，等等。
 
 ### Rx Subject vs BroadcastChannel
 
