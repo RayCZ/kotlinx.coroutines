@@ -487,7 +487,7 @@ Operators ：運算符
 
 Full-featured reactive stream libraries, like Rx, come with [a very large set of operators](http://reactivex.io/documentation/operators.html) to create, transform, combine and otherwise process the corresponding streams. Creating your own operators with support for back-pressure is [notoriously](http://akarnokd.blogspot.ru/2015/05/pitfalls-of-operator-implementations.html) [difficult](https://github.com/ReactiveX/RxJava/wiki/Writing-operators-for-2.0).
 
-功能齊全的 Reactive Streams 函式庫，像 Rx，伴隨[非常大組的運算符](http://reactivex.io/documentation/operators.html)去創建、轉換、結合以及處理對應的串流。創建你擁有的運算符並對背壓的支援是[眾所周知](http://akarnokd.blogspot.ru/2015/05/pitfalls-of-operator-implementations.htmlhttp://akarnokd.blogspot.ru/2015/05/pitfalls-of-operator-implementations.html)的[困難](https://github.com/ReactiveX/RxJava/wiki/Writing-operators-for-2.0)。
+功能齊全的 Reactive Streams 函式庫，像 Rx，伴隨[非常大組的運算符](http://reactivex.io/documentation/operators.html)去創建、轉換、結合以及處理對應的串流。創建你擁有的運算符並對背壓的支援是[眾所周知](http://akarnokd.blogspot.ru/2015/05/pitfalls-of-operator-implementations.html)的[困難](https://github.com/ReactiveX/RxJava/wiki/Writing-operators-for-2.0)。
 
 Coroutines and channels are designed to provide an opposite experience. There are no built-in operators, but processing streams of elements is extremely simple and back-pressure is supported automatically without you having to explicitly think about it.
 
