@@ -499,7 +499,7 @@ This section shows coroutine-based implementation of several reactive stream ope
 
 ### Range
 
-Range ：自定義 range API
+Range ：使用 pulish 協程實作發送範圍值
 
 Let's roll out own implementation of [range](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Flowable.html#range(int,%20int)) operator for reactive streams `Publisher` interface. The asynchronous clean-slate implementation of this operator for reactive streams is explained in [this blog post](http://akarnokd.blogspot.ru/2017/03/java-9-flow-api-asynchronous-integer.html). It takes a lot of code. Here is the corresponding code with coroutines:
 
