@@ -465,9 +465,9 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-rx2/test/guide/example-reactive-basic-09.kt)
+> You can get full code [here](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-basic-09.kt)
 >
-> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-basic-08.kt)獲取完整的代碼
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-basic-09.kt)獲取完整的代碼
 
 It produces the same output as the previous example based on `BehaviorSubject`:
 
