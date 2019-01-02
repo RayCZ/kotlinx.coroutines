@@ -342,15 +342,11 @@ We see here how producer coroutine puts the first element in the buffer and is s
 
 ### Rx Subject vs BroadcastChannel
 
-RxJava has a concept of [Subject](https://github.com/ReactiveX/RxJava/wiki/Subject) which is an object that
-effectively broadcasts elements to all its subscribers. The matching concept in coroutines world is called a 
-[BroadcastChannel]. There is a variety of subjects in Rx with 
-[BehaviorSubject](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/subjects/BehaviorSubject.html) being
-the one used to manage state:
+Rx Subject vs BroadcastChannel ：Rx Subject 與 BroadcastChannel API 的比較
 
-<!--- INCLUDE
-import io.reactivex.subjects.BehaviorSubject
--->
+RxJava has a concept of [Subject](https://github.com/ReactiveX/RxJava/wiki/Subject) which is an object that effectively broadcasts elements to all its subscribers. The matching concept in coroutines world is called a [BroadcastChannel][BroadcastChannel]. There is a variety of subjects in Rx with [BehaviorSubject](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/subjects/BehaviorSubject.html) being the one used to manage state:
+
+Rxjava 有 [Subject](https://github.com/ReactiveX/RxJava/wiki/Subject) 的觀念。它是一個有效的廣播元素給它所有的訂閱者物件。在協程世界中匹配的概念稱為 [BroadcastChannel][BroadcastChannel] 。在 Rx 中有各種 Subject 類別，使用 [BehaviorSubject](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/subjects/BehaviorSubject.html) 用於管理狀態：
 
 ```kotlin
 fun main() {
@@ -358,16 +354,21 @@ fun main() {
     subject.onNext("one")
     subject.onNext("two") // updates the state of BehaviorSubject, "one" value is lost
     // now subscribe to this subject and print everything
+    
+    // 在訂閱時，它發送最近一次的項目，所以才會印出 "two"
     subject.subscribe(System.out::println)
     subject.onNext("three")
     subject.onNext("four")
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-rx2/test/guide/example-reactive-basic-06.kt)
+> You can get full code [here](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-basic-06.kt)
+>
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-basic-06.kt)獲取完整的代碼
 
 This code prints the current state of the subject on subscription and all its further updates:
 
+在訂閱時這些代碼印出目前 `subject` 的狀態和它所有進一步的更新：
 
 ```text
 two
@@ -375,21 +376,16 @@ three
 four
 ```
 
-<!--- TEST -->
-
 You can subscribe to subjects from a coroutine just as with any other reactive stream:
 
-<!--- INCLUDE 
-import io.reactivex.subjects.BehaviorSubject
-import kotlinx.coroutines.*
-import kotlinx.coroutines.rx2.consumeEach
--->   
+你可以從一個協程就像使用任何其他的 Reactive Streams 函式庫訂閱主題：
 
 ```kotlin
 fun main() = runBlocking<Unit> {
     val subject = BehaviorSubject.create<String>()
     subject.onNext("one")
     subject.onNext("two")
+    // 利用協程來訂閱
     // now launch a coroutine to print everything
     GlobalScope.launch(Dispatchers.Unconfined) { // launch coroutine in unconfined context
         subject.consumeEach { println(it) }
@@ -399,9 +395,13 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-rx2/test/guide/example-reactive-basic-07.kt)
+> You can get full code [here](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-basic-07.kt)
+>
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-basic-07.kt)獲取完整的代碼
 
 The result is the same:
+
+結果是一樣：
 
 ```text
 two
@@ -409,25 +409,13 @@ three
 four
 ```
 
-<!--- TEST -->
+Here we use [Dispatchers.Unconfined][Dispatchers.Unconfined] coroutine context to launch consuming coroutine with the same behaviour as subscription in Rx. It basically means that the launched coroutine is going to be immediately executed in the same thread that is emitting elements. Contexts are covered in more details in a [separate section](#coroutine-context).
 
-Here we use [Dispatchers.Unconfined] coroutine context to launch consuming coroutine with the same behaviour as subscription in Rx. 
-It basically means that the launched coroutine is going to be immediately executed in the same thread that 
-is emitting elements. Contexts are covered in more details in a [separate section](#coroutine-context).
+在這裡，我們使用 [Dispatchers.Unconfined][Dispatchers.Unconfined] 分配協程環境去發射進行消耗的協程，與在 Rx 中的 `subscribe` 相同行為。它基本上意味著已發射的協程將立即在發射元素的相同線程中執行。協程環境在[單獨章節](#coroutine-context)中更細節的涵蓋。
 
-The advantage of coroutines is that it is easy to get conflation behavior for single-threaded UI updates. 
-A typical UI application does not need to react to every state change. Only the most recent state is relevant.
-A sequence of back-to-back updates to the application state needs to get reflected in UI only once, 
-as soon as the UI thread is free. For the following example we are going to simulate this by launching 
-consuming coroutine in the context of the main thread and use [yield] function to simulate a break in the 
-sequence of updates and to release the main thread:
+The advantage of coroutines is that it is easy to get conflation behavior for single-threaded UI updates. A typical UI application does not need to react to every state change. Only the most recent state is relevant. A sequence of back-to-back updates to the application state needs to get reflected in UI only once, as soon as the UI thread is free. For the following example we are going to simulate this by launching consuming coroutine in the context of the main thread and use [yield][yield] function to simulate a break in the sequence of updates and to release the main thread:
 
-<!--- INCLUDE
-import io.reactivex.subjects.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.rx2.*
-import kotlin.coroutines.*
--->
+協程的優點是對於單線程的 UI 更新更容易的合併行為。典型的 UI 應用程式不會為每個狀態更新做反應。只有最近的狀態是相關的。只要 UI 線程是空閒時，依序更新應用程式狀態只需要在 UI 中反應一次。對於以下範例，我們經由在主線程環境中發射消耗的協程模擬這點，並使用 [yield][yield] 函數在更新順序和釋放主線程中模擬中斷：
 
 ```kotlin
 fun main() = runBlocking<Unit> {
@@ -445,25 +433,21 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-rx2/test/guide/example-reactive-basic-08.kt)
+> You can get full code [here](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-basic-08.kt)
+>
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-basic-08.kt)獲取完整的代碼
 
 Now coroutine process (prints) only the most recent update:
+
+ 現在協程只處理最近的更新：
 
 ```text
 four
 ```
 
-<!--- TEST -->
+The corresponding behavior in a pure coroutines world is implemented by [ConflatedBroadcastChannel][ConflatedBroadcastChannel] that provides the same logic on top of coroutine channels directly, without going through the bridge to the reactive streams:
 
-The corresponding behavior in a pure coroutines world is implemented by [ConflatedBroadcastChannel] 
-that provides the same logic on top of coroutine channels directly, 
-without going through the bridge to the reactive streams:
-
-<!--- INCLUDE
-import kotlinx.coroutines.channels.*
-import kotlinx.coroutines.*
-import kotlin.coroutines.*
--->
+在原始協程世界中對應的行為透過 [ConflatedBroadcastChannel][ConflatedBroadcastChannel] 實作，直接在協程通道上提供相同的邏輯，而不是透過橋接到 Reactive Streams 函式庫： 
 
 ```kotlin
 fun main() = runBlocking<Unit> {
@@ -482,22 +466,20 @@ fun main() = runBlocking<Unit> {
 ```
 
 > You can get full code [here](kotlinx-coroutines-rx2/test/guide/example-reactive-basic-09.kt)
+>
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-basic-08.kt)獲取完整的代碼
 
 It produces the same output as the previous example based on `BehaviorSubject`:
+
+它產生與前一個範例基於 `BehaviorSubject` API 相同的輸出：
 
 ```text
 four
 ```
 
-<!--- TEST -->
+Another implementation of [BroadcastChannel][BroadcastChannel] is `ArrayBroadcastChannel` with an array-based buffer of a specified `capacity`. It can be created with `BroadcastChannel(capacity)`. It delivers every event to every subscriber since the moment the corresponding subscription is open. It corresponds to [PublishSubject](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/subjects/PublishSubject.html) in Rx. The capacity of the buffer in the constructor of `ArrayBroadcastChannel` controls the numbers of elements that can be sent before the sender is suspended waiting for receiver to receive those elements.
 
-Another implementation of [BroadcastChannel] is `ArrayBroadcastChannel` with an array-based buffer of
-a specified `capacity`. It can be created with `BroadcastChannel(capacity)`. 
-It delivers every event to every
-subscriber since the moment the corresponding subscription is open. It corresponds to 
-[PublishSubject](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/subjects/PublishSubject.html) in Rx.
-The capacity of the buffer in the constructor of `ArrayBroadcastChannel` controls the numbers of elements
-that can be sent before the sender is suspended waiting for receiver to receive those elements.
+[BroadcastChannel][BroadcastChannel] 的另一個實作是 `ArrayBroadcastChannel` 基本陣列指定 `capacity` 的緩衝。它可以使用 `BroadcastChannel(capacity)` 創建。從對應訂閱開放那一刻起。它傳每個事件給每個訂閱者。它對應於 Rx 中的 [PublishSubject](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/subjects/PublishSubject.html) 。在 `ArrayBroadcastChannel` 的建構元當中緩衝的容量控制可以被發送的數個元素，在發送者懸掛的等待接收者去接收那些元素
 
 ## Operators
 
