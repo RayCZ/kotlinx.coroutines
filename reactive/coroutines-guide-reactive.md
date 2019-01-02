@@ -353,9 +353,9 @@ fun main() {
     val subject = BehaviorSubject.create<String>()
     subject.onNext("one")
     subject.onNext("two") // updates the state of BehaviorSubject, "one" value is lost
-    // now subscribe to this subject and print everything
     
     // 在訂閱時，它發送最近一次的項目，所以才會印出 "two"
+    // now subscribe to this subject and print everything
     subject.subscribe(System.out::println)
     subject.onNext("three")
     subject.onNext("four")
@@ -411,11 +411,11 @@ four
 
 Here we use [Dispatchers.Unconfined][Dispatchers.Unconfined] coroutine context to launch consuming coroutine with the same behaviour as subscription in Rx. It basically means that the launched coroutine is going to be immediately executed in the same thread that is emitting elements. Contexts are covered in more details in a [separate section](#coroutine-context).
 
-在這裡，我們使用 [Dispatchers.Unconfined][Dispatchers.Unconfined] 分配協程環境去發射進行消耗的協程，與在 Rx 中的 `subscribe` 相同行為。它基本上意味著已發射的協程將立即在發射元素的相同線程中執行。協程環境在[單獨章節](#coroutine-context)中更細節的涵蓋。
+在這裡，我們使用 [Dispatchers.Unconfined][Dispatchers.Unconfined] 分配協程環境，去發射進行消耗的協程，與在 Rx 中的 `subscribe` 相同行為。它基本上意味著已發射的協程將在發射元素的相同線程中立即執行。協程環境在[單獨章節](#coroutine-context)中更細節的涵蓋。
 
 The advantage of coroutines is that it is easy to get conflation behavior for single-threaded UI updates. A typical UI application does not need to react to every state change. Only the most recent state is relevant. A sequence of back-to-back updates to the application state needs to get reflected in UI only once, as soon as the UI thread is free. For the following example we are going to simulate this by launching consuming coroutine in the context of the main thread and use [yield][yield] function to simulate a break in the sequence of updates and to release the main thread:
 
-協程的優點是對於單線程的 UI 更新更容易的合併行為。典型的 UI 應用程式不會為每個狀態更新做反應。只有最近的狀態是相關的。只要 UI 線程是空閒時，依序更新應用程式狀態只需要在 UI 中反應一次。對於以下範例，我們經由在主線程環境中發射消耗的協程模擬這點，並使用 [yield][yield] 函數在更新順序和釋放主線程中模擬中斷：
+協程的優點是對於單線程的 UI 更新更容易的合併行為。典型的 UI 應用程式不會需要為每個狀態更新做反應。只有最近的狀態是相關的。只要 UI 線程是空閒時，依序更新應用程式狀態只需要在 UI 中反應一次。對於以下範例，我們經由在主線程環境中發射消耗的協程模擬這點，並使用 [yield][yield] 函數在更新順序和釋放主線程中模擬中斷：
 
 ```kotlin
 fun main() = runBlocking<Unit> {
@@ -479,21 +479,23 @@ four
 
 Another implementation of [BroadcastChannel][BroadcastChannel] is `ArrayBroadcastChannel` with an array-based buffer of a specified `capacity`. It can be created with `BroadcastChannel(capacity)`. It delivers every event to every subscriber since the moment the corresponding subscription is open. It corresponds to [PublishSubject](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/subjects/PublishSubject.html) in Rx. The capacity of the buffer in the constructor of `ArrayBroadcastChannel` controls the numbers of elements that can be sent before the sender is suspended waiting for receiver to receive those elements.
 
-[BroadcastChannel][BroadcastChannel] 的另一個實作是 `ArrayBroadcastChannel` 基本陣列指定 `capacity` 的緩衝。它可以使用 `BroadcastChannel(capacity)` 創建。從對應訂閱開放那一刻起。它傳每個事件給每個訂閱者。它對應於 Rx 中的 [PublishSubject](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/subjects/PublishSubject.html) 。在 `ArrayBroadcastChannel` 的建構元當中緩衝的容量控制可以被發送的數個元素，在發送者懸掛的等待接收者去接收那些元素
+[BroadcastChannel][BroadcastChannel] 的另一個實作是指定 `capacity` 基於陣列緩衝的 `ArrayBroadcastChannel` 。它可以使用 `BroadcastChannel(capacity)` 創建。從對應訂閱開放那一刻起。它傳每個事件給每個訂閱者。它對應於 Rx 中的 [PublishSubject](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/subjects/PublishSubject.html) 。在 `ArrayBroadcastChannel` 的建構元當中緩衝的容量控制可以被發送的數個元素，在發送者懸掛的等待接收者去接收那些元素之前
 
 ## Operators
 
-Full-featured reactive stream libraries, like Rx, come with 
-[a very large set of operators](http://reactivex.io/documentation/operators.html) to create, transform, combine
-and otherwise process the corresponding streams. Creating your own operators with support for
-back-pressure is [notoriously](http://akarnokd.blogspot.ru/2015/05/pitfalls-of-operator-implementations.html)
-[difficult](https://github.com/ReactiveX/RxJava/wiki/Writing-operators-for-2.0).
+Operators ：運算符
 
-Coroutines and channels are designed to provide an opposite experience. There are no built-in operators, 
-but processing streams of elements is extremely simple and back-pressure is supported automatically 
-without you having to explicitly think about it.
+Full-featured reactive stream libraries, like Rx, come with [a very large set of operators](http://reactivex.io/documentation/operators.html) to create, transform, combine and otherwise process the corresponding streams. Creating your own operators with support for back-pressure is [notoriously](http://akarnokd.blogspot.ru/2015/05/pitfalls-of-operator-implementations.html) [difficult](https://github.com/ReactiveX/RxJava/wiki/Writing-operators-for-2.0).
 
-This section shows coroutine-based implementation of several reactive stream operators.  
+功能齊全的 Reactive Streams 函式庫，像 Rx，伴隨[非常大組的運算符](http://reactivex.io/documentation/operators.html)去創建、轉換、結合以及處理對應的串流。創建你擁有的運算符並對背壓的支援是[眾所周知](http://akarnokd.blogspot.ru/2015/05/pitfalls-of-operator-implementations.htmlhttp://akarnokd.blogspot.ru/2015/05/pitfalls-of-operator-implementations.html)的[困難](https://github.com/ReactiveX/RxJava/wiki/Writing-operators-for-2.0)。
+
+Coroutines and channels are designed to provide an opposite experience. There are no built-in operators, but processing streams of elements is extremely simple and back-pressure is supported automatically without you having to explicitly think about it.
+
+協程和通道被設計提供相反的經驗。沒有內建的運算符，但處理元素串流是非常簡單，並且自動的支援背壓，你不必明確的考慮它。
+
+This section shows coroutine-based implementation of several reactive stream operators.
+
+這個章節展示幾個 Reactive Streams 函式庫運算符基於協程的實作。
 
 ### Range
 
