@@ -833,6 +833,8 @@ In Rx you use special operators to modify the threading context for operations i
 
 For example, there is [observeOn](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Flowable.html#observeOn(io.reactivex.Scheduler)) operator. Let us modify the previous example to observe using `Schedulers.computation()`: 
 
+例如，有 [observeOn](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Flowable.html#observeOn(io.reactivex.Scheduler)) 運算符。讓我們修改上一個範例去觀察使用 `Schedulers.computation()` ：
+
 ```kotlin
 fun rangeWithInterval(context: CoroutineContext, time: Long, start: Int, count: Int) = GlobalScope.publish<Int>(context) {
     for (x in start until start + count) { 
@@ -849,9 +851,13 @@ fun main() {
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-rx2/test/guide/example-reactive-context-03.kt)
+> You can get full code [here](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-context-03.kt)
+>
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-context-03.kt)獲取完整的代碼
 
 Here is the difference in output, notice "RxComputationThreadPool":
+
+這裡在輸出的差異，注意 "RxComputationThreadPool" ：
 
 ```text
 1 on thread RxComputationThreadPool-1
@@ -861,18 +867,11 @@ Here is the difference in output, notice "RxComputationThreadPool":
 
 ### Coroutine context to rule them all
 
-A coroutine is always working in some context. For example, let us start a coroutine
-in the main thread with [runBlocking] and iterate over the result of the Rx version of `rangeWithIntervalRx` operator, 
-instead of using Rx `subscribe` operator:
+Coroutine context to rule them all ：協程環境去管理它們
 
-<!--- INCLUDE
-import io.reactivex.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.reactive.*
-import io.reactivex.functions.BiFunction
-import io.reactivex.schedulers.Schedulers
-import java.util.concurrent.TimeUnit
--->
+A coroutine is always working in some context. For example, let us start a coroutine in the main thread with [runBlocking][runBlocking] and iterate over the result of the Rx version of `rangeWithIntervalRx` operator, instead of using Rx `subscribe` operator:
+
+協程總是在某種協程環境下運行。例如，讓我們在主線程使用 [runBlocking][runBlocking] 中啟動協程，並且遍歷 `rangeWithIntervalRx` 運算符的 Rx 版本結果，而不是使用 Rx `subscribe` 運算符：
 
 ```kotlin
 fun rangeWithIntervalRx(scheduler: Scheduler, time: Long, start: Int, count: Int): Flowable<Int> =
@@ -887,9 +886,13 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-rx2/test/guide/example-reactive-context-04.kt)
+> You can get full code [here](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-context-04.kt)
+>
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-context-04.kt)獲取完整的代碼
 
 The resulting messages are going to be printed in the main thread:
+
+結果訊息將在主線程印出：
 
 ```text
 1 on thread main
@@ -897,27 +900,17 @@ The resulting messages are going to be printed in the main thread:
 3 on thread main
 ```
 
-<!--- TEST LINES_START -->
-
 ### Unconfined context
 
-Most Rx operators do not have any specific thread (scheduler) associated with them and are working 
-in whatever thread that they happen to be invoked in. We've seen it on the example of `subscribe` operator 
-in the [threads with Rx](#threads-with-rx) section.
+Unconfined context ：未限制的協程環境，讓另外控制線程的函式來處理線程
 
-In the world of coroutines, [Dispatchers.Unconfined] context serves a similar role. Let us modify our previous example,
-but instead of iterating over the source `Flowable` from the `runBlocking` coroutine that is confined 
-to the main thread, we launch a new coroutine in `Dispatchers.Unconfined` context, while the main coroutine
-simply waits its completion using [Job.join]:
+Most Rx operators do not have any specific thread (scheduler) associated with them and are working in whatever thread that they happen to be invoked in. We've seen it on the example of `subscribe` operator in the [threads with Rx](#threads-with-rx) section.
 
-<!--- INCLUDE
-import io.reactivex.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.reactive.*
-import io.reactivex.functions.BiFunction
-import io.reactivex.schedulers.Schedulers
-import java.util.concurrent.TimeUnit
--->
+大多 Rx 運算符不會有任何特定線程 (排程) 與它們聯繫 ，並且它們在任何線程調用發生中運行。我們已經看到在[使用 Rx 線程](#threads-with-rx)章節 `subscribe` 運算符範例。
+
+In the world of coroutines, [Dispatchers.Unconfined][Dispatchers.Unconfined] context serves a similar role. Let us modify our previous example, but instead of iterating over the source `Flowable` from the `runBlocking` coroutine that is confined to the main thread, we launch a new coroutine in `Dispatchers.Unconfined` context, while the main coroutine simply waits its completion using [Job.join][Job.join]:
+
+在協程的世界中， [Dispatchers.Unconfined][Dispatchers.Unconfined] 環境提供類似的角色。讓我們修改我們上一個範例，而不是被限限制在主線程的  `runBlocking` 協程遍歷來源 `Flowable` ，我們在 `Dispatchers.Unconfined` 下發射一個新的協程，而主協程就是使用 [Job.join][Job.join] 等待它完成：
 
 ```kotlin
 fun rangeWithIntervalRx(scheduler: Scheduler, time: Long, start: Int, count: Int): Flowable<Int> =
@@ -935,10 +928,13 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-rx2/test/guide/example-reactive-context-05.kt)
+> You can get full code [here](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-context-05.kt)
+>
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-context-05.kt)獲取完整的代碼
 
-Now, the output shows that the code of the coroutine is executing in the Rx computation thread pool, just
-like our initial example using Rx `subscribe` operator.
+Now, the output shows that the code of the coroutine is executing in the Rx computation thread pool, just like our initial example using Rx `subscribe` operator.
+
+現在，輸出顯示在 Rx 計算線程池中執行協程代碼，就像我們的使用 Rx `subscribe` 運算符的初始範例一樣：
 
 ```text
 1 on thread RxComputationThreadPool-1
@@ -946,20 +942,13 @@ like our initial example using Rx `subscribe` operator.
 3 on thread RxComputationThreadPool-1
 ```
 
-<!--- TEST LINES_START -->
+Note, that [Dispatchers.Unconfined][Dispatchers.Unconfined] context shall be used with care. It may improve the overall performance on certain tests, due to the increased stack-locality of operations and less scheduling overhead, but it also produces deeper stacks and makes it harder to reason about asynchronicity of the code that is using it. 
 
-Note, that [Dispatchers.Unconfined] context shall be used with care. It may improve the overall performance on certain tests,
-due to the increased stack-locality of operations and less scheduling overhead, but it also produces deeper stacks 
-and makes it harder to reason about asynchronicity of the code that is using it. 
+注意，應該謹慎使用 [Dispatchers.Unconfined][Dispatchers.Unconfined] 環境，它可以改善在某些測試下的整體性能，由於遞增運算符局部堆疊並減少調用開銷，但它也產生更深的堆疊，並使它更難的推斷正在使用它代碼的異步性。
 
-If a coroutine sends an element to a channel, then the thread that invoked the 
-[send][SendChannel.send] may start executing the code of a coroutine with [Dispatchers.Unconfined] dispatcher.
-The original producer coroutine that invoked `send`  is paused until the unconfined consumer coroutine hits its next
-suspension point. This is very similar to a lock-step single-threaded `onNext` execution in Rx world in the absense
-of thread-shifting operators. It is a normal default for Rx, because operators are usually doing very small chunks
-of work and you have to combine many operators for a complex processing. However, this is unusual with coroutines, 
-where you can have an arbitrary complex processing in a coroutine. Usually, you only need to chain stream-processing
-coroutines for complex pipelines with fan-in and fan-out between multiple worker coroutines.
+If a coroutine sends an element to a channel, then the thread that invoked the [send][SendChannel.send] may start executing the code of a coroutine with [Dispatchers.Unconfined][Dispatchers.Unconfined] dispatcher. The original producer coroutine that invoked `send`  is paused until the unconfined consumer coroutine hits its next suspension point. This is very similar to a lock-step single-threaded `onNext` execution in Rx world in the absense of thread-shifting operators. It is a normal default for Rx, because operators are usually doing very small chunks of work and you have to combine many operators for a complex processing. However, this is unusual with coroutines, where you can have an arbitrary complex processing in a coroutine. Usually, you only need to chain stream-processing coroutines for complex pipelines with fan-in and fan-out between multiple worker coroutines.
+
+如果協程發送元素到通道，接著線程調用的 [send][SendChannel.send] 開始執行一個使用 [Dispatchers.Unconfined][Dispatchers.Unconfined] 分配器協程的代碼。傳統生產者協程調用 `send` 被停止，直到未限制的消費者協程碰擊到它下一個懸掛點。在沒有線程轉移運算符下的 Rx 世界中這與單線程的鎖非常相類。這是 Rx 的正常預設，因為運算符通常執行非常小的工作區塊，並且你必須結合很多運算符用於複雜的處理。然而，這在協程中不常見，在一個協程中你可以進行隨意複雜的處理。通常，你只需要複雜管道的鏈式串流處理，在多個工作者協程之間使用扇入 (多個生產者、一個消費者) 和扇出 (一個生產者、多個消費者) 。
 
 <!--- MODULE kotlinx-coroutines-core -->
 <!--- INDEX kotlinx.coroutines -->
