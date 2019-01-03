@@ -825,21 +825,13 @@ Here we've used Rx [subscribe](http://reactivex.io/RxJava/2.x/javadoc/io/reactiv
 
 ### Rx observeOn 
 
-In Rx you use special operators to modify the threading context for operations in the chain. You
-can find some [good guides](http://tomstechnicalblog.blogspot.ru/2016/02/rxjava-understanding-observeon-and.html)
-about them, if you are not familiar. 
+Rx observeOn ： Rx 的 observeOn ，指定線程處理方式
 
-For example, there is
-[observeOn](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Flowable.html#observeOn(io.reactivex.Scheduler)) 
-operator. Let us modify the previous example to observe using `Schedulers.computation()`:   
+In Rx you use special operators to modify the threading context for operations in the chain. You can find some [good guides](http://tomstechnicalblog.blogspot.ru/2016/02/rxjava-understanding-observeon-and.html) about them, if you are not familiar. 
 
-<!--- INCLUDE
-import io.reactivex.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.reactive.*
-import io.reactivex.schedulers.Schedulers
-import kotlin.coroutines.CoroutineContext
--->
+在 Rx 中你使用特別的運算符去修改鏈式中操作進行線程環境。如果你不熟悉，你可以找到一些關於它們的[好指導](http://tomstechnicalblog.blogspot.ru/2016/02/rxjava-understanding-observeon-and.html)。
+
+For example, there is [observeOn](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Flowable.html#observeOn(io.reactivex.Scheduler)) operator. Let us modify the previous example to observe using `Schedulers.computation()`: 
 
 ```kotlin
 fun rangeWithInterval(context: CoroutineContext, time: Long, start: Int, count: Int) = GlobalScope.publish<Int>(context) {
@@ -866,8 +858,6 @@ Here is the difference in output, notice "RxComputationThreadPool":
 2 on thread RxComputationThreadPool-1
 3 on thread RxComputationThreadPool-1
 ```
-
-<!--- TEST FLEXIBLE_THREAD -->
 
 ### Coroutine context to rule them all
 
