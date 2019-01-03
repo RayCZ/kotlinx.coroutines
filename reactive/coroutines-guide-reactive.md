@@ -738,23 +738,19 @@ And the results should be:
 
 ## Coroutine context
 
-All the example operators that are shown in the previous section have an explicit
-[CoroutineContext](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/) 
-parameter. In Rx world it roughly corresponds to 
-a [Scheduler](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Scheduler.html).
+Coroutine context ：協程環境
+
+All the example operators that are shown in the previous section have an explicit [CoroutineContext](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/) parameter. In Rx world it roughly corresponds to a [Scheduler](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Scheduler.html).
+
+在上一個章節顯示所有範例的運算符有明顯的 [CoroutineContext](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/) 參數。在 Rx 世界，它大致上對應到 [Scheduler](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Scheduler.html) 。
 
 ### Threads with Rx
 
-The following example shows the basics of threading context management with Rx.
-Here `rangeWithIntervalRx` is an implementation of `rangeWithInterval` function using Rx 
-`zip`, `range`, and `interval` operators.
+Threads with Rx ：使用 Rx 線程，指定 Schedulers 來處理線程
 
-<!--- INCLUDE
-import io.reactivex.*
-import io.reactivex.functions.BiFunction
-import io.reactivex.schedulers.Schedulers
-import java.util.concurrent.TimeUnit
--->
+The following example shows the basics of threading context management with Rx. Here `rangeWithIntervalRx` is an implementation of `rangeWithInterval` function using Rx `zip`, `range`, and `interval` operators.
+
+以下範例展示，使用 Rx 進行線程環境管理的基本概念。這裡 `rangeWithIntervalRx` 是 Kotlin 的 `rangeWithInterval` 使用 Rx 函式庫的 `zip` 、 `range` 、和 `interval` 運算符實作。
 
 ```kotlin
 fun rangeWithIntervalRx(scheduler: Scheduler, time: Long, start: Int, count: Int): Flowable<Int> = 
@@ -764,18 +760,20 @@ fun rangeWithIntervalRx(scheduler: Scheduler, time: Long, start: Int, count: Int
         BiFunction { x, _ -> x })
 
 fun main() {
+    // Schedulers.computation() 指定線程方式
     rangeWithIntervalRx(Schedulers.computation(), 100, 1, 3)
         .subscribe { println("$it on thread ${Thread.currentThread().name}") }
     Thread.sleep(1000)
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-rx2/test/guide/example-reactive-context-01.kt)
+> You can get full code [here](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-context-01.kt)
+>
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-context-01.kt)獲取完整的代碼
 
-We are explicitly passing the 
-[Schedulers.computation()](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/schedulers/Schedulers.html#computation()) 
-scheduler to our `rangeWithIntervalRx` operator and
-it is going to be executed in Rx computation thread pool. The output is going to be similar to the following one:
+We are explicitly passing the [Schedulers.computation()](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/schedulers/Schedulers.html#computation()) scheduler to our `rangeWithIntervalRx` operator and it is going to be executed in Rx computation thread pool. The output is going to be similar to the following one:
+
+我們明顯的傳遞 [Schedulers.computation()](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/schedulers/Schedulers.html#computation()) `scheduler` 參數到我們的 `rangeWithIntervalRx` 運算符，並且在 Rx 計算線程池中執行它。輸出將類似於以下內容：
 
 ```text
 1 on thread RxComputationThreadPool-1
@@ -783,19 +781,13 @@ it is going to be executed in Rx computation thread pool. The output is going to
 3 on thread RxComputationThreadPool-1
 ```
 
-<!--- TEST FLEXIBLE_THREAD -->
-
 ### Threads with coroutines
 
-In the world of coroutines `Schedulers.computation()` roughly corresponds to [Dispatchers.Default], 
-so the previous example is similar to the following one:
+Threads with coroutines ：使用協程的線程，在協程中指定 Dispatchers 處理線程
 
-<!--- INCLUDE
-import io.reactivex.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.reactive.*
-import kotlin.coroutines.CoroutineContext
--->
+In the world of coroutines `Schedulers.computation()` roughly corresponds to [Dispatchers.Default][Dispatchers.Default], so the previous example is similar to the following one:
+
+在協程的世界中 `Schedulers.computation()` 大致上對應到 [Dispatchers.Default][Dispatchers.Default] ，所以上一個範例類似於以下範例：
 
 ```kotlin
 fun rangeWithInterval(context: CoroutineContext, time: Long, start: Int, count: Int) = GlobalScope.publish<Int>(context) {
@@ -806,15 +798,20 @@ fun rangeWithInterval(context: CoroutineContext, time: Long, start: Int, count: 
 }
 
 fun main() {
+    // Dispatchers.Default 指定線程方式
     Flowable.fromPublisher(rangeWithInterval(Dispatchers.Default, 100, 1, 3))
         .subscribe { println("$it on thread ${Thread.currentThread().name}") }
     Thread.sleep(1000)
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-rx2/test/guide/example-reactive-context-02.kt)
+> You can get full code [here](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-context-02.kt)
+>
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-context-02.kt)獲取完整的代碼
 
 The produced output is going to be similar to:
+
+產生的輸出將類似於：
 
 ```text
 1 on thread ForkJoinPool.commonPool-worker-1
@@ -822,12 +819,9 @@ The produced output is going to be similar to:
 3 on thread ForkJoinPool.commonPool-worker-1
 ```
 
-<!--- TEST LINES_START -->
+Here we've used Rx [subscribe](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Flowable.html#subscribe(io.reactivex.functions.Consumer)) operator that does not have its own scheduler and operates on the same thread that the publisher -- on a default shared pool of threads in this example.
 
-Here we've used Rx 
-[subscribe](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Flowable.html#subscribe(io.reactivex.functions.Consumer))
-operator that does not have its own scheduler and operates on the same thread that the publisher -- on a default
-shared pool of threads in this example.
+在這裡，我們已使用 Rx [subscribe](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Flowable.html#subscribe(io.reactivex.functions.Consumer)) 運算符，沒有 Rx 擁有的 Scheduler 並在 Publisher 相同的線程中操作 -- 在這個範例中預設共享線程池上執行。
 
 ### Rx observeOn 
 
