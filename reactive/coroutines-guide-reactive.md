@@ -51,7 +51,11 @@ This section outlines key differences between reactive streams and coroutine-bas
 
 ### Basics of iteration
 
+Basics of iteration ：遍歷的基本知識
+
 The [Channel][Channel] is somewhat similar concept to the following reactive stream classes:
+
+[Channel][Channel] 與以下 Reactive Streams 函式庫類別有些類似的既念：
 
 [Channel][Channel] 與以下 Reactive Streams 類別有些相似：
 
@@ -65,7 +69,7 @@ They all describe an asynchronous stream of elements (aka items in Rx), either i
 
 However, the `Channel` always represents a _hot_ stream of items, using Rx terminology. Elements are being sent into the channel by producer coroutines and are received from it by consumer coroutines. Every [receive][ReceiveChannel.receive] invocation consumes an element from the channel. Let us illustrate it with the following example:
 
-然而， `Channel` 始終代表一個熱門項目的串流，以 Rx 術語來說。透過 producer 協程送來通道中並透過消費者協程從通道中接收。每個 [receive][ReceiveChannel.receive] 調用從通道中消耗一個元素。讓我們使用以下範例解釋它：
+然而， `Channel` 始終代表一個熱門項目的串流，以 Rx 術語來說。透過 producer 協程元素正在被送到通道中，並透過消費者協程從通道中接收元素。每個 [receive][ReceiveChannel.receive] 調用從通道中消耗一個元素。讓我們使用以下範例解釋它：
 
 ```kotlin
 fun main() = runBlocking<Unit> {
@@ -115,7 +119,7 @@ Again:
 
 Notice, how "Begin" line was printed just once, because [produce][produce] _coroutine builder_, when it is executed, launches one coroutine to produce a stream of elements. All the produced elements are consumed with [ReceiveChannel.consumeEach][consumeEach] extension function. There is no way to receive the elements from this channel again. The channel is closed when the producer coroutine is over and the attempt to receive from it again cannot receive anything.
 
-注意， 有關 "Begin" 行就被列印一次，因為 [produce][produce] 協程建造者，當它被執行時，發射一個產生元素串流的協程。所有已產生的元素使用 [ReceiveChannel.consumeEach][consumeEach] 擴展函數消耗。無法辦法再次從這個通道接收元素。當生產者協程結束時，通道被關閉，並且再次嘗試從通道接收，直到不可接收任何的東西。
+注意， 有關 "Begin" 行就被列印一次，因為 [produce][produce] 協程建造者，當它被執行時，發射一個協程去產生元素串流。所有已產生的元素使用 [ReceiveChannel.consumeEach][consumeEach] 擴展函數做消耗。沒有辦法再次從這個通道接收元素。當生產者協程結束時，通道被關閉，並且再次嘗試從通道接收，直到不可接收任何的東西。
 
 Let us rewrite this code using [publish][publish] coroutine builder from `kotlinx-coroutines-reactive` module instead of [produce][produce] from `kotlinx-coroutines-core` module. The code stays the same, but where `source` used to have [ReceiveChannel][ReceiveChannel] type, it now has reactive streams [Publisher](http://www.reactive-streams.org/reactive-streams-1.0.0-javadoc/org/reactivestreams/Publisher.html) type.
 
@@ -124,7 +128,7 @@ Let us rewrite this code using [publish][publish] coroutine builder from `kotlin
 ```kotlin
 fun main() = runBlocking<Unit> {
     
-    //不同於之前是 ReceiveChannel 類型， publish 如同字面做發怖、發送的事情
+    // 不同於之前是 ReceiveChannel 類型， publish 如同字面做發怖、發送的事情
     // create a publisher that produces numbers from 1 to 3 with 200ms delays between them
     val source = publish<Int> {
     //           ^^^^^^^  <---  Difference from the previous examples is here
@@ -198,18 +202,20 @@ Subscription and cancellation ：訂閱和取消
 
 An example in the previous section uses `source.consumeEach { ... }` snippet to open a subscription and receive all the elements from it. If we need more control on how what to do with the elements that are being received from the channel, we can use [Publisher.openSubscription][org.reactivestreams.Publisher.openSubscription] as shown in the following example:
 
-在前一個章節中範例使用 `source.consumeEach { ... }` 片段去打開訂閱並從它接收所有元素。如果我們需要更多控制如何處理從通道正在接收元素，我們可以使用 [Publisher.openSubscription][org.reactivestreams.Publisher.openSubscription] 如下所示範例：
+在前一個章節中範例使用 `source.consumeEach { ... }` 片段去打開訂閱並從它接收所有元素。如果我們需要更多控制如何處理從通道正在接收元素，我們可以使用 [Publisher.openSubscription][org.reactivestreams.Publisher.openSubscription] 擴展函數如下所示：
 
 ```kotlin
 fun main() = runBlocking<Unit> {
+    // 發送 1 ~ 5
     val source = Flowable.range(1, 5) // a range of five numbers
         .doOnSubscribe { println("OnSubscribe") } // provide some insight
         .doOnComplete { println("OnComplete") }   // ...
         .doFinally { println("Finally") }         // ... into what's going on
     var cnt = 0 
     
-    // openSubscription() 回傳 ReceiveChannel 做消耗
+    // openSubscription() 擴展函數回傳 ReceiveChannel 通道做消耗
     source.openSubscription().consume { // open channel to the source
+        // this 代表這個 ReceiveChannel 通道
         for (x in this) { // iterate over the channel to receive elements from it
             println(x)
             if (++cnt >= 3) break // break when 3 elements are printed
@@ -668,18 +674,9 @@ Producing
 
 ### Merge
 
-There are always at least two ways for processing multiple streams of data with coroutines. One way involving
-[select] was shown in the previous example. The other way is just to launch multiple coroutines. Let
-us implement 
-[merge](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Flowable.html#merge(org.reactivestreams.Publisher))
-operator using the later approach:
+There are always at least two ways for processing multiple streams of data with coroutines. One way involving [select][select] was shown in the previous example. The other way is just to launch multiple coroutines. Let us implement [merge](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Flowable.html#merge(org.reactivestreams.Publisher)) operator using the later approach:
 
-<!--- INCLUDE
-import kotlinx.coroutines.*
-import kotlinx.coroutines.reactive.*
-import org.reactivestreams.*
-import kotlin.coroutines.*
--->
+使用協程處理多個資料串流總總至少兩種方法。一種方法是涉及 [select][select] 表達式在前一個範例中展示。另一個方法就是發射多個協程。讓我們使用後面的方法實作 [merge](http://reactivex.io/RxJava/2.x/javadoc/io/reactivex/Flowable.html#merge(org.reactivestreams.Publisher)) 運算符：
 
 ```kotlin
 fun <T> Publisher<Publisher<T>>.merge(context: CoroutineContext) = GlobalScope.publish<T>(context) {
@@ -691,32 +688,21 @@ fun <T> Publisher<Publisher<T>>.merge(context: CoroutineContext) = GlobalScope.p
 }
 ```
 
-Notice, the use of 
-[coroutineContext](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/coroutine-context.html)
-in the invocation of [launch] coroutine builder. It is used to refer
-to the context of the enclosing `publish` coroutine. This way, all the coroutines that are
-being launched here are [children](../docs/coroutines-guide.md#children-of-a-coroutine) of the `publish`
-coroutine and will get cancelled when the `publish` coroutine is cancelled or is otherwise completed. 
-Moreover, since parent coroutine waits until all children are complete, this implementation fully
-merges all the received streams.
+Notice, the use of [coroutineContext](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/coroutine-context.html) in the invocation of [launch][launch] coroutine builder. It is used to refer to the context of the enclosing `publish` coroutine. This way, all the coroutines that are being launched here are [children](../docs/coroutines-guide.md#children-of-a-coroutine) of the `publish` coroutine and will get cancelled when the `publish` coroutine is cancelled or is otherwise completed. Moreover, since parent coroutine waits until all children are complete, this implementation fully merges all the received streams.
 
-For a test, let us start with `rangeWithInterval` function from the previous example and write a 
-producer that sends its results twice with some delay:
+注意，在 [launch][launch] 協程建造者調用時使用 [coroutineContext](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/coroutine-context.html)。它用於閉包 `publish` 協程的參考 (引用) 。這種方式，在這裡所有已發射協程都是 `publish` 協程的[子協程](../docs/coroutines-guide.md#children-of-a-coroutine)，並且在取消或是其他的完成 `publish` 協程時，將被取消。此外，從父協程等待所有子協程完成，這個實作完全合併所有已收到的串流。
 
-<!--- INCLUDE
+For a test, let us start with `rangeWithInterval` function from the previous example and write a producer that sends its results twice with some delay:
 
-fun CoroutineScope.rangeWithInterval(time: Long, start: Int, count: Int) = publish<Int> {
-​    for (x in start until start + count) { 
-​        delay(time) // wait before sending each number
-​        send(x)
-​    }
-}
--->
+對於測試，讓我們從上一個範例以 `rangeWithInterval` 函數開始，並寫一個生產者，有一些延遲發送它的結果兩次
 
 ```kotlin
 fun CoroutineScope.testPub() = publish<Publisher<Int>> {
+    // 跑 1 ~ 4 次，每次 0.25 秒
     send(rangeWithInterval(250, 1, 4)) // number 1 at 250ms, 2 at 500ms, 3 at 750ms, 4 at 1000ms 
     delay(100) // wait for 100 ms
+    
+    // 跑 11 ~ 13 ，每次 0.5 秒 
     send(rangeWithInterval(500, 11, 3)) // number 11 at 600ms, 12 at 1100ms, 13 at 1600ms
     delay(1100) // wait for 1.1s - done in 1.2 sec after start
 }
@@ -724,27 +710,31 @@ fun CoroutineScope.testPub() = publish<Publisher<Int>> {
 
 The test code is to use `merge` on `testPub` and to display the results:
 
+測試代碼在  `testPub` 使用 `merge` 並且顯示結果：
+
 ```kotlin
 fun main() = runBlocking<Unit> {
     testPub().merge(coroutineContext).consumeEach { println(it) } // print the whole stream
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-rx2/test/guide/example-reactive-operators-04.kt)
+> You can get full code [here](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-operators-04.kt)
+>
+> 你可以在[這裡](https://github.com/Kotlin/kotlinx.coroutines/blob/master/reactive/kotlinx-coroutines-rx2/test/guide/example-reactive-operators-04.kt)獲取完整的代碼
 
 And the results should be: 
 
-```text
-1
-2
-11
-3
-4
-12
-13
-```
+結果應該是：
 
-<!--- TEST -->
+```text
+1 // 0.25
+2 // 0.5
+11 // 0.6 (因為 delay 100 ms)
+3 // 0.75
+4 // 1
+12 // 1.1
+13 // 1.6
+```
 
 ## Coroutine context
 
