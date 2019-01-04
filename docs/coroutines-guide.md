@@ -27,7 +27,7 @@ In order to use coroutines as well as follow the examples in this guide, you nee
 
 ## Additional references
 
-* [Guide to UI programming with coroutines](../ui/coroutines-guide-ui.md)
-* [Guide to reactive streams with coroutines](../reactive/coroutines-guide-reactive.md)
+* [Guide to UI programming with coroutines](../ui/coroutines-guide-ui.md) (使用協程配合 UI 程式設計指導)
+* [Guide to reactive streams with coroutines](../reactive/coroutines-guide-reactive.md) (使用協程配合 Reactive Streams 函式庫的指導)
 * [Coroutines design document (KEEP)](https://github.com/Kotlin/kotlin-coroutines/blob/master/kotlin-coroutines-informal.md)
 * [Full kotlinx.coroutines API reference](http://kotlin.github.io/kotlinx.coroutines)

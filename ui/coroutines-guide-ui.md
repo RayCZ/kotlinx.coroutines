@@ -1,6 +1,6 @@
 # Guide to UI programming with coroutines
 
-Guide to UI programming with coroutines ：使用協程的 UI 程式設計
+Guide to UI programming with coroutines ：使用協程配合 UI 程式設計指導
 
 This guide assumes familiarity with basic coroutine concepts that are covered in [Guide to kotlinx.coroutines](../docs/coroutines-guide.md) and gives specific examples on how to use coroutines in UI applications. 
 
