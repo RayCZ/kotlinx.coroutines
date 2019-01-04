@@ -110,7 +110,7 @@ Add dependencies on `kotlinx-coroutines-android` module to the `dependencies { .
 添加 `kotlinx-coroutines-android` 模組依賴到 `app/build.gradle` 檔案的 `dependencies { ... }` 部份。
 
 ```groovy
-implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.0.1"
+implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.1.0"
 ```
 
 You can clone [kotlinx.coroutines](https://github.com/Kotlin/kotlinx.coroutines) project from GitHub onto your workstation. The resulting template project for Android resides in [`ui/kotlinx-coroutines-android/example-app`](kotlinx-coroutines-android/example-app) directory. You can load it in Android Studio to follow this guide on Android.
@@ -425,30 +425,21 @@ Structured concurrency, lifecycle and coroutine parent-child hierarchy ：結構
 
 A typical UI application has a number of elements with a lifecycle. Windows, UI controls, activities, views, fragments and other visual elements are created and destroyed. A long-running coroutine, performing some IO or a background computation, can retain references to the corresponding UI elements for longer than it is needed, preventing garbage collection of the whole trees of UI objects that were already destroyed and will not be displayed anymore.
 
-典型的 UI 應用程式有許多生命週期的元素。 Windows 、 UI 控制、 Activity 、 View 、 Fragment 和其他的視覺元素被創建和銷毀。在執行某些 IO 或背景運算的長時間運行協程可以保留對應的 UI 元素引用超過它所需要的時間，防止整個 UI 物件樹狀的垃圾集合，這些 UI 物件已經被被銷毀，並且將不再被顯示。
+典型的 UI 應用程式有許多生命週期的元素。 Windows 、 UI 控制、 Activity 、 View 、 Fragment 和其他的視覺元素被創建和銷毀。在執行某些 IO 或背景運算的長時間運行協程可以保留對應的 UI 元素引用超過它所需要的時間，防止整個 UI 物件樹狀的垃圾集合，這些 UI 物件已經被銷毀，並且將不再被顯示。
 
-The natural solution to this problem is to associate a [Job][Job] object with each UI object that has a lifecycle and create all the coroutines in the context of this job. But passing associated job object to every coroutine builder is error-prone, it is easy to forget it. For this purpose, [CoroutineScope][CoroutineScope] interface should be implemented by UI owner, and then every coroutine builder defined as an extension on [CoroutineScope][CoroutineScope] inherits UI job without explicitly mentioning it.
+The natural solution to this problem is to associate a [Job][Job] object with each UI object that has a lifecycle and create all the coroutines in the context of this job. But passing associated job object to every coroutine builder is error-prone, it is easy to forget it. For this purpose, [CoroutineScope][CoroutineScope] interface could be implemented by UI owner, and then every coroutine builder defined as an extension on [CoroutineScope][CoroutineScope] inherits UI job without explicitly mentioning it. For the sake of simplicity, [MainScope()][MainScope()] factory can be used. It automatically provides `Dispatchers.Main` and parent job.
 
-這個問題的自然解決方式是使用 [Job][Job] 物件聯繫每個有生命週期的 UI 物件，並在這個 job 物件的環境中創建所有協程。但是傳遞聯繫的 job 物件給每個協程建造者容易出錯，很容易忘記它。對於這個目的，應該透過 UI 擁有者實作[CoroutineScope][CoroutineScope] 介面，並接著在 [CoroutineScope][CoroutineScope] 中每個協程建造者定義為擴展函數，繼承 UI job 無明確的提及它。
+這個問題的自然解決方式是使用 [Job][Job] 物件聯繫每個有生命週期的 UI 物件，並在這個 job 物件的環境中創建所有協程。但是傳遞聯繫的 job 物件給每個協程建造者容易出錯，很容易忘記它。對於這個目的，應該透過 UI 擁有者實作[CoroutineScope][CoroutineScope] 介面，並接著在 [CoroutineScope][CoroutineScope] 中每個協程建造者定義為擴展函數，繼承 UI job 無明確的提及它。為了簡單的目的， [MainScope()][MainScope()] 工廠可以使用。它自動的提供 `Dispatchers.Main` 和上層的 job 。
 
 For example, in Android application an `Activity` is initially _created_ and is _destroyed_ when it is no longer needed and when its memory must be released. A natural solution is to attach an instance of a `Job` to an instance of an `Activity`:
 
 例如，在 Android 應用程式中最初創建一個 `Activity`，並當不再需要它並且必須釋放它的記憶體時銷毀它。一個自然的解決方式是附加一個 `Job` 的實例到 `Activity` 的實例：
 
 ```kotlin
-abstract class ScopedAppActivity: AppCompatActivity(), CoroutineScope {
-    protected lateinit var job: Job
-    override val coroutineContext: CoroutineContext 
-        get() = job + Dispatchers.Main
-    
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        job = Job()
-    }
-        
+abstract class ScopedAppActivity: AppCompatActivity(), CoroutineScope by MainScope() {
     override fun onDestroy() {
         super.onDestroy()
-        job.cancel()
+        cancel() // CoroutineScope.cancel
     } 
 }
 ```
@@ -478,7 +469,7 @@ class MainActivity : ScopedAppActivity() {
 
 Every coroutine launched from within a `MainActivity` has its job as a parent and is immediately cancelled when activity is destroyed.
 
-從 `Mainactivity` 內發射每個協程，因父類別有它的 job 實例並在 Activity 被銷毀時立刻取消。
+從 `MainActivity` 內發射每個協程，因父類別有它的 job 實例並在 Activity 被銷毀時立刻取消。
 
 To propagate activity scope to its views and presenters, multiple techniques can be used:
 
@@ -521,7 +512,7 @@ suspend fun CoroutineScope.launchInIO() = launch(Dispatchers.IO) {
 
 Parent-child relation between jobs forms a hierarchy. A coroutine that performs some background job on behalf of the view and in its context can create further children coroutines. The whole tree of coroutines gets cancelled when the parent job is cancelled. An example of that is shown in the ["Children of a coroutine"](../docs/coroutine-context-and-dispatchers.md#children-of-a-coroutine) section of the guide to coroutines.
 
-在 job 之間的父子關係形成層級。協程代表 View 執行某些背景工作，並且在它的環境中可以創建進一步的子協程。在父協程的 job 被取消時，整個協程的樹狀聯繫 job 都被取消。
+在 job 之間的父子關係形成層級。協程代表 View 執行某些背景工作，並且在它的環境中可以創建進一步的子協程。在父協程的 job 被取消時，整個協程的樹狀聯繫 job 都被取消。在指導協程的 ["協程的後代"](../docs/coroutine-context-and-dispatchers.md#children-of-a-coroutine) 章節中展示範例。
 
 ### Blocking operations
 
@@ -663,6 +654,7 @@ After delay
 [Job]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/index.html
 [Job.cancel]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/cancel.html
 [CoroutineScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html
+[MainScope()]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-main-scope.html
 [coroutineScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html
 [withContext]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-context.html
 [Dispatchers.Default]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-dispatchers/-default.html

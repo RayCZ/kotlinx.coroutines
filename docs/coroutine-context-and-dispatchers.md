@@ -1,4 +1,4 @@
-## Table of contents
+**Table of contents**
 
 * [Coroutine context and dispatchers](#coroutine-context-and-dispatchers)
   * [Dispatchers and threads](#dispatchers-and-threads)

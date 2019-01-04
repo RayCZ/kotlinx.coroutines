@@ -1,4 +1,4 @@
-## Table of contents
+**Table of contents**
 
 * [Coroutine basics](#coroutine-basics)
   * [Your first coroutine](#your-first-coroutine)

@@ -1,4 +1,4 @@
-## Table of contents
+**Table of contents**
 
 * [Cancellation and timeouts](#cancellation-and-timeouts)
   * [Cancelling coroutine execution](#cancelling-coroutine-execution)

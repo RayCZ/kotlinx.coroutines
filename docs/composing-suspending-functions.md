@@ -1,4 +1,4 @@
-## Table of contents
+**Table of contents**
 
 * [Composing suspending functions](#composing-suspending-functions)
   * [Sequential by default](#sequential-by-default)

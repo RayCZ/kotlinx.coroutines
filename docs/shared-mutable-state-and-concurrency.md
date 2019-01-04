@@ -1,4 +1,4 @@
-## Table of contents
+**Table of contents**
 
 * [Shared mutable state and concurrency](#shared-mutable-state-and-concurrency)
   * [The problem](#the-problem)

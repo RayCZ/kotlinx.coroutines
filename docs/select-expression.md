@@ -1,5 +1,5 @@
 
-## Table of contents
+**Table of contents**
 
 * [Select expression (experimental)](#select-expression-experimental)
   * [Selecting from channels](#selecting-from-channels)

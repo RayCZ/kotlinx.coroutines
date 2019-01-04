@@ -1,4 +1,4 @@
-## Table of contents
+**Table of contents**
 
 * [Channels (experimental)](#channels-experimental)
   * [Channel basics](#channel-basics)
@@ -204,11 +204,6 @@ fun main() = runBlocking {
     println("Done!") // we are done
     coroutineContext.cancelChildren() // cancel children coroutines
 //sampleEnd
-}
-
-// 本範例目前沒用到
-fun CoroutineScope.produceSquares(): ReceiveChannel<Int> = produce {
-    for (x in 1..5) send(x * x)
 }
 
 // 生成一個 produce 協程，發送數值

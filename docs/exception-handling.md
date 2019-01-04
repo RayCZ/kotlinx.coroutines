@@ -1,4 +1,4 @@
-## Table of contents
+**Table of contents**
 
 * [Exception handling](#exception-handling)
   * [Exception propagation](#exception-propagation)
