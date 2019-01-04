@@ -645,6 +645,8 @@ Ticker channel is a special rendezvous channel that produces `Unit` every time g
 
 To create such channel use a factory method [ticker][ticker]. To indicate that no further elements are needed use [ReceiveChannel.cancel][ReceiveChannel.cancel] method on it.
 
+創建這樣的通道使用工廠方法 [ticker][ticker] 。表示在 ticker 回傳物件中沒有更進一步的元素被需要使用 [ReceiveChannel.cancel][ReceiveChannel.cancel] 方法。
+
 Now let's see how it works in practice:
 
 ```kotlin
