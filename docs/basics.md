@@ -58,7 +58,7 @@ World!
 
 Essentially, coroutines are light-weight threads. They are launched with [launch][launch] _coroutine builder_ in a context of some [CoroutineScope][-CoroutineScope]. Here we are launching a new coroutine in the [GlobalScope][GlobalScope], meaning that the lifetime of the new coroutine is limited only by the lifetime of the whole application. 
 
-本質上， coroutines  是輕量的線程。在一些 [CoroutineScope][-CoroutineScope] 內容中使用 [launch][launch] 協程建造者發射協程。這裡我們 [GlobalScope][GlobalScope] 中發射新的協程，意味者透過整個應用程序的存活時間只限制新的協程存活時間。
+本質上， coroutines  是輕量的線程。在一些 [CoroutineScope][-CoroutineScope] 已有的環境中使用 [launch][launch] 協程建造者發射協程。在這裡，我們在 [GlobalScope][GlobalScope] 中發射新的協程，意味者只透過整個應用程序的存活時間限制新的協程存活時間。
 
 You can achieve the same result replacing `GlobalScope.launch { ... }` with `thread { ... }` and `delay(...)` with `Thread.sleep(...)`. Try it.
 
@@ -109,7 +109,7 @@ fun main() {
 //World!
 ```
 
-> You can get full code [here](.https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-basic-02b.kt)
+> You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-basic-02b.kt)
 >
 > 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-basic-02b.kt)獲取完整的代碼
 
