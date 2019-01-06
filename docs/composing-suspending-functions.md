@@ -21,7 +21,7 @@ Sequential by default ：根據預設依序
 
 Assume that we have two suspending functions defined elsewhere that do something useful like some kind of remote service call or computation. We just pretend they are useful, but actually each one just delays for a second for the purpose of this example:
 
-假設我們有兩個懸掛函數定義在別處，負責做某些有用的事像是某種遠端服務調用或計算。我們只是假裝它們有用的，但實際上每個函數只是為了這個例子的目延遲一秒：
+假設我們有兩個懸掛函數定義在別處，負責做某些有用的事像是某種遠端服務調用或計算。我們只是假裝它們有用的，但實際上每個函數只是為了這個例子目的延遲一秒：
 
 ```kotlin
 suspend fun doSomethingUsefulOne(): Int {
@@ -37,7 +37,7 @@ suspend fun doSomethingUsefulTwo(): Int {
 
 What do we do if need to invoke them _sequentially_ -- first `doSomethingUsefulOne` _and then_  `doSomethingUsefulTwo` and compute the sum of their results? In practice we do this if we use the results of the first function to make a decision on whether we need to invoke the second one or to decide on how to invoke it.
 
-如果需要依序調用它們我們該做什麼 -- 首先 `doSomethingUsefulOne` 而接著 `doSomethingUsefulTwo` 並計算它們結果的總合？在實踐上，如果我們使用第一個函數的結果來決定，我們是否需要調用第二個函數或決定如何調用它，我們會這樣做。
+如果需要依序調用它們，我們該做什麼 -- 首先 `doSomethingUsefulOne` 而接著 `doSomethingUsefulTwo` 並計算它們結果的總合？在實踐上，如果我們使用第一個函數的結果來決定，我們是否需要調用第二個函數或決定如何調用它，我們會這樣做。
 
 We use a normal sequential invocation, because the code in the coroutine, just like in the regular code, is _sequential_ by default. The following example demonstrates it by measuring the total time it takes to execute both suspending functions:
 
@@ -94,7 +94,7 @@ Concurrent using async ：並發 (同時) 使用 async 函數
 
 What if there are no dependencies between invocation of `doSomethingUsefulOne` and `doSomethingUsefulTwo` and we want to get the answer faster, by doing both _concurrently_? This is where [async][async] comes to help. 
 
-如果在調用 `doSomethingUsefulOne` 和 `doSomethingUsefulTwo` 之間沒有依賴，並且我們想要透過並發 (同時) 執行兩者，更快的取得答案，該怎麼做？這是 [async][async] 來幫忙的地方。
+如果在 `doSomethingUsefulOne` 和 `doSomethingUsefulTwo` 調用之間沒有依賴，並且我們想要透過並發 (同時) 執行兩者，更快的取得答案，該怎麼做？這是 [async][async] 來幫忙的地方。
 
 Conceptually, [async][async] is just like [launch][launch]. It starts a separate coroutine which is a light-weight thread that works concurrently with all the other coroutines. The difference is that `launch` returns a [Job][Job] and does not carry any resulting value, while `async` returns a [Deferred][Deferred] -- a light-weight non-blocking future that represents a promise to provide a result later. You can use `.await()` on a deferred value to get its eventual result, but `Deferred` is also a `Job`, so you can cancel it if needed.
 
@@ -156,7 +156,7 @@ This is twice as fast, because we have concurrent execution of two coroutines. N
 
 ### Lazily started async
 
-Lazily started async ：惰性啟動 async 函數，惰性代表只有當調用時才會執行
+Lazily started async ：惰性啟動 async 函數，「惰性」代表只有當調用時 (start) 才會執行
 
 There is a laziness option to [async][async] using an optional `start` parameter with a value of [CoroutineStart.LAZY][CoroutineStart.LAZY]. It starts coroutine only when its result is needed by some [await][Deferred.await] or if a [start][Job.start] function is invoked. Run the following example:
 
