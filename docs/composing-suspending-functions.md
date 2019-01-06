@@ -37,11 +37,11 @@ suspend fun doSomethingUsefulTwo(): Int {
 
 What do we do if need to invoke them _sequentially_ -- first `doSomethingUsefulOne` _and then_  `doSomethingUsefulTwo` and compute the sum of their results? In practice we do this if we use the results of the first function to make a decision on whether we need to invoke the second one or to decide on how to invoke it.
 
-如果需要依序調用它們，我們該做什麼 -- 首先 `doSomethingUsefulOne` 而接著 `doSomethingUsefulTwo` 並計算它們結果的總合？在實踐上，如果我們使用第一個函數的結果來決定，我們是否需要調用第二個函數或決定如何調用它，我們會這樣做。
+如果需要**依序**調用它們，我們該做什麼 -- 首先 `doSomethingUsefulOne` **而接著** `doSomethingUsefulTwo` 並計算它們結果的總合？在實踐上，如果我們使用第一個函數的結果來決定，我們是否需要調用第二個函數或決定如何調用它，我們會這樣做。
 
 We use a normal sequential invocation, because the code in the coroutine, just like in the regular code, is _sequential_ by default. The following example demonstrates it by measuring the total time it takes to execute both suspending functions:
 
-我們使用正常順序的調用，因為在協程中的代碼，與常規的代碼一樣，是預設順序。以下範例透過測量 `measureTimeMillis` 執行兩個懸掛函數花費的總時間來展示它：
+我們使用正常順序的調用，因為在協程中的代碼，與常規的代碼一樣，是預設**順序**。以下範例透過測量 `measureTimeMillis` 執行兩個懸掛函數花費的總時間來展示它：
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -94,7 +94,7 @@ Concurrent using async ：並發 (同時) 使用 async 函數
 
 What if there are no dependencies between invocation of `doSomethingUsefulOne` and `doSomethingUsefulTwo` and we want to get the answer faster, by doing both _concurrently_? This is where [async][async] comes to help. 
 
-如果在 `doSomethingUsefulOne` 和 `doSomethingUsefulTwo` 調用之間沒有依賴，並且我們想要透過並發 (同時) 執行兩者，更快的取得答案，該怎麼做？這是 [async][async] 來幫忙的地方。
+如果在 `doSomethingUsefulOne` 和 `doSomethingUsefulTwo` 調用之間沒有依賴，並且我們想要透過**並發 (同時)** 執行兩者，更快的取得答案，該怎麼做？這是 [async][async] 來幫忙的地方。
 
 Conceptually, [async][async] is just like [launch][launch]. It starts a separate coroutine which is a light-weight thread that works concurrently with all the other coroutines. The difference is that `launch` returns a [Job][Job] and does not carry any resulting value, while `async` returns a [Deferred][Deferred] -- a light-weight non-blocking future that represents a promise to provide a result later. You can use `.await()` on a deferred value to get its eventual result, but `Deferred` is also a `Job`, so you can cancel it if needed.
 
@@ -230,7 +230,7 @@ Async-style functions ： Async 風格的函數
 
 We can define async-style functions that invoke `doSomethingUsefulOne` and `doSomethingUsefulTwo` _asynchronously_ using [async][async] coroutine builder with an explicit [GlobalScope][GlobalScope] reference. We name such functions with "Async" suffix to highlight the fact that they only start asynchronous computation and one needs to use the resulting deferred value to get the result.
 
-我們可以明確使用 [GlobalScope][GlobalScope] 參照中的 [async][async] 協程建造者來定義 async 風格的函數，該函數異步調用 `doSomethingUsefulOne` 和 `doSomethingUsefulTwo` 。我們使用 "Async" 為後綴命名這樣的函數，突顯它們只啟動於異步計算以及使用 Deferred 類型值去取得結果。
+我們可以明確使用 [GlobalScope][GlobalScope] 參照中的 [async][async] 協程建造者來定義 async 風格的函數，該函數**異步**調用 `doSomethingUsefulOne` 和 `doSomethingUsefulTwo` 。我們使用 "Async" 為後綴命名這樣的函數，突顯它們只啟動於異步計算以及使用 Deferred 類型值去取得結果。
 
 ```kotlin
 // The result type of somethingUsefulOneAsync is Deferred<Int>
@@ -246,7 +246,7 @@ fun somethingUsefulTwoAsync() = GlobalScope.async {
 
 Note, that these `xxxAsync` functions are **not** _suspending_ functions. They can be used from anywhere. However, their use always implies asynchronous (here meaning _concurrent_) execution of their action with the invoking code.
 
-注意：這些 `xxxAsync` 函數不是懸掛函數。他們可以在任何地方使用。然而，他們的用途總是意味著它們的動作是異步執行調用代碼。
+注意：這些 `xxxAsync` 函數**不是懸掛函數**。他們可以在任何地方使用。然而，它們的使用總是暗示著它們的動作和調用代碼是異步的 (這裡意味著**並發**)。
 
 The following example shows their use outside of coroutine: 
 

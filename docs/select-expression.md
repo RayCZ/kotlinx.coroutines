@@ -17,7 +17,7 @@ Select expression (experimental) ： Select 表達式 (實驗性)
 Select expression makes it possible to await multiple suspending functions simultaneously and _select_
 the first one that becomes available.
 
-Select 表達式可以同時等待多個懸掛函數，並且選擇第一個可用的懸掛函數。
+Select 表達式可以同時等待多個懸掛函數，並且**選擇**第一個可用的懸掛函數。
 
 > Select expressions are an experimental feature of `kotlinx.coroutines`. Their API is expected to 
 > evolve in the upcoming updates of the `kotlinx.coroutines` library with potentially
@@ -57,7 +57,7 @@ fun CoroutineScope.buzz() = produce<String> {
 
 Using [receive][ReceiveChannel.receive] suspending function we can receive _either_ from one channel or the other. But [select][select] expression allows us to receive from _both_ simultaneously using its [onReceive][ReceiveChannel.onReceive] clauses:
 
-使用 [receive][ReceiveChannel.receive] 懸掛函數，我們可以接收來自一個通道或其他的通道。但 [select][select] 表達式允許我們使用它的 [onReceive][ReceiveChannel.onReceive] 子句，去同時去接收來自兩者。
+使用 [receive][ReceiveChannel.receive] 懸掛函數，我們可以接收來自一個通道**或**其他的通道。但 [select][select] 表達式允許我們使用它的 [onReceive][ReceiveChannel.onReceive] 子句，去同時去接收來自**兩者**。
 
 ```kotlin
 suspend fun selectFizzBuzz(fizz: ReceiveChannel<String>, buzz: ReceiveChannel<String>) {
@@ -246,7 +246,7 @@ There are couple of observations to make out of it.
 
 First of all, `select` is _biased_ to the first clause. When several clauses are selectable at the same time, the first one among them gets selected. Here, both channels are constantly producing strings, so `a` channel, being the first clause in select, wins. However, because we are using unbuffered channel, the `a` gets suspended from time to time on its [send][SendChannel.send] invocation and gives a chance for `b` to send, too.
 
-首先， `select` 是偏向第一個子句。當在同時間可選多個子句時，在它們之中的第一個被選中。這裡，兩個生產者通道不斷的產生字串，所以 `a` 通道，在 `select` 中成為第一個子句獲勝。然而，因為我們使用未緩衝的通道， `a` 生產者通道在它的 [send][SendChannel.send] 有時被懸掛，且對 `b` 也有機會去發送。
+首先， `select` 是**偏向**第一個子句。當在同時間可選多個子句時，在它們之中的第一個被選中。這裡，兩個生產者通道不斷的產生字串，所以 `a` 通道，在 `select` 中成為第一個子句獲勝。然而，因為我們使用未緩衝的通道， `a` 生產者通道在它的 [send][SendChannel.send] 有時被懸掛，且對 `b` 也有機會去發送。
 
 The second observation, is that [onReceiveOrNull][ReceiveChannel.onReceiveOrNull] gets immediately selected when the channel is already closed.
 

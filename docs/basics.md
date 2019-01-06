@@ -58,7 +58,7 @@ World!
 
 Essentially, coroutines are light-weight threads. They are launched with [launch][launch] _coroutine builder_ in a context of some [CoroutineScope][-CoroutineScope]. Here we are launching a new coroutine in the [GlobalScope][GlobalScope], meaning that the lifetime of the new coroutine is limited only by the lifetime of the whole application. 
 
-本質上， coroutines  是輕量的線程。在一些 [CoroutineScope][-CoroutineScope] 已有的環境中使用 [launch][launch] 協程建造者發射協程。在這裡，我們在 [GlobalScope][GlobalScope] 中發射新的協程，意味者只透過整個應用程序的存活時間限制新的協程存活時間。
+本質上， coroutines  是輕量的線程。在一些 [CoroutineScope][-CoroutineScope] 已有的環境中使用 [launch][launch] **協程建造者**發射協程。在這裡，我們在 [GlobalScope][GlobalScope] 中發射新的協程，意味者只透過整個應用程序的存活時間限制新的協程存活時間。
 
 You can achieve the same result replacing `GlobalScope.launch { ... }` with `thread { ... }` and `delay(...)` with `Thread.sleep(...)`. Try it.
 
@@ -74,7 +74,7 @@ Error: Kotlin: Suspend functions are only allowed to be called from a coroutine 
 
 That is because [delay][delay] is a special _suspending function_ that does not block a thread, but _suspends_ coroutine and it can be only used from a coroutine.
 
-這是因為 [delay][delay] 是特別的懸掛函數不會阻塞線程，但是**懸掛**協程只能從協程中使用。 
+這是因為 [delay][delay] 是特別的**懸掛函數**不會阻塞線程，但是**懸掛**協程只能從協程中使用。 
 
 ### Bridging blocking and non-blocking worlds
 
@@ -115,7 +115,7 @@ fun main() {
 
 The result is the same, but this code uses only non-blocking [delay][delay]. The main thread, that invokes `runBlocking`, _blocks_ until the coroutine inside `runBlocking` completes. 
 
-結果是相同的，但這代碼只使用非阻塞 [delay][delay] 。主線程，調用 `runBlocking` ，主線程阻塞直到在 `runBlocking` 內協程完成。
+結果是相同的，但這些代碼只使用非阻塞 [delay][delay] 。主線程，調用 `runBlocking` ，主線程**阻塞**直到在 `runBlocking` 內協程完成。
 
 **`runBlocking`  是阻塞當下的線程，由於是在 main() 中呼叫 runblocking {...} 所以阻塞主線程**
 
@@ -294,7 +294,7 @@ Extract function refactoring ：提取函數重構
 
 Let's extract the block of code inside `launch { ... }` into a separate function. When you perform "Extract function" refactoring on this code you get a new function with `suspend` modifier. That is your first _suspending function_. Suspending functions can be used inside coroutines just like regular functions, but their additional feature is that they can, in turn, use other suspending functions, like `delay` in this example, to _suspend_ execution of a coroutine.
 
-讓我們提取 `launch { ... }` 內的代碼區塊到單獨函數。當你在這份代碼執行 "提取函數" 重構時，你使用 `suspend` 修飾符取得新的函數。這是你第一個**懸掛函數**。懸掛函數可以用在協程內就像常規函數，但它們的額外功能是它們可以反過來使用其他的懸掛函數，像是在範例中的 `delay` ，懸掛 (暫停) 協程的執行。
+讓我們提取 `launch { ... }` 內的代碼區塊到單獨函數。當你在這份代碼執行 "提取函數" 重構時，你使用 `suspend` 修飾符取得新的函數。這是你第一個**懸掛函數**。懸掛函數可以用在協程內就像常規函數，但它們的額外功能是它們可以反過來使用其他的懸掛函數，像是在範例中的 `delay` ，**懸掛 (暫停)** 協程的執行。
 
 **Suspend ：懸掛函數，不是以阻塞的方式來處理線程，而是讓線程暫停「懸起來」跟「掛回去」的某種機制，賦與線程某種生命週期。 Suspend 英文上是指正在進行中的事暫停，尤其強調短時間的停止。**
 

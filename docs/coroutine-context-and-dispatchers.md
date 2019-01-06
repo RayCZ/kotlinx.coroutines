@@ -307,7 +307,7 @@ Children of a coroutine ：協程的後代
 
 When a coroutine is launched in the [CoroutineScope][CoroutineScope] of another coroutine, it inherits its context via [CoroutineScope.coroutineContext][CoroutineScope.coroutineContext] and the [Job][Job] of the new coroutine becomes a _child_ of the parent coroutine's job. When the parent coroutine is cancelled, all its children are recursively cancelled, too. 
 
-當在另一個協程的 [CoroutineScope][CoroutineScope] 中發射一個協程時，它通過 [CoroutineScope.coroutineContext][CoroutineScope.coroutineContext] 繼承它的環境，並且新協程的 [Job][Job] 成為父協程 job 的後代。當父協程被取消，所有它的後代也會遞迴式的被取消。
+當在另一個協程的 [CoroutineScope][CoroutineScope] 中發射一個協程時，它通過 [CoroutineScope.coroutineContext][CoroutineScope.coroutineContext] 繼承它的環境，並且新協程的 [Job][Job] 成為父協程 job 的**後代**。當父協程被取消，所有它的後代也會遞迴式的被取消。
 
 However, when [GlobalScope][GlobalScope] is used to launch a coroutine, it is not tied to the scope it was launched from and operates independently.
 

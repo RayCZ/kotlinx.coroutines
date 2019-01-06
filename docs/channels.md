@@ -556,7 +556,7 @@ fun main() = runBlocking<Unit> {
 
 It prints "sending" _five_ times using a buffered channel with capacity of _four_:
 
-它使用 4 的容量緩衝通道，印出 "sending" 5 次使用：
+它使用 **4** 的容量緩衝通道，印出 "sending" **5** 次使用：
 
 ```text
 Sending 0
@@ -576,7 +576,7 @@ Channels are fair ：通道是公平
 
 Send and receive operations to channels are _fair_ with respect to the order of their invocation from multiple coroutines. They are served in first-in first-out order, e.g. the first coroutine to invoke `receive` gets the element. In the following example two coroutines "ping" and "pong" are receiving the "ball" object from the shared "table" channel. 
 
-從多個協程調用它們的順序，向通道發送與接收操作是公平的。它們在先進先出的順序中提供，例如第一個協程調用 `receive` 取得元素。在以下例子兩個協程 "ping" 和 "pong" 正在從共享的 "table" 通道接收 "ball" 物件。
+從多個協程調用它們的順序，向通道發送與接收操作是**公平的**。它們在先進先出的順序中提供，例如第一個協程調用 `receive` 取得元素。在以下例子兩個協程 "ping" 和 "pong" 正在從共享的 "table" 通道接收 "ball" 物件。
 
 ```kotlin
 import kotlinx.coroutines.*

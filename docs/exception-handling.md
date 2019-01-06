@@ -392,7 +392,7 @@ Good example of such requirement can be a UI component with the job defined in i
 
 Another example is a server process that spawns several children jobs and needs to _supervise_ their execution, tracking their failures and restarting just those children jobs that had failed.
 
-另一個例子是伺服器進程，它產生幾個後代 Job ，並且需要監督它們的執行、追蹤它們的失敗，並且重新啟動那些已失敗的子 Job 。
+另一個例子是伺服器進程，它產生幾個後代 Job ，並且需要**監督**它們的執行、追蹤它們的失敗，並且重新啟動那些已失敗的子 Job 。
 
 ### Supervision job
 

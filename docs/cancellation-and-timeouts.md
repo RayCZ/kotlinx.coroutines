@@ -70,7 +70,7 @@ Cancellation is cooperative ：取消是合作的 (cancel + join 操作)
 
 Coroutine cancellation is _cooperative_. A coroutine code has to cooperate to be cancellable. All the suspending functions in `kotlinx.coroutines` are _cancellable_. They check for cancellation of coroutine and throw [CancellationException][CancellationException] when cancelled. However, if a coroutine is working in a computation and does not check for cancellation, then it cannot be cancelled, like the following example shows:
 
-協程取消是合作的。協程代碼必須配合才能取消。在 `kotlinx.coroutines` 中所有的懸掛函數是可取消的。他檢查協程的取消並當已取消時丟出 [CancellationException][CancellationException] 。然而，如果協程正在計算工作並不會檢查取消，接著它不可以被取消，像以下範例所示：
+協程取消是**合作的**。協程代碼必須配合才能取消。在 `kotlinx.coroutines` 中所有的懸掛函數是**可取消的**。他檢查協程的取消並當已取消時丟出 [CancellationException][CancellationException] 。然而，如果協程正在計算工作並不會檢查取消，接著它不可以被取消，像以下範例所示：
 
 
 ```kotlin

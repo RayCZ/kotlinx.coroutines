@@ -89,7 +89,7 @@ What does it print at the end? It is highly unlikely to ever print "Counter = 10
 
 > Note: if you have an old system with 2 or fewer CPUs, then you _will_ consistently see 100000, because the thread pool is running in only one thread in this case. To reproduce the problem you'll need to make the following change:
 >
-> 注意：如果你有舊系統使用 2 或 更少的 CPU ，接著你將始終看到 100000 ，因為在這種情況下，線程池只在一個線程中執行。重現問題，你將需要做以下修改：
+> 注意：如果你有舊系統使用 2 或 更少的 CPU ，接著你**將**始終看到 100000 ，因為在這種情況下，線程池只在一個線程中執行。重現問題，你將需要做以下修改：
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -242,7 +242,7 @@ Thread confinement fine-grained ：線程限制的「細」粒度方式，細粒
 
 _Thread confinement_ is an approach to the problem of shared mutable state where all access to the particular shared state is confined to a single thread. It is typically used in UI applications, where all UI state is confined to the single event-dispatch/application thread. It is easy to apply with coroutines by using a single-threaded context. 
 
-線程限制是共享的可變狀態問題的解決辦法，所有存取特定共享狀態被限制到單一線程。它在 UI 應用程式中是典型的使用，所有 UI 狀態被限制到單一事件 - 分配 / 應用程式線程。透過使用一個單一線程環境應應用協程是容易的。
+**線程限制**是共享的可變狀態問題的解決辦法，所有存取特定共享狀態被限制到單一線程。它在 UI 應用程式中是典型的使用，所有 UI 狀態被限制到單一事件 - 分配 / 應用程式線程。透過使用一個單一線程環境應應用協程是容易的。
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -288,7 +288,7 @@ fun main() = runBlocking<Unit> {
 
 This code works very slowly, because it does _fine-grained_ thread-confinement. Each individual increment switches from multi-threaded [Dispatchers.Default][Dispatchers.Default] context to the single-threaded context using [withContext][withContext] block.
 
-這些代碼非常慢的運作，因為它進行細粒度的線程限制。每個個別增量操作使用 [withContext][withContext] 區塊從多線程 [Dispatchers.Default][Dispatchers.Default] 環境轉換到單線程環境。
+這些代碼非常慢的運作，因為它進行**細粒度**的線程限制。每個個別增量操作使用 [withContext][withContext] 區塊從多線程 [Dispatchers.Default][Dispatchers.Default] 環境轉換到單線程環境。
 
 ### Thread confinement coarse-grained
 
@@ -346,7 +346,7 @@ Mutual exclusion ：互斥排除，當只有一開一關的情況時才讓你寫
 
 Mutual exclusion solution to the problem is to protect all modifications of the shared state with a _critical section_ that is never executed concurrently. In a blocking world you'd typically use `synchronized` or `ReentrantLock` for that. Coroutine's alternative is called [Mutex][Mutex]. It has [lock][Mutex.lock] and [unlock][Mutex.unlock] functions to delimit a critical section. The key difference is that `Mutex.lock()` is a suspending function. It does not block a thread.
 
-問題的互斥排除解決方式是永不同時執行關鍵部分的程式，保護共享狀態的所有修改。在阻塞的世界中，你可能會使用 Java 典型的 `synchronized` 或  `ReentrantLock` API 用於阻塞。多協程的替代品是稱 [Mutex][Mutex] 。它有 [lock][Mutex.lock] 和 [unlock][Mutex.unlock] 函數去劃分某一關鍵區塊。關鍵的區別是 `Mutex.lock()` 是懸掛函數。它不會阻塞線程。
+問題的互斥排除解決方式是永不同時執行**關鍵部分**的程式，保護共享狀態的所有修改。在阻塞的世界中，你可能會使用 Java 典型的 `synchronized` 或  `ReentrantLock` API 用於阻塞。多協程的替代品是稱 [Mutex][Mutex] 。它有 [lock][Mutex.lock] 和 [unlock][Mutex.unlock] 函數去劃分某一關鍵區塊。關鍵的區別是 `Mutex.lock()` 是懸掛函數。它不會阻塞線程。
 
 There is also [withLock][withLock] extension function that conveniently represents `mutex.lock(); try { ... } finally { mutex.unlock() }` pattern: 
 
