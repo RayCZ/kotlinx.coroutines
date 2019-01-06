@@ -76,6 +76,8 @@ That is because [delay][delay] is a special _suspending function_ that does not 
 
 這是因為 [delay][delay] 是特別的**懸掛函數**不會阻塞線程，但是**懸掛**協程只能從協程中使用。 
 
+---
+
 ### Bridging blocking and non-blocking worlds
 
 Bridging blocking and non-blocking worlds ：橋接阻塞和非阻塞的世界
@@ -163,9 +165,11 @@ class MyTest {
 }
 ```
 
+---
+
 ### Waiting for a job
 
-Waiting for a job ：等待工作
+Waiting for a job ：等待工作，利用 Job.join 函數在主協程等待另一個協程完成才繼續主協程
 
 Delaying for a time while another coroutine is working is not a good approach. Let's explicitly wait (in a non-blocking way) until the background [Job][Job] that we have launched is complete:
 
@@ -202,7 +206,9 @@ fun main() = runBlocking {
 Now the result is still the same, but the code of the main coroutine is not tied to the duration of
 the background job in any way. Much better.
 
-現在的結果還是一樣，但主協程的代碼不以任何方式綁定 (聯繫) 背景程序的持續時間。
+現在的結果還是一樣，但主協程的代碼不以任何方式綁定 (聯繫) 背景程序的持續時間。好多了。
+
+---
 
 ### Structured concurrency
 
@@ -210,15 +216,15 @@ Structured concurrency ：結構化並發
 
 There is still something to be desired for practical usage of coroutines. When we use `GlobalScope.launch` we create a top-level coroutine. Even though it is light-weight, it still consumes some memory resources while it runs. If we forget to keep a reference to the newly launched coroutine it still runs. What if the code in the coroutine hangs (for example, we erroneously delay for too long), what if we launched too many coroutines and ran out of memory? Having to manually keep a reference to all the launched coroutines and [join][job.join] them is error-prone. 
 
-還是有某些事情被期望用於實踐協程的用法。當我們使用 `GlobalScope.launch` 時，我們創建一個最高層級的協程。即使它是輕量，當它運行時，它還是有消耗某些記憶體資源。如果我們忘記保留新的已發射協程引用，已發射的協程還是在運行。如果在協程中的代碼掛起 (例如：我太長時間錯誤的延遲) ，如果我們發射太多協程且跑出記憶體不足怎麼辦？必須手動保留已發射協程的引用並 [join][job.join] 它們容易出錯。
+還是有某些事情被期望用於實踐協程的用法。當我們使用 `GlobalScope.launch` 時，我們創建一個最高層級的協程。即使它是輕量，當它運行時，它還是消耗某些記憶體資源。如果我們忘記保留新的已發射協程引用，已發射的協程還是在運行。如果在協程中的代碼掛起 (例如：我們有太長時間錯誤的延遲) ，如果我們發射太多協程且跑出記憶體不足怎麼辦？必須手動保留已發射協程的引用並 [join][job.join] 它們容易出錯。
 
 There is a better solution. We can use structured concurrency in our code. Instead of launching coroutines in the [GlobalScope][GlobalScope], just like we usually do with threads (threads are always global), we can launch coroutines in the specific scope of the operation we are performing. 
 
-有更好的解決方式。我們可以在我們的代碼中使用結構式並發。在 [GlobalScope][GlobalScope] 中代替發射協程，就像我們通常使用線程一樣 (線程總是全域的) ，我們可以在我們正在執行的指定範圍發射協程。
+有更好的解決方式。我們可以在我們的代碼中使用結構式並發。就像我們通常使用線程一樣 (線程總是全域的) ，我們可以在我們正在執行的指定範圍發射協程，而不是在 [GlobalScope][GlobalScope] 中發射協程。
 
 In our example, we have `main` function that is turned into a coroutine using [runBlocking][runBlocking] coroutine builder. Every coroutine builder, including `runBlocking`, adds an instance of [CoroutineScope][-CoroutineScope] to the scope of its code block. We can launch coroutines in this scope without having to `join` them explicitly, because an outer coroutine (`runBlocking` in our example) does not complete until all the coroutines launched in its scope complete. Thus, we can make our example simpler:
 
-在我們的範例中，我們使用 [runBlocking][runBlocking] 協程建造者將 `main` 函數轉換到協程。每個協程建造者，包括  `runBlocking` ， 添加 [CoroutineScope][-CoroutineScope] 的實例到 `runBlocking` 的代碼區塊的範圍。我們可以在 `runBlocking` 範圍內發射協程，不必明確的 `join` 它們，因為外部的協程不會完成執行 (在我們的範例中 `runBlocking`) ，直到在 `runBlocking` 範圍內所有已發射的協程完成。
+在我們的範例中，我們使用 [runBlocking][runBlocking] 協程建造者將 `main` 函數轉換到協程。每個協程建造者，包括  `runBlocking` ， 添加 [CoroutineScope][-CoroutineScope] 的實例到 `runBlocking` 代碼區塊的範圍。我們可以在 `runBlocking` 範圍內發射協程，不必明確的 `join` 它們，因為外部的協程不會完成執行 (在我們的範例中 `runBlocking`) ，直到在 `runBlocking` 範圍內所有已發射的協程完成。
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -239,6 +245,8 @@ fun main() = runBlocking { // this: CoroutineScope
 > You can get full code [here](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-basic-03s.kt)
 >
 > 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-basic-03s.kt)獲取完整的代碼
+
+---
 
 ### Scope builder
 
@@ -288,13 +296,15 @@ fun main() = runBlocking { // this: CoroutineScope
 >
 > 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-basic-04.kt)獲取完整的代碼
 
+---
+
 ### Extract function refactoring
 
 Extract function refactoring ：提取函數重構
 
 Let's extract the block of code inside `launch { ... }` into a separate function. When you perform "Extract function" refactoring on this code you get a new function with `suspend` modifier. That is your first _suspending function_. Suspending functions can be used inside coroutines just like regular functions, but their additional feature is that they can, in turn, use other suspending functions, like `delay` in this example, to _suspend_ execution of a coroutine.
 
-讓我們提取 `launch { ... }` 內的代碼區塊到單獨函數。當你在這份代碼執行 "提取函數" 重構時，你使用 `suspend` 修飾符取得新的函數。這是你第一個**懸掛函數**。懸掛函數可以用在協程內就像常規函數，但它們的額外功能是它們可以反過來使用其他的懸掛函數，像是在範例中的 `delay` ，**懸掛 (暫停)** 協程的執行。
+讓我們提取 `launch { ... }` 內的代碼區塊到單獨函數。當你在這份代碼執行 "提取函數" 重構時，你使用 `suspend` 修飾符獲取新的函數。這是你第一個**懸掛函數**。懸掛函數可以用在協程內就像常規函數，但它們的額外功能是它們可以反過來使用其他的懸掛函數，像是在範例中的 `delay` ，**懸掛 (暫停)** 協程的執行。
 
 **Suspend ：懸掛函數，不是以阻塞的方式來處理線程，而是讓線程暫停「懸起來」跟「掛回去」的某種機制，賦與線程某種生命週期。 Suspend 英文上是指正在進行中的事暫停，尤其強調短時間的停止。**
 
@@ -337,6 +347,8 @@ But what if the extracted function contains a coroutine builder which is invoked
 
 但是，如果提取的函數包含目前範圍上調用的協程建造者，該怎麼辦？在這種情況下 ，在提取函數上的 `suspend` 修飾符是不夠的。在 `CoroutineScope` 上製作 `doWorld` 擴展函數是解決方式之一，但它可能不總是適用，因為它不會使 API 變的清晰。常用慣語解決方式是有明確的方式是 `CoroutineScope` 在類別內作為欄位包含目標函數，或是隱式的方式在外部類別實作 `CoroutineScope` 。作為最後的手段，可以使用  [CoroutineScope(coroutineContext)][CoroutineScope()] ，但是這種方式結構上是不安全的，因為你不能在範圍中再控制這個方法被執行，只有私有 API 可以使用這樣的建造者。
 
+---
+
 ### Coroutines ARE light-weight
 
 Coroutines ARE light-weight ：協程是輕量
@@ -366,6 +378,8 @@ fun main() = runBlocking {
 It launches 100K coroutines and, after a second, each coroutine prints a dot. Now, try that with threads. What would happen? (Most likely your code will produce some sort of out-of-memory error)
 
 它發射十萬次協程，並且，在一秒之後，每個協程印出一個點。現在，嘗試使用線程。可能會發生？ (最有可能你的代碼將產生某種記憶體不足的錯誤) 。
+
+---
 
 ### Global coroutines are like daemon threads
 
