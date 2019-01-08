@@ -18,11 +18,11 @@ This section covers coroutine cancellation and timeouts.
 
 ### Cancelling coroutine execution
 
-Cancelling coroutine execution ：取消協程執行
+Cancelling coroutine execution ：取消協程執行，Job.cancel 函數
 
 In a long-running application you might need fine-grained control on your background coroutines. For example, a user might have closed the page that launched a coroutine and now its result is no longer needed and its operation can be cancelled. The [launch][launch] function returns a [Job][Job] that can be used to cancel running coroutine:
 
-在一個長時間運行的應用程式，在你的背景協程中你可能需要細粒度的控制。例如，一個使用者或許已經關閉已發射協程的畫面，然而現在它的結果不再需要和它的操作可以被取消。
+在一個長時間運行的應用程式下，在你的背景運行的協程中你可能需要細粒度的控制。例如，一個使用者可能已經關閉啟動協程的畫面，然而現在不再需要它的結果和它的操作，可以被取消。
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -35,6 +35,8 @@ fun main() = runBlocking {
             delay(500L)
         }
     }
+    
+    // delay 是懸掛函數，在 runBlocking 協程會先懸掛起來，先讓 launch 在線程中執行
     delay(1300L) // delay a bit
     println("main: I'm tired of waiting!")
     job.cancel() // cancels the job
@@ -62,7 +64,9 @@ main: Now I can quit.
 
 As soon as main invokes `job.cancel`, we don't see any output from the other coroutine because it was cancelled. There is also a [Job][Job.join] extension function [cancelAndJoin][cancelAndJoin]  that combines [cancel][Job.cancel] and [join][Job.join] invocations.
 
-一旦在 main 函數中調用 `job.cancel` ，我們不需要從其他的協程看到任何輸出，因為它被取消了。也有 [Job][Job.join] 擴展函數 [cancelAndJoin][cancelAndJoin] 結合 [cancel][Job.cancel] 和 [join][Job.join] 的調用。
+一旦在 main 函數中調用 `job.cancel` ，我們不需要從其他的協程看到任何輸出，因為它被取消了。也有 [Job][Job.join] 擴展函數結合 [cancel][Job.cancel] 和 [join][Job.join] 的調用 [cancelAndJoin][cancelAndJoin]。
+
+---
 
 ### Cancellation is cooperative
 
@@ -70,7 +74,7 @@ Cancellation is cooperative ：取消是合作的 (cancel + join 操作)
 
 Coroutine cancellation is _cooperative_. A coroutine code has to cooperate to be cancellable. All the suspending functions in `kotlinx.coroutines` are _cancellable_. They check for cancellation of coroutine and throw [CancellationException][CancellationException] when cancelled. However, if a coroutine is working in a computation and does not check for cancellation, then it cannot be cancelled, like the following example shows:
 
-協程取消是**合作的**。協程代碼必須配合才能取消。在 `kotlinx.coroutines` 中所有的懸掛函數是**可取消的**。他檢查協程的取消並當已取消時丟出 [CancellationException][CancellationException] 。然而，如果協程正在計算工作並不會檢查取消，接著它不可以被取消，像以下範例所示：
+協程取消是**合作的**。協程代碼必須配合才能取消。在 `kotlinx.coroutines` 中所有的懸掛函數是**可取消的**。當已取消時，它們檢查協程的取消並丟出 [CancellationException][CancellationException] 。然而，如果協程正在計算工作並不會檢查取消，接著它不可以被取消，像以下範例所示：
 
 
 ```kotlin
@@ -92,6 +96,8 @@ fun main() = runBlocking {
             }
         }
     }
+    
+    // 讓主協程延遲，讓 job 協程跑
     delay(1300L) // delay a bit
     println("main: I'm tired of waiting!")
     job.cancelAndJoin() // cancels the job and waits for its completion
@@ -116,7 +122,9 @@ fun main() = runBlocking {
 
 Run it to see that it continues to print "I'm sleeping" even after cancellation until the job completes by itself after five iterations.
 
-運行它去看，去看繼續印出 "I'm sleeping" 即使在之後取消，直到在五次遍歷後透過 job 本身完成。
+運行它去看，即使在取消之後，繼續印出 "I'm sleeping" ，直到在五次遍歷之後，透過 job 本身完成。
+
+---
 
 ### Making computation code cancellable
 
@@ -139,6 +147,8 @@ fun main() = runBlocking {
     val job = launch(Dispatchers.Default) {
         var nextPrintTime = startTime
         var i = 0
+        
+        // 由 coroutine 本身的 isActive 屬性判斷停止
         while (isActive) { // cancellable computation loop
             // print a message twice a second
             if (System.currentTimeMillis() >= nextPrintTime) {
@@ -147,6 +157,8 @@ fun main() = runBlocking {
             }
         }
     }
+    
+    // 讓主協程延遲，讓 job 協程跑
     delay(1300L) // delay a bit
     println("main: I'm tired of waiting!")
     job.cancelAndJoin() // cancels the job and waits for its completion
@@ -163,9 +175,11 @@ As you can see, now this loop is cancelled. [isActive][isActive] is an extension
 
 如你所見，現在這個循環被取消。 [isActive][isActive] 是擴展屬性，經由 [CoroutineScope][CoroutineScope] 物件在協程的代碼內使用。
 
+---
+
 ### Closing resources with finally
 
-Closing resources with finally ：使用 finally 關掉資源
+Closing resources with finally ：使用 try-finally 程式區塊關掉資源
 
 Cancellable suspending functions throw [CancellationException][CancellationException] on cancellation which can be handled in a usual way. For example, `try {...} finally {...}` expression and Kotlin `use` function execute their finalization actions normally when coroutine is cancelled:
 
@@ -177,6 +191,7 @@ import kotlinx.coroutines.*
 fun main() = runBlocking {
 //sampleStart
     val job = launch {
+        
         try {
             repeat(1000) { i ->
                 println("I'm sleeping $i ...")
@@ -211,13 +226,15 @@ I'm running finally
 main: Now I can quit.
 ```
 
+---
+
 ### Run non-cancellable block
 
 Run non-cancellable block ：運行不能取消的區塊
 
 Any attempt to use a suspending function in the `finally` block of the previous example causes [CancellationException][CancellationException], because the coroutine running this code is cancelled. Usually, this is not a problem, since all well-behaving closing operations (closing a file, cancelling a job, or closing any kind of a communication channel) are usually non-blocking and do not involve any suspending functions. However, in the rare case when you need to suspend in the cancelled coroutine you can wrap the corresponding code in `withContext(NonCancellable) {...}` using [withContext][withContext] function and [NonCancellable][NonCancellable] context as the following example shows:
 
-在上一個範例的 `finally` 區塊中，任何嘗試使用懸掛函數都會造成 [CancellationException][CancellationException] ，因為取消正在運行這些代碼的協程。通常，這不是問題，因為所有表示良好的關閉操作 (關閉檔案、取消任務、關閉任何種類的溝通頻道) 通常是非阻塞的並不會涉及任何的懸掛函數。然而，在罕見的情況下 ，當你需要在已取消的協程中懸掛 (暫停) 時，你可以使用 [withContext][withContext] 函數和 [NonCancellable][NonCancellable] 內容如下例所示，包裝對應的代碼在 `withContext(NonCancellable) {...}` 之中：
+在上一個範例的 `finally` 區塊中，任何嘗試使用懸掛函數都會造成 [CancellationException][CancellationException] ，因為協程正在運行這些代碼時被取消。通常，這不是問題，因為所有表示良好的關閉操作 (關閉檔案、取消任務、關閉任何種類的通訊通道) 通常是非阻塞的並不會涉及任何的懸掛函數。然而，在罕見的情況下 ，當你需要在已取消的協程中懸掛 (暫停) 時，你可以包裝對應的代碼在 `withContext(NonCancellable) {...}` 使用 [withContext][withContext] 函數和 [NonCancellable][NonCancellable] 環境之中，如下例所示：
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -231,6 +248,7 @@ fun main() = runBlocking {
                 delay(500L)
             }
         } finally {
+            // 協程已取消，但又需要再懸掛到線程中執行
             withContext(NonCancellable) {
                 println("I'm running finally")
                 delay(1000L)
@@ -258,13 +276,15 @@ fun main() = runBlocking {
 >
 > 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-cancel-05.kt)獲取完整的代碼
 
+---
+
 ### Timeout
 
-Timeout ：超時
+Timeout ：超時，使用 withTimeout 、 withTimeoutOrNull 函數
 
 The most obvious reason to cancel coroutine execution in practice is because its execution time has exceeded some timeout. While you can manually track the reference to the corresponding [Job][Job] and launch a separate coroutine to cancel the tracked one after delay, there is a ready to use [withTimeout][withTimeout] function that does it. Look at the following example:
 
-在實踐中取消協程執行最明顯的原因是因為它的執行時間超出某些超時。當你可以手動追蹤對應的 [Job][Job] 引用並發射單獨協程在延遲後取消追蹤，有一個準備好使用 [withTimeout][withTimeout] 函數做這件事。看看以下範例：
+在實際中取消協程執行最明顯的原因是，因為它的執行時間超出某些超時。當你可以同時手動追蹤對應的 [Job][Job] 引用並發射單獨協程在延遲後取消追蹤，有一個準備好使用 [withTimeout][withTimeout] 函數做這件事。看看以下範例：
 
 ```kotlin
 import kotlinx.coroutines.*
