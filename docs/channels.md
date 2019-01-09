@@ -264,7 +264,7 @@ fun CoroutineScope.filter(numbers: ReceiveChannel<Int>, prime: Int) = produce<In
 
 Now we build our pipeline by starting a stream of numbers from 2, taking a prime number from the current channel, and launching new pipeline stage for each prime number found:
 
-現在，我們開始從 2 的數值串流，建立我們的管道，從目前管道帶入一個值數，並為找到的每個質數，發射新的管道階段： 
+現在，我們開始從 2 的數值串流，建立我們的管道，從目前管道帶入一個質數，並為找到的每個質數，發射新的管道階段： 
 
 ```
 numbersFrom(2) -> filter(2) -> filter(3) -> filter(5) -> filter(7) ... 
@@ -279,7 +279,6 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 
 fun main() = runBlocking {
-//sampleStart
     
     // 擴展函數，建立數值串流
     var cur = numbersFrom(2)
@@ -292,11 +291,10 @@ fun main() = runBlocking {
     }
     
     // 在 runBlocking 範圍中取消所有子協程
-    coroutineContext.cancelChildren() // cancel all children to let main finish
-//sampleEnd    
+    coroutineContext.cancelChildren() // cancel all children to let main finish   
 }
 
-// 建立一個協程，處理無限的生成數值
+// 建立一個協程，處理無限的產生數值
 fun CoroutineScope.numbersFrom(start: Int) = produce<Int> {
     var x = start
     while (true) send(x++) // infinite stream of integers from start
@@ -335,7 +333,9 @@ Note, that you can build the same pipeline using [`buildIterator`](https://kotli
 
 Anyway, this is an extremely impractical way to find prime numbers. In practice, pipelines do involve some other suspending invocations (like asynchronous calls to remote services) and these pipelines cannot be built using `buildSequence`/`buildIterator`, because they do not allow arbitrary suspension, unlike `produce`, which is fully asynchronous.
 
-無論如何，這是極端不切實際的方式去找質數。在實踐中，管道確實涉及一些其他的懸掛調用 (像異步調用遠端服務) 並且這些管道不可以使用 `buildSequence`/`buildIterator` 建立，因為它們不會隨便允許懸掛，不像 `produce` ，它是完全的異步。
+無論如何，這是極端不切實際的方式去找質數。在實際中，管道確實涉及一些其他的懸掛調用 (像異步遠端服務的調用) 並且這些管道不可以使用 `buildSequence`/`buildIterator` 建立，因為它們不會隨便允許懸掛，不像 `produce` ，它是完全的異步。
+
+---
 
 ### Fan-out
 
@@ -343,7 +343,7 @@ Fan-out ：扇出 (由一個點擴散多個點出去像扇子一樣，以下例�
 
 Multiple coroutines may receive from the same channel, distributing work between themselves. Let us start with a producer coroutine that is periodically producing integers (ten numbers per second):
 
-多協程可以從相同的通道接受，在它們之間分配工作。讓我們以生產者協程開始，定期生產整數 (1 秒 10 個數值) ：
+多協程可以從相同的通道接受，在它們之間分配工作。讓我們以生產者協程開始，定期產生整數 (1 秒 10 個數值) ：
 
 ```kotlin
 fun CoroutineScope.produceNumbers() = produce<Int> {
@@ -376,19 +376,17 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 
 fun main() = runBlocking<Unit> {
-//sampleStart
     
-    // 開始自動生成數字的協程
+    // 開始自動產生數字的協程
     val producer = produceNumbers()
     
     // 呼叫五次產生五個協程，五個協程異步的取得數字
     repeat(5) { launchProcessor(it, producer) }
     delay(950)
     producer.cancel() // cancel producer coroutine and thus kill them all
-//sampleEnd
 }
 
-// 建立一個協程，持續每 0.1 秒生成數字
+// 建立一個協程，持續每 0.1 秒產生數字
 fun CoroutineScope.produceNumbers() = produce<Int> {
     var x = 1 // start from 1
     while (true) {
@@ -398,7 +396,7 @@ fun CoroutineScope.produceNumbers() = produce<Int> {
 }
 
 
-// 每次呼叫建立一個協程，都去跟生成數字的協程取得數字
+// 每次呼叫建立一個協程，都去跟產生數字的協程取得數字
 fun CoroutineScope.launchProcessor(id: Int, channel: ReceiveChannel<Int>) = launch {
     for (msg in channel) {
         println("Processor #$id received $msg")
@@ -433,7 +431,9 @@ Note, that cancelling a producer coroutine closes its channel, thus eventually t
 
 Also, pay attention to how we explicitly iterate over channel with `for` loop to perform fan-out in `launchProcessor` code. Unlike `consumeEach`, this `for` loop pattern is perfectly safe to use from multiple coroutines. If one of the processor coroutines fails, then others would still be processing the channel, while a processor that is written via `consumeEach` always consumes (cancels) the underlying channel on its normal or abnormal completion.
 
-另外，注意我們如何在 `launchProcessor` 代碼中執行扇出使用 `for` 循環明確遍歷。不像 `consumeEach` ，這種 `for` 循環模式從多個協程中使用是非常安全。如果處理器協程之一失敗，接著其他的處理器協程仍然會處理通道，而通過 `consumeEach` 寫入處理器總是在它正常或非正常完成時消費 (取消) 底層的通道。
+另外，注意我們如何明確遍歷通道，在 `launchProcessor` 代碼中執行扇出 (一個生產、多個消費) 使用 `for` 循環。不像 `consumeEach` ，這種 `for` 循環模式從多個協程中使用是非常安全。如果處理器協程之一失敗，接著其他的處理器協程仍然會處理通道，而通過 `consumeEach` 寫入處理器，總是在它正常或非正常完成時消費 (取消) 底層的通道。
+
+---
 
 ### Fan-in
 
@@ -441,7 +441,7 @@ Fan-in  ：扇入 (由多個點聚集一個像扇子一樣，以下例子：多�
 
 Multiple coroutines may send to the same channel. For example, let us have a channel of strings, and a suspending function that repeatedly sends a specified string to this channel with a specified delay:
 
-多個協程可能送出給相同通道。例如，讓我們有一個字串的通道，並且新增一個懸掛函數，重覆的指定延遲時間及送出指定的字串給這個通道：
+多個協程可能送出給相同通道。例如，讓我們有一個字串的通道，並且新增一個懸掛函數，重覆的發送指定字串到這個通道和指定延遲時間：
 
 ```kotlin
 suspend fun sendString(channel: SendChannel<String>, s: String, time: Long) {
@@ -454,7 +454,7 @@ suspend fun sendString(channel: SendChannel<String>, s: String, time: Long) {
 
 Now, let us see what happens if we launch a couple of coroutines sending strings (in this example we launch them in the context of the main thread as main coroutine's children):
 
-現在，讓我們看發生什麼事，如果我們發射幾個協程送出字串 (在這個例子中，我們在主線程環境中作為主協程的後代) ：
+現在，讓我們看發生什麼事，如果我們發射幾個協程去送出字串 (在這個例子中，我們在主線程環境中作為主協程的後代發討它們) ：
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -508,17 +508,19 @@ BAR! 0.5s
 
 **扇出與扇入的差別：「扇出」是利用 produce 協程作為參數，送給每個處理器的協程取去取得值，「扇入」是利用 Channel 的 API 處理，當然也可以做「扇出」的行為**
 
+---
+
 ### Buffered channels
 
 Buffered channels ：緩衝的通道
 
 The channels shown so far had no buffer. Unbuffered channels transfer elements when sender and receiver meet each other (aka rendezvous). If send is invoked first, then it is suspended until receive is invoked, if receive is invoked first, it is suspended until send is invoked.
 
-到目前為止展示的通道沒有緩衝。當發送者跟接收著彼此相遇 (又名會合) 時，無緩衝通道傳輸元素。如果首先調用發送 ，接著在調用接收之前它是懸掛的，如果首先調用接收，在調用發送之前它是懸掛的，。
+到目前為止展示的通道沒有緩衝。當發送者跟接收著彼此相遇 (又名會合) 時，無緩衝通道傳輸元素。如果首先調用「發送」 ，接著它是懸掛的，直到接收被調用，如果首先調用「接收」，它是懸掛的，直到發送被調用。
 
 Both [Channel()][Channel()] factory function and [produce][produce] builder take an optional `capacity` parameter to specify _buffer size_. Buffer allows senders to send multiple elements before suspending, similar to the `BlockingQueue` with a specified capacity, which blocks when buffer is full.
 
-[Channel()][Channel()] 工廠函數與 [produce][produce] 建造者帶一個可選的 `capacity` 參數去指定**緩衝大小**。在懸掛之前緩衝允許發送者去發送多個元素，類似於使用指定容量的 `BlockingQueue` ，當緩衝是滿的時候阻塞。
+[Channel()][Channel()] 工廠函數與 [produce][produce] 建造者帶一個可選的 `capacity` 參數去指定**緩衝大小**。在懸掛之前，緩衝允許發送者去發送多個元素，類似於 `BlockingQueue` 與指定容量，當緩衝是滿的時候阻塞。
 
 Take a look at the behavior of the following code:
 
@@ -568,7 +570,9 @@ Sending 4
 
 The first four elements are added to the buffer and the sender suspends when trying to send the fifth one.
 
-首先添加 4 個元素到緩衝，當嘗試送出第 5 個元素時發送者懸掛 (暫停)。
+首先添加 4 個元素到緩衝，當嘗試去送出第 5 個元素時，發送者懸掛 (暫停)。
+
+---
 
 ### Channels are fair
 
@@ -576,7 +580,7 @@ Channels are fair ：通道是公平
 
 Send and receive operations to channels are _fair_ with respect to the order of their invocation from multiple coroutines. They are served in first-in first-out order, e.g. the first coroutine to invoke `receive` gets the element. In the following example two coroutines "ping" and "pong" are receiving the "ball" object from the shared "table" channel. 
 
-從多個協程調用它們的順序，向通道發送與接收操作是**公平的**。它們在先進先出的順序中提供，例如第一個協程調用 `receive` 取得元素。在以下例子兩個協程 "ping" 和 "pong" 正在從共享的 "table" 通道接收 "ball" 物件。
+從多個協程調用它們的順序，發送與接收通道的操作是**公平的**。先進先出的順序中提供它們，例如第一個協程調用 `receive` 取得元素。在以下例子兩個協程 "ping" 和 "pong" 正在從共享的 "table" 通道接收 "ball" 物件。
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -634,6 +638,8 @@ pong Ball(hits=4)
 Note, that sometimes channels may produce executions that look unfair due to the nature of the executor that is being used. See [this issue](https://github.com/Kotlin/kotlinx.coroutines/issues/111) for details.
 
 注意：由於執行者正在使用的性質，有時通道可能產生執行看起來不公平。更多細節參閱 [this issue](https://github.com/Kotlin/kotlinx.coroutines/issues/111) 。
+
+---
 
 ### Ticker channels
 
