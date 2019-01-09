@@ -28,7 +28,6 @@ In a long-running application you might need fine-grained control on your backgr
 import kotlinx.coroutines.*
 
 fun main() = runBlocking {
-//sampleStart
     val job = launch {
         repeat(1000) { i ->
             println("I'm sleeping $i ...")
@@ -41,8 +40,7 @@ fun main() = runBlocking {
     println("main: I'm tired of waiting!")
     job.cancel() // cancels the job
     job.join() // waits for job's completion 
-    println("main: Now I can quit.")
-//sampleEnd    
+    println("main: Now I can quit.") 
 }
 ```
 
@@ -81,7 +79,6 @@ Coroutine cancellation is _cooperative_. A coroutine code has to cooperate to be
 import kotlinx.coroutines.*
 
 fun main() = runBlocking {
-//sampleStart
     val startTime = System.currentTimeMillis()
     val job = launch(Dispatchers.Default) {
         var nextPrintTime = startTime
@@ -102,7 +99,6 @@ fun main() = runBlocking {
     println("main: I'm tired of waiting!")
     job.cancelAndJoin() // cancels the job and waits for its completion
     println("main: Now I can quit.")
-//sampleEnd    
 }
 
 //ans:
@@ -142,7 +138,6 @@ Replace `while (i < 5)` in the previous example with `while (isActive)` and reru
 import kotlinx.coroutines.*
 
 fun main() = runBlocking {
-//sampleStart
     val startTime = System.currentTimeMillis()
     val job = launch(Dispatchers.Default) {
         var nextPrintTime = startTime
@@ -163,7 +158,6 @@ fun main() = runBlocking {
     println("main: I'm tired of waiting!")
     job.cancelAndJoin() // cancels the job and waits for its completion
     println("main: Now I can quit.")
-//sampleEnd    
 }
 ```
 
@@ -189,7 +183,6 @@ Cancellable suspending functions throw [CancellationException][CancellationExcep
 import kotlinx.coroutines.*
 
 fun main() = runBlocking {
-//sampleStart
     val job = launch {
         
         try {
@@ -204,8 +197,7 @@ fun main() = runBlocking {
     delay(1300L) // delay a bit
     println("main: I'm tired of waiting!")
     job.cancelAndJoin() // cancels the job and waits for its completion
-    println("main: Now I can quit.")
-//sampleEnd    
+    println("main: Now I can quit.")  
 }
 ```
 
@@ -240,7 +232,6 @@ Any attempt to use a suspending function in the `finally` block of the previous 
 import kotlinx.coroutines.*
 
 fun main() = runBlocking {
-//sampleStart
     val job = launch {
         try {
             repeat(1000) { i ->
@@ -260,7 +251,6 @@ fun main() = runBlocking {
     println("main: I'm tired of waiting!")
     job.cancelAndJoin() // cancels the job and waits for its completion
     println("main: Now I can quit.")
-//sampleEnd    
 }
 //ans:
 //I'm sleeping 0 ...
@@ -290,14 +280,12 @@ The most obvious reason to cancel coroutine execution in practice is because its
 import kotlinx.coroutines.*
 
 fun main() = runBlocking {
-//sampleStart
     withTimeout(1300L) {
         repeat(1000) { i ->
             println("I'm sleeping $i ...")
             delay(500L)
         }
     }
-//sampleEnd
 }
 ```
 
@@ -328,7 +316,6 @@ Because cancellation is just an exception, all the resources are closed in a usu
 import kotlinx.coroutines.*
 
 fun main() = runBlocking {
-//sampleStart
     val result = withTimeoutOrNull(1300L) { // 超時沒完全執行也回傳 null
         repeat(1000) { i ->
             println("I'm sleeping $i ...")
@@ -337,7 +324,6 @@ fun main() = runBlocking {
         "Done" // will get cancelled before it produces this result
     }
     println("Result is $result")
-//sampleEnd
 }
 ```
 

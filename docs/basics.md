@@ -180,7 +180,6 @@ import kotlinx.coroutines.*
 
 // 指定協程，阻塞 main 線程，產生新的協程
 fun main() = runBlocking {
-//sampleStart
     
     // 建立新的 coroutine , launch 必須在某個 CoroutineScope 底下
     val job = GlobalScope.launch { // launch new coroutine and keep a reference to its Job
@@ -191,7 +190,6 @@ fun main() = runBlocking {
     
     // join 只能在協程中調用，等待 job 完成，再回來 runBlocking 的協程
     job.join() // wait until child coroutine completes
-//sampleEnd    
 }
 
 //ans:
@@ -393,9 +391,8 @@ The following code launches a long-running coroutine in [GlobalScope][GlobalScop
 import kotlinx.coroutines.*
 
 fun main() = runBlocking {
-//sampleStart
-    GlobalScope.launch {
-        
+
+    GlobalScope.launch {        
         // 重覆 1000 次印出，但主函數延遲 1.3 秒，而在函數之中運行一次 0.5 秒，所以只跑兩次
         repeat(1000) { i ->
             println("I'm sleeping $i ...")
@@ -405,7 +402,6 @@ fun main() = runBlocking {
     
     // 主函數延遲 1.3 秒
     delay(1300L) // just quit after delay
-//sampleEnd    
 }
 
 //ans:
