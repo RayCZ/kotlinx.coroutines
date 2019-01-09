@@ -18,7 +18,7 @@ Channels (experimental) ：通道 (實驗性)
 
 Deferred values provide a convenient way to transfer a single value between coroutines. Channels provide a way to transfer a stream of values.
 
-延期的值，提供協程之間傳輸單一值的便利方式。通道提供傳輸值的串流方式。
+延期的值，提供協程之間傳輸單一值的便利方式。通道提供一種傳輸值的串流方式。
 
 > Channels are an experimental feature of `kotlinx.coroutines`. Their API is expected to evolve in the upcoming updates of the `kotlinx.coroutines` library with potentially breaking changes.
 >
@@ -26,18 +26,17 @@ Deferred values provide a convenient way to transfer a single value between coro
 
 ### Channel basics
 
-Channel basics ：通道基礎
+Channel basics ：通道基礎， Channel 類別
 
 A [Channel][Channel] is conceptually very similar to `BlockingQueue`. One key difference is that instead of a blocking `put` operation it has a suspending [send][SendChannel.send], and instead of a blocking `take` operation it has a suspending [receive][ReceiveChannel.receive].
 
-[通道][Channel]的概念與 `BlockingQueue` 非常相似。一個關鍵的不同是，代替阻塞的 `put` 操作，它有懸掛函數 [`send`][SendChannel.send] ，而且代替阻塞的 `take` 操作，它有懸掛函數 [`receive`][ReceiveChannel.receive] 。 
+[通道][Channel]的概念與 `BlockingQueue` 非常相似。一個關鍵的不同是，它代替阻塞的 `put` 操作，它有懸掛函數 [`send`][SendChannel.send] ，而且代替阻塞的 `take` 操作，它有懸掛函數 [`receive`][ReceiveChannel.receive] 。 
 
 ```kotlin
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 
 fun main() = runBlocking {
-//sampleStart
     val channel = Channel<Int>()
     launch {
         // this might be heavy CPU-consuming computation or async logic, we'll just send five squares
@@ -46,7 +45,6 @@ fun main() = runBlocking {
     // here we print five received integers:
     repeat(5) { println(channel.receive()) }
     println("Done!")
-//sampleEnd
 }
 ```
 
@@ -67,13 +65,15 @@ The output of this code is:
 Done!
 ```
 
+---
+
 ### Closing and iteration over channels 
 
-Closing and iteration over channels ：關閉和遍歷通道
+Closing and iteration over channels ：關閉和遍歷通道， Channel.close 函數
 
 Unlike a queue, a channel can be closed to indicate that no more elements are coming. On the receiver side it is convenient to use a regular `for` loop to receive elements from the channel. 
 
-不像佇列，通道可以被關閉 `channel.close()` 去指示沒有更多的元素到來。在接收端它使用常規 `for` 環循從通道接收元素是方便的。
+不像佇列，去指示通道可以被關閉 `channel.close()` 沒有更多的元素到來。在接收端它使用常規 `for` 循環方便的從通道接收元素。
 
 Conceptually, a [close][SendChannel.close] is like sending a special close token to the channel. The iteration stops as soon as this close token is received, so there is a guarantee that all previously sent elements before the close are received:
 
@@ -84,7 +84,6 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 
 fun main() = runBlocking {
-//sampleStart
     val channel = Channel<Int>()
     launch {
         for (x in 1..5) channel.send(x * x)
@@ -93,7 +92,6 @@ fun main() = runBlocking {
     // here we print received values using `for` loop (until the channel is closed)
     for (y in channel) println(y)
     println("Done!")
-//sampleEnd
 }
 
 //ans:
@@ -109,29 +107,30 @@ fun main() = runBlocking {
 >
 > 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-channel-02.kt)獲取完整的代碼
 
+---
+
 ### Building channel producers
 
-Building channel producers ：建造通道生產者
+Building channel producers ：建造通道生產者， `produce{ ... }` 函數
 
 The pattern where a coroutine is producing a sequence of elements is quite common. This is a part of _producer-consumer_ pattern that is often found in concurrent code. You could abstract such a producer into a function that takes channel as its parameter, but this goes contrary to common sense that results must be returned from functions. 
 
-協程生成一系列的元素是很常見的模式。這是**生產者-消費者**模式的一部份，通常在並發行為的代碼常發現。你可以抽象化 (提取) 這樣的生產者到函數，帶入通道當作它的參數。而是這與必須從函式回傳結果的常識相反。
+協程產生一系列的元素是很常見的模式。這是**生產者-消費者**模式的一部份，它通常在並發行為的代碼中常發現。你可以抽象化 (提取) 這樣的生產者到函數，帶入通道當作它的參數。而是這與必須從函式回傳結果的常識相反。
 
 There is a convenient coroutine builder named [produce][produce] that makes it easy to do it right on producer side, and an extension function [consumeEach][consumeEach], that replaces a `for` loop on the consumer side:
 
-這有一個方便的協程建造者命為 [produce][produce] ，在生產者端使它容易完成。以及擴展函數 [consumeEach][consumeEach] ，它在消費者端代替 `for` 循環：
+這有一個方便的協程建造者名為 [produce][produce] ，在生產者端使它容易完成。以及擴展函數 [consumeEach][consumeEach] ，它在消費者端代替 `for` 循環：
 
 ```kotlin
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 
-// CoroutineScope 新增擴展函數 produceSquares() 、回傳 ReceiveChannel<Int> 、生成一個協程在 produce {}  中處理，而回傳的值做取出的動作
+// CoroutineScope 新增擴展函數 produceSquares() 、回傳 ReceiveChannel<Int> 、產生一個協程在 produce {}  中處理，而回傳的值做取出的動作
 fun CoroutineScope.produceSquares(): ReceiveChannel<Int> = produce {
     for (x in 1..5) send(x * x)
 }
 
 fun main() = runBlocking {
-//sampleStart
     
     // ReceiveChannel<Int> 物件
     val squares = produceSquares()
@@ -139,7 +138,6 @@ fun main() = runBlocking {
     // ReceiveChannel<Int> 物件為消費者端做接收處理，並減少 for 循環
     squares.consumeEach { println(it) }
     println("Done!")
-//sampleEnd
 }
 
 //ans:
@@ -155,13 +153,15 @@ fun main() = runBlocking {
 >
 > 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-channel-03.kt)獲取完整的代碼
 
+---
+
 ### Pipelines
 
 Pipelines ：管道
 
 A pipeline is a pattern where one coroutine is producing, possibly infinite, stream of values:
 
-管道是一個協程正在生成的模式，可能是無限的，值的串流 (一個接續一個)：
+管道是一個協程正在產生的模式，可能是無限的，值的串流 (一個接續一個)：
 
 ```kotlin
 // 生成一個協程，無限的送出數值
@@ -173,7 +173,7 @@ fun CoroutineScope.produceNumbers() = produce<Int> {
 
 And another coroutine or coroutines are consuming that stream, doing some processing, and producing some other results. In the example below, the numbers are just squared:
 
-並且另一個協程或多個協程正在消費這些串流，做某些處理，以及生成某些其他的結果。在下面的範例，只是求平方值的數值：
+並且另一個協程或多個協程正在消費這些串流，做某些處理，以及產生某些其他的結果。在下面的範例，只是求平方值的數值：
 
 ```kotlin
 // 生成一個協程，做平方處理
@@ -191,28 +191,26 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 
 fun main() = runBlocking {
-//sampleStart
-    
-    // ReceiveChannel 物件，做取出的動作
+
+    // 回傳的 ReceiveChannel 物件，做取出的動作
     val numbers = produceNumbers() // produces integers from 1 and on
     
-    // ReceiveChannel 物件
+    // 回傳的 ReceiveChannel 物件，做取出的動作
     val squares = square(numbers) // squares integers
     
     // 接送發送的數值
     for (i in 1..5) println(squares.receive()) // print first five
     println("Done!") // we are done
     coroutineContext.cancelChildren() // cancel children coroutines
-//sampleEnd
 }
 
-// 生成一個 produce 協程，發送數值
+// 產生一個 produce 協程，發送數值
 fun CoroutineScope.produceNumbers() = produce<Int> {
     var x = 1
     while (true) send(x++) // infinite stream of integers starting from 1
 }
 
-// 生成一個 produce 協程，將前一個發送的數值，循環取出做平方處理，再發送出去
+// 產生一個 produce 協程，將前一個發送的數值，循環取出做平方處理，再發送出去
 fun CoroutineScope.square(numbers: ReceiveChannel<Int>): ReceiveChannel<Int> = produce {
     for (x in numbers) send(x * x)
 }
@@ -234,6 +232,8 @@ fun CoroutineScope.square(numbers: ReceiveChannel<Int>): ReceiveChannel<Int> = p
 >
 > 所有函數建立的協程被定義為 [CoroutineScope][CoroutineScope] 擴展函數，以便我們可以依賴[結構化並發](https://github.com/RayCZ/kotlinx.coroutines/blob/ray/docs/composing-suspending-functions.md#structured-concurrency-with-async)，確保我們不會有常駐全域的協程在我們的應用程式。
 
+---
+
 ### Prime numbers with pipeline
 
 Prime numbers with pipeline ：使用管道處理質數
@@ -241,7 +241,7 @@ Prime numbers with pipeline ：使用管道處理質數
 Let's take pipelines to the extreme with an example that generates prime numbers using a pipeline 
 of coroutines. We start with an infinite sequence of numbers. 
 
-讓我們帶管道到極端的例子，該例子使用協程的管道生成質數。我們從生成無限數值的序列開始。
+讓我們帶管道到極端的例子，該例子使用協程的管道產生質數。我們從產生無限數值的序列開始。
 
 ```kotlin
 // 生成一個協程，處理無限的生成數值
@@ -637,11 +637,11 @@ Note, that sometimes channels may produce executions that look unfair due to the
 
 ### Ticker channels
 
-Ticker channels ：定時器通道 (定期生成器)
+Ticker channels ：定時器通道 (定期產生器)
 
 Ticker channel is a special rendezvous channel that produces `Unit` every time given delay passes since last consumption from this channel. Though it may seem to be useless standalone, it is a useful building block to create complex time-based [produce][produce] pipelines and operators that do windowing and other time-dependent processing. Ticker channel can be used in [select][select] to perform "on tick" action.
 
-定時器通道是特殊的約定會合通道，從上次開始由這個通道的消耗，每次給定延遲通過時生成 `Unit`。雖然它可能似乎單獨無用，但它是一個有用的建造時間阻斷，用來建立以時間為基礎複雜的 [produce][produce](生產) 管線和運算符，進行窗口和其他時間相關的處理。定時器通道可以被用在 [select][select](選擇懸掛中的協程) 去執行 "定期調用" 的動作。
+定時器通道是特殊的約定會合通道，從上次開始由這個通道的消耗，每次給定延遲通過時產生 `Unit`。雖然它可能似乎單獨無用，但它是一個有用的建造時間阻斷，用來建立以時間為基礎複雜的 [produce][produce](生產) 管線和運算符，進行窗口和其他時間相關的處理。定時器通道可以被用在 [select][select](選擇懸掛中的協程) 去執行 "定期調用" 的動作。
 
 To create such channel use a factory method [ticker][ticker]. To indicate that no further elements are needed use [ReceiveChannel.cancel][ReceiveChannel.cancel] method on it.
 
@@ -701,7 +701,7 @@ Next element is ready in 50ms after consumer pause in 150ms: kotlin.Unit
 
 Note that [ticker][ticker] is aware of possible consumer pauses and, by default, adjusts next produced element delay if a pause occurs, trying to maintain a fixed rate of produced elements.
 
-注意： [ticker][ticker] 定時器可能知道消費者暫停，並且，預設模式下 [TickerMode.FIXED_PERIOD](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-ticker-mode/-f-i-x-e-d_-p-e-r-i-o-d.html)，如果暫停發生，調整下一個生成元素的延遲，嘗試維持生成元素的固定速率。
+注意： [ticker][ticker] 定時器可能知道消費者暫停，並且，預設模式下 [TickerMode.FIXED_PERIOD](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-ticker-mode/-f-i-x-e-d_-p-e-r-i-o-d.html)，如果暫停發生，調整下一個產生元素的延遲，嘗試維持產生元素的固定速率。
 
 Optionally, a `mode` parameter equal to [TickerMode.FIXED_DELAY][TickerMode.FIXED_DELAY] can be specified to maintain a fixed delay between elements.  
 
