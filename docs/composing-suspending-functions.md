@@ -17,7 +17,7 @@ This section covers various approaches to composition of suspending functions.
 
 ### Sequential by default
 
-Sequential by default ：根據預設依序
+Sequential by default ：根據預設依序調用
 
 Assume that we have two suspending functions defined elsewhere that do something useful like some kind of remote service call or computation. We just pretend they are useful, but actually each one just delays for a second for the purpose of this example:
 
@@ -37,7 +37,7 @@ suspend fun doSomethingUsefulTwo(): Int {
 
 What do we do if need to invoke them _sequentially_ -- first `doSomethingUsefulOne` _and then_  `doSomethingUsefulTwo` and compute the sum of their results? In practice we do this if we use the results of the first function to make a decision on whether we need to invoke the second one or to decide on how to invoke it.
 
-如果需要**依序**調用它們，我們該做什麼 -- 首先 `doSomethingUsefulOne` **而接著** `doSomethingUsefulTwo` 並計算它們結果的總合？在實踐上，如果我們使用第一個函數的結果來決定，我們是否需要調用第二個函數或決定如何調用它，我們會這樣做。
+如果需要**依序**調用它們，我們該做什麼 -- 首先 `doSomethingUsefulOne` **而接著** `doSomethingUsefulTwo` 並計算它們結果的總合？在實際上，如果我們使用第一個函數的結果來決定，我們是否需要調用第二個函數或決定如何調用它，我們會這樣做。
 
 We use a normal sequential invocation, because the code in the coroutine, just like in the regular code, is _sequential_ by default. The following example demonstrates it by measuring the total time it takes to execute both suspending functions:
 
@@ -88,9 +88,11 @@ The answer is 42
 Completed in 2017 ms
 ```
 
+---
+
 ### Concurrent using async
 
-Concurrent using async ：並發 (同時) 使用 async 函數
+Concurrent using async ：並發 (同時) 使用 async 函數，並發 async 函數接著使用 await 取值
 
 What if there are no dependencies between invocation of `doSomethingUsefulOne` and `doSomethingUsefulTwo` and we want to get the answer faster, by doing both _concurrently_? This is where [async][async] comes to help. 
 
@@ -98,7 +100,7 @@ What if there are no dependencies between invocation of `doSomethingUsefulOne` a
 
 Conceptually, [async][async] is just like [launch][launch]. It starts a separate coroutine which is a light-weight thread that works concurrently with all the other coroutines. The difference is that `launch` returns a [Job][Job] and does not carry any resulting value, while `async` returns a [Deferred][Deferred] -- a light-weight non-blocking future that represents a promise to provide a result later. You can use `.await()` on a deferred value to get its eventual result, but `Deferred` is also a `Job`, so you can cancel it if needed.
 
-觀念上，[async][async] 就像 [launch][launch] 。它啟動一個單獨協程，協程是輕量的線程，與所有其他的協程同時工作。不同的是， `launch` 回傳 [Job][Job]，並不會附帶任何結果值，而 `async` 回傳 [Deferred][Deferred] -- 一個輕量不阻塞的 Future (Java API Future) ，表示稍後提供結果的承諾。你可以在回傳 [Deferred][Deferred] 值上使用 `.await()` 來獲取它最終的結果，但 `Deferred` 也是一個 `Job` ，所以如果需要你可以取消它。
+觀念上，[async][async] 就像 [launch][launch] 。它啟動一個單獨協程，協程是輕量的線程，與所有其他的協程同時的工作。不同的是， `launch` 回傳 [Job][Job]，並不會附帶任何結果值，而 `async` 回傳 [Deferred][Deferred] -- 一個輕量不阻塞的 Future (Java API Future) ，表示稍後提供結果的承諾。你可以在回傳 [Deferred][Deferred] 類型的值上使用 `.await()` 來獲取它最終的結果，但 `Deferred` 也是一個 `Job` ，所以如果需要你可以取消它。
 
 
 ```kotlin
@@ -154,13 +156,17 @@ This is twice as fast, because we have concurrent execution of two coroutines. N
 
 這是兩倍的速度，因為我們並發 (同時) 執行兩個協程。注意，並發協程必須明確。
 
+---
+
 ### Lazily started async
 
 Lazily started async ：惰性啟動 async 函數，「惰性」代表只有當調用時 (start) 才會執行
 
 There is a laziness option to [async][async] using an optional `start` parameter with a value of [CoroutineStart.LAZY][CoroutineStart.LAZY]. It starts coroutine only when its result is needed by some [await][Deferred.await] or if a [start][Job.start] function is invoked. Run the following example:
 
-這是一個懶惰的選項，[async][async] 使用可選的 `start` 參數帶 [CoroutineStart.LAZY][CoroutineStart.LAZY] 的值。只當某個 [await][Deferred.await] 需要執行它的結果，或者如果 [start][Job.start] 函數被調用，它才執行協程，執行以下範例：
+這是一個懶惰的選項，[async][async] 函數使用可選的 `start` 參數帶 [CoroutineStart.LAZY][CoroutineStart.LAZY] 的值。只當某個 [await][Deferred.await] 需要執行它的結果，或者如果 [start][Job.start] 函數被調用，它才執行協程，執行以下範例：
+
+**此範例有修改與原本不同**
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -170,7 +176,7 @@ fun main() = runBlocking<Unit> {
 //sampleStart
     val time = measureTimeMillis {
         
-        // 參數 CoroutineStart.LAZY ，當調用時才執行 {...}
+        // 帶入參數 CoroutineStart.LAZY ，當調用時才執行 {...}
         val one = async(start = CoroutineStart.LAZY) { doSomethingUsefulOne() }
         val two = async(start = CoroutineStart.LAZY) { doSomethingUsefulTwo() }
         // some computation
@@ -224,9 +230,11 @@ Note, that if we have called [await][Deferred.await] in `println` and omitted [s
 
 注意：如果我們在 `println` 中已經調用 [await][Deferred.await] 並且在各個協程上省略 [start][Job.start] ，接著我們會得到依序 (有序) 的行為，因為 [await][Deferred.await] 先啟動協程執行並且等到執行到結束的行為，這不是懶性預期的使用案例。當計算值涉及懸掛函數時，在這種情況時 `async(start = CoroutineStart.LAZY)` 的使用案例是代替標準的 `lazy` 函數。
 
+---
+
 ### Async-style functions
 
-Async-style functions ： Async 風格的函數
+Async-style functions ： Async 風格的函數，使用 Async 當後綴命名表示異步
 
 We can define async-style functions that invoke `doSomethingUsefulOne` and `doSomethingUsefulTwo` _asynchronously_ using [async][async] coroutine builder with an explicit [GlobalScope][GlobalScope] reference. We name such functions with "Async" suffix to highlight the fact that they only start asynchronous computation and one needs to use the resulting deferred value to get the result.
 
@@ -246,7 +254,7 @@ fun somethingUsefulTwoAsync() = GlobalScope.async {
 
 Note, that these `xxxAsync` functions are **not** _suspending_ functions. They can be used from anywhere. However, their use always implies asynchronous (here meaning _concurrent_) execution of their action with the invoking code.
 
-注意：這些 `xxxAsync` 函數**不是懸掛函數**。他們可以在任何地方使用。然而，它們的使用總是暗示著它們的動作和調用代碼是異步的 (這裡意味著**並發**)。
+注意：這些 `xxxAsync` 函數**不是懸掛函數**。他們可以在任何地方使用。然而，它們的使用總是暗示著它們的動作和調用代碼是異步的執行 (這裡意味著**並發**)。
 
 The following example shows their use outside of coroutine: 
 
@@ -312,11 +320,13 @@ suspend fun doSomethingUsefulTwo(): Int {
 
 > This programming style with async functions is provided here only for illustration, because it is a popular style in other programming languages. Using this style with Kotlin coroutines is **strongly discouraged** for the reasons that are explained below.
 >
-> 這裡提供使用異步函數的這種編碼風格只為了解釋，在其他的編程語言中它是一種流行風格。使用這種風格的 Kotlin 協程是強烈不鼓勵的，以下解譯原因：
+> 這裡提供使用異步函數的這種程式設計風格只為了解釋，在其他的程式設計語言中它是一種流行風格。使用這種風格的 Kotlin 協程是強烈不鼓勵的，以下解譯原因：
 
 Consider what happens if between `val one = somethingUsefulOneAsync()` line and `one.await()` expression there is some logic error in the code and the program throws an exception and the operation that was being performed by the program aborts. Normally, a global error-handler could catch this exception, log and report the error for developers, but the program could otherwise continue doing other operations. But here we have `somethingUsefulOneAsync` still running in background, despite the fact, that operation that had initiated it aborts. This problem does not happen with structured concurrency, as shown in the section below.
 
-考慮，如果在 `val one = somethingUsefulOneAsync()` 一行和 `one.await()` 表達式之間發生什麼事，在代碼中有些邏輯錯誤並程式丟出異常和程式中止已執行的操作。通常，全域的錯誤處理器可以捕獲這樣的異常、日誌、錯誤報告給開發者，但程式可以另外繼續做其他的操作。但是在這裡我們有一些 `somethingUsefulOneAsync` 還是在背景程序執行，儘管實際上，已初始化它的操作中止。使用結構並發不會發生這樣的問題，如下面章節所示：
+考慮，如果在 `val one = somethingUsefulOneAsync()` 行和 `one.await()` 表達式之間發生什麼事，在代碼中有些邏輯錯誤，而程式丟出異常，和程式中止正在執行的操作。通常，全域的錯誤處理器可以捕獲這樣的異常、日誌、錯誤報告給開發者，但程式可以另外繼續做其他的操作。但是在這裡我們有一些 `somethingUsefulOneAsync` 還是在背景程序持續執行，儘管實際上，已初始化它的操作中止。使用結構並發不會發生這樣的問題，如下面章節所示：
+
+---
 
 ### Structured concurrency with async 
 
@@ -324,7 +334,7 @@ Structured concurrency with async ：使用 async 函數結構並發
 
 Let us take [Concurrent using async](#concurrent-using-async) example and extract a function that concurrently performs `doSomethingUsefulOne` and `doSomethingUsefulTwo` and returns the sum of their results. Because [async][async] coroutines builder is defined as extension on [CoroutineScope][-CoroutineScope] we need to have it in the scope and that is what [coroutineScope][coroutineScope] function provides:
 
-讓我們以[並發使用 async 函數](#concurrent-using-async)為例並提取函數並發執行 `doSomethingUsefulOne` 和 `doSomethingUsefulTwo` 並回傳它們結果的總合。因為 [async][async] 協程建造器被定義在 [CoroutineScope][-CoroutineScope] 的擴展函數，我們需要在協程範圍中放置 async 函數，這就是 [coroutineScope][coroutineScope] 函數提供的功能：
+讓我們以[並發使用 async 函數](#concurrent-using-async)為例並提取並發執行 `doSomethingUsefulOne` 和 `doSomethingUsefulTwo` 的函數並回傳它們結果的總合。因為 [async][async] 協程建造者被定義為 [CoroutineScope][-CoroutineScope] 的擴展函數，我們需要在協程範圍中放置 async 函數，這就是 [coroutineScope][coroutineScope] 函數提供的功能：
 
 **coroutineScope 提供了如果在這個範圍發生錯誤協程的處理機制**
 
@@ -338,7 +348,7 @@ suspend fun concurrentSum(): Int = coroutineScope {
 
 This way, if something goes wrong inside the code of `concurrentSum` function and it throws an exception, all the coroutines that were launched in its scope are cancelled.
 
-這種方式，如果在 `concurrentSum` 函數的代碼內發生錯誤並且它拋出異常，取消在 `coroutineScope` 的協程範圍內所有已發射的協程。
+這種方式，如果在 `concurrentSum` 函數的代碼內發生錯誤並且它拋出異常，取消所有在 `coroutineScope` 的協程範圍內發射的協程。
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -433,7 +443,7 @@ suspend fun failedConcurrentSum(): Int = coroutineScope {
 
 Note, how both first `async` and awaiting parent are cancelled on the one child failure:
 
-注意：如何在一個子協程失敗上，取消第一個 `async` 和等待父親：
+注意：在一個子協程失敗上，如何取消第一個 `async` 和等待中的父協程：
 
 ```text
 Second child throws an exception
