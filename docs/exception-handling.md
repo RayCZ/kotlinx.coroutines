@@ -16,19 +16,21 @@ Exception handling ：異常 (例外) 處理
 
 This section covers exception handling and cancellation on exceptions. We already know that cancelled coroutine throws [CancellationException][CancellationException] in suspension points and that it is ignored by coroutines machinery. But what happens if an exception is thrown during cancellation or multiple children of the same coroutine throw an exception?
 
-這個章節涵蓋在異常中取消和異常 (例外) 處理。我們已經知道在懸掛點中取消協程會丟出 [CancellationException][CancellationException] 並且被協程機制忽略。但是如果異常在取消期間丟出異常，或相同協程的多個子協程丟出異常會發生什麼事？
+這個章節涵蓋在異常中異常 (例外) 處理和取消。我們已經知道在懸掛點中取消協程會丟出 [CancellationException][CancellationException] 並且被協程機制忽略。但是如果異常在取消期間丟出異常，或相同協程的多個子協程丟出異常會發生什麼事？
+
+---
 
 ### Exception propagation
 
-Exception propagation ：異常傳播 (丟出、拋出)
+Exception propagation ：異常傳播 (丟出、拋出)，測試在協程中丟出異常
 
 Coroutine builders come in two flavors: propagating exceptions automatically ([launch][launch] and [actor][actor]) or exposing them to users ([async][async] and [produce][produce]). The former treat exceptions as unhandled, similar to Java's `Thread.uncaughtExceptionHandler`, while the latter are relying on the user to consume the final exception, for example via [await][Deferred.await] or [receive][ReceiveChannel.receive] ([produce][produce] and [receive][ReceiveChannel.receive] are covered later in [Channels](channels.md) section).
 
-協程建造者有兩種風格：自動的傳播 (丟出) 異常 ([launch][launch] 和 [actor][actor]) 或揭露它們給使用者 ([async][async] 和 [produce][produce]) 。前者視異常未處理，類似於 Java 的 `Thread.uncaughtExceptionHandler` ，而後者依賴使用者去消耗處理最終的異常，例如：透過 [await][Deferred.await] 或 [receive][ReceiveChannel.receive] ([produce][produce] 和 [receive][ReceiveChannel.receive] 在 [Channels](channels.md) 章節中稍後涵蓋) 函數去捕獲異常。
+協程建造者有兩種風格：自動的傳播 (丟出) 異常 ([launch][launch] 和 [actor][actor]) 或揭露它們給使用者 ([async][async] 和 [produce][produce]) 。前者視異常為未處理的，類似於 Java 的 `Thread.uncaughtExceptionHandler` ，而後者依賴使用者去消耗 (處理) 最終的異常，例如：透過 [await][Deferred.await] 或 [receive][ReceiveChannel.receive] 函數去捕獲異常 ([produce][produce] 和 [receive][ReceiveChannel.receive] 在 [Channels](channels.md) 章節中稍後涵蓋) 。
 
 It can be demonstrated by a simple example that creates new coroutines in [GlobalScope][GlobalScope]:
 
-可以透過在 [GlobalScope][GlobalScope] 中創建新的協程的簡單例子展示它：
+可以透過在 [GlobalScope][GlobalScope] 中創建新的協程的簡單例子展示：
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -36,7 +38,7 @@ import kotlinx.coroutines.*
 // 第一個協程
 fun main() = runBlocking {
     
-    // 2.第二個協程，GlobalScope 發射協程並在之中丟出異常
+    // 2.第二個協程，GlobalScope 發射協程並在之中丟出異常，沒有任何的處理機制
     val job = GlobalScope.launch {
         println("Throwing exception from launch")
         throw IndexOutOfBoundsException() // Will be printed to the console by Thread.defaultUncaughtExceptionHandler
@@ -52,7 +54,7 @@ fun main() = runBlocking {
         throw ArithmeticException() // Nothing is printed, relying on user to call await
     }
     
-    // 4.async 需要 await() ，處理最終的異常
+    // 4.async 需要 await() ，消耗 (處理) 最終的異常
     try {
         deferred.await()
         println("Unreached")
@@ -78,13 +80,15 @@ Throwing exception from async
 Caught ArithmeticException
 ```
 
+---
+
 ### CoroutineExceptionHandler
 
-CoroutineExceptionHandler ：協程異常處理器
+CoroutineExceptionHandler ：協程異常處理器， CoroutineExceptionHandler API 捕獲異常
 
 But what if one does not want to print all exceptions to the console? [CoroutineExceptionHandler][CoroutineExceptionHandler] context element is used as generic `catch` block of coroutine where custom logging or exception handling may take place. It is similar to using [`Thread.uncaughtExceptionHandler`](https://docs.oracle.com/javase/8/docs/api/java/lang/Thread.html#setUncaughtExceptionHandler(java.lang.Thread.UncaughtExceptionHandler)).
 
-但是如果一個人不想要印出所有的異常到控制台？ [CoroutineExceptionHandler][CoroutineExceptionHandler] 環境元素用作協程的通用 `catch` 區域，區域中帶入可以自定義日誌記錄或異常處理。它類似於使用 [`Thread.uncaughtExceptionHandler`](https://docs.oracle.com/javase/8/docs/api/java/lang/Thread.html#setUncaughtExceptionHandler(java.lang.Thread.UncaughtExceptionHandler)) 。
+但是如果一個人不想要印出所有的異常到控制台？ [CoroutineExceptionHandler][CoroutineExceptionHandler] 環境元素用作協程的通用 `catch` 區塊，區塊中可以帶入自定義日誌記錄或異常處理。它類似於使用 [`Thread.uncaughtExceptionHandler`](https://docs.oracle.com/javase/8/docs/api/java/lang/Thread.html#setUncaughtExceptionHandler(java.lang.Thread.UncaughtExceptionHandler)) 。
 
 On JVM it is possible to redefine global exception handler for all coroutines by registering [CoroutineExceptionHandler][CoroutineExceptionHandler] via [`ServiceLoader`](https://docs.oracle.com/javase/8/docs/api/java/util/ServiceLoader.html). Global exception handler is similar to [`Thread.defaultUncaughtExceptionHandler`](https://docs.oracle.com/javase/8/docs/api/java/lang/Thread.html#setDefaultUncaughtExceptionHandler(java.lang.Thread.UncaughtExceptionHandler)) which is used when no more specific handlers are registered. On Android, `uncaughtExceptionPreHandler` is installed as a global coroutine exception handler.
 
@@ -100,7 +104,7 @@ import kotlinx.coroutines.*
 fun main() = runBlocking {
 //sampleStart
     
-    // 創建 CoroutineExceptionHandler 實例
+    // 創建 CoroutineExceptionHandler 實例，捕獲異常
     val handler = CoroutineExceptionHandler { _, exception -> 
         println("Caught $exception") 
     }
@@ -133,13 +137,15 @@ The output of this code is:
 Caught java.lang.AssertionError
 ```
 
+---
+
 ### Cancellation and exceptions
 
-Cancellation and exceptions ：取消和異常
+Cancellation and exceptions ：取消和異常，同樣的協程範圍當有異常時會造成別的協程中止
 
 Cancellation is tightly bound with exceptions. Coroutines internally use `CancellationException` for cancellation, these exceptions are ignored by all handlers, so they should be used only as the source of additional debug information, which can be obtained by `catch` block. When a coroutine is cancelled using [Job.cancel][Job.cancel] without a cause, it terminates, but it does not cancel its parent. Cancelling without cause is a mechanism for parent to cancel its children without cancelling itself. 
 
-取消與異常緊密相關。協程內部使用 `CancellationException` 用於取消，所有處理器忽略這些異常，所以它們應用只能被用為額外除錯資訊的來源，透過 `catch` 區域獲取這些資訊。當沒有理由使用 [Job.cancel][Job.cancel] 取消協程時，它被終止，但它不會取消它的父協程。沒有理由取消是一種機制，用於父協程去取消它的子協程，父協程無法取消本身。
+取消與異常緊密相關。協程內部使用 `CancellationException` 用於取消，所有處理器忽略這些異常，所以它們應用只能被用為額外除錯資訊的來源，透過 `catch` 區塊獲取這些資訊。當沒有理由使用 [Job.cancel][Job.cancel] 取消協程時，它被終止，但它不會取消它的父協程。沒有理由取消是一種機制，用於父協程去取消它的子協程，父協程無法取消本身。
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -259,13 +265,15 @@ The first child finished its non cancellable block
 Caught java.lang.ArithmeticException
 ```
 
+---
+
 ### Exceptions aggregation
 
 Exceptions aggregation ：異常的聚集，表示當發生多個異常，以那個異常處理
 
 What happens if multiple children of a coroutine throw an exception? The general rule is "the first exception wins", so the first thrown exception is exposed to the handler. But that may cause lost exceptions, for example if coroutine throws an exception in its `finally` block. So, additional exceptions are suppressed. 
 
-如果一個協程的多個子協程丟出異常會發生什麼事？一般規則是 "第一個異常獲勝" ，所以第一個丟出異常是揭露給異常處理器。但這樣可能導致遺失異常，例如，如果協程在它的 `final` 區域中丟出異常。所以，額外異常被抑制了。
+如果一個協程的多個子協程丟出異常會發生什麼事？一般規則是 "第一個異常獲勝" ，所以第一個丟出異常是揭露給異常處理器。但這樣可能導致遺失異常，例如，如果協程在它的 `final` 區塊中丟出異常。所以，額外異常被抑制了。
 
 > One of the solutions would have been to report each exception separately, but then [Deferred.await][Deferred.await] should have had the same mechanism to avoid behavioural inconsistency and this would cause implementation details of a coroutines (whether it had delegated parts of its work to its children or not) to leak to its exception handler.
 >
@@ -378,6 +386,8 @@ Rethrowing CancellationException with original cause
 Caught original java.io.IOException
 ```
 
+---
+
 ## Supervision
 
 Supervision ：監督，單獨的處理每個協程的錯誤，不會造成整個協程環境壞掉
@@ -393,6 +403,8 @@ Good example of such requirement can be a UI component with the job defined in i
 Another example is a server process that spawns several children jobs and needs to _supervise_ their execution, tracking their failures and restarting just those children jobs that had failed.
 
 另一個例子是伺服器進程，它產生幾個後代 Job ，並且需要**監督**它們的執行、追蹤它們的失敗，並且重新啟動那些已失敗的子 Job 。
+
+---
 
 ### Supervision job
 
@@ -410,7 +422,7 @@ fun main() = runBlocking {
     val supervisor = SupervisorJob()
     with(CoroutineScope(coroutineContext + supervisor)) {
         
-        // 1.發射一個協程，使用一般的 coroutine context ，如果丟出 AssertionError 整個程式會壞掉
+        // 1.發射一個協程，使用一般的 CoroutineContext ，如果丟出 AssertionError 整個環境會壞掉
         // 而今天使用 SupervisorJob 可以讓單一個協程壞掉被取消
         // launch the first child 
         // -- its exception is ignored for this example (don't do this in practice!)
@@ -457,9 +469,11 @@ Cancelling supervisor
 Second child is cancelled because supervisor is cancelled
 ```
 
+---
+
 ### Supervision scope
 
-Supervision scope ：監督範圍，自定義監範圍，自己捕獲異常， supervisorScope API 的使用
+Supervision scope ：監督範圍，從範圍中丟出異常並捕獲， supervisorScope API 的使用
 
 For *scoped* concurrency [supervisorScope][supervisorScope] can be used instead of [coroutineScope][coroutineScope] for the same purpose. It propagates cancellation only in one direction and cancels all children only if it has failed itself. It also waits for all children before completion just like [coroutineScope][coroutineScope] does.
 
@@ -475,7 +489,7 @@ fun main() = runBlocking {
     try {
         supervisorScope {
             
-            // 因為丟出異常，會造成別的協程取消中止
+            // 等待丟出異常，造成協程取消中止
             val child = launch {
                 try {
                     println("Child is sleeping")
@@ -489,6 +503,8 @@ fun main() = runBlocking {
             // Give our child a chance to execute and print using yield 
             yield()
             println("Throwing exception from scope")
+            
+            // 從 supervisorScope 丟出異常，造成別的協程取消中止
             throw AssertionError()
         }
     } catch(e: AssertionError) {
@@ -511,6 +527,8 @@ Throwing exception from scope
 Child is cancelled
 Caught assertion error
 ```
+
+---
 
 ### Exceptions in supervised coroutines
 
