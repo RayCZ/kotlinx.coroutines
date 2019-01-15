@@ -14,8 +14,7 @@ Select expression (experimental) ： Select 表達式 (實驗性)
 
 **Select 表達式同時等待多個掛起函數的結果，應用上可以想成在多個協程同時競爭中選擇一個**
 
-Select expression makes it possible to await multiple suspending functions simultaneously and _select_
-the first one that becomes available.
+Select expression makes it possible to await multiple suspending functions simultaneously and _select_ the first one that becomes available.
 
 Select 表達式可以同時等待多個懸掛函數，並且**選擇**第一個可用的懸掛函數。
 
@@ -25,9 +24,11 @@ Select 表達式可以同時等待多個懸掛函數，並且**選擇**第一個
 >
 > Select 表達式是 `kotlinx.coroutines` 的實驗性功能。他們的 API 預期在即將到來的 `kotlinx.coroutines` 函式庫更新中發展，可能會發生重大變化。
 
+---
+
 ### Selecting from channels
 
-Selecting from channels ：從多個通道中選擇其中一個
+Selecting from channels ：從多個通道中選擇其中一個，在 select 表達式中使用 onReceive 函數
 
 Let us have two producers of strings: `fizz` and `buzz`. The `fizz` produces "Fizz" string every 300 ms:
 
@@ -145,9 +146,11 @@ fizz -> 'Fizz' 第六次， Fizz 等 200 ms (滿 300 ms) ， Buzz 再等 300 ms
 buzz -> 'Buzz!' 第七次， Fizz 再等 300 ms ， Buzz 等 300 ms (滿 500 ms) ，最後一個可能會衝突，由於 Fizz上輪已輸出，需要重新執行程式，會有些執行時間加長幾個 ms ，會是 Buzz 快一點
 ```
 
+---
+
 ### Selecting on close
 
-Selecting on close ：在通道關閉中選擇一個
+Selecting on close ：在通道關閉中選擇一個，在 select 表達式中使用 onReceiveOrNull 函數
 
 The [onReceive][ReceiveChannel.onReceive] clause in `select` fails when the channel is closed causing the corresponding `select` to throw an exception. We can use [onReceiveOrNull][ReceiveChannel.onReceiveOrNull] clause to perform a specific action when the channel is closed. The following example also shows that `select` is an expression that returns the result of its selected clause:
 
@@ -252,9 +255,11 @@ The second observation, is that [onReceiveOrNull][ReceiveChannel.onReceiveOrNull
 
 第二個觀察，當通道已經被關閉， [onReceiveOrNull][ReceiveChannel.onReceiveOrNull] 中立刻被選中為 null 。
 
+---
+
 ### Selecting to send
 
-Selecting to send ： 選擇性發送
+Selecting to send ： 選擇性發送，在 select 表達式中或 Channel 使用 onSend 函數
 
 Select expression has [onSend][SendChannel.onSend] clause that can be used for a great good in combination with a biased nature of selection.
 
@@ -346,13 +351,15 @@ Consuming 10
 Done consuming
 ```
 
+---
+
 ### Selecting deferred values
 
-Selecting deferred values ： 選擇其中一個的推遲值
+Selecting deferred values ： 選擇其中一個的 Deferred 類型值，在 select 表達式中使用 onAwait 函數
 
 Deferred values can be selected using [onAwait][Deferred.onAwait] clause. Let us start with an async function that returns a deferred string value after a random delay:
 
-可以使用 [onAwait][Deferred.onAwait] 子句選擇推遲的值。讓我們以 async 函數開始，在隨機 delay 之後回傳推遲字串值。
+可以使用 [onAwait][Deferred.onAwait] 子句選擇 Deferred 類型值。讓我們以 async 函數開始，在隨機 delay 之後回傳 Deferred 類型字串值。
 
 ```kotlin
 fun CoroutineScope.asyncString(time: Int) = async {
@@ -363,7 +370,7 @@ fun CoroutineScope.asyncString(time: Int) = async {
 
 Let us start a dozen of them with a random delay.
 
-讓我們使用隨機延遲開始它們的一打 (12個) 。
+讓我們使用隨機延遲啟動它們的一打 (12個) 。
 
 ```kotlin
 fun CoroutineScope.asyncStringsList(): List<Deferred<String>> {
@@ -374,7 +381,7 @@ fun CoroutineScope.asyncStringsList(): List<Deferred<String>> {
 
 Now the main function awaits for the first of them to complete and counts the number of deferred values that are still active. Note, that we've used here the fact that `select` expression is a Kotlin DSL, so we can provide clauses for it using an arbitrary code. In this case we iterate over a list of deferred values to provide `onAwait` clause for each deferred value.
 
-注意：主函數等待它們的第一個函數完成，並且計算仍處於活動狀態的推遲值數值。注意，我們在這裡使用 `select` 表達式是一個 Kotlin DSL ，所以我們可以為它使用隨便的代碼提供子句。在這樣的情況下，我們遍歷一個推遲值的列表，為每個推遲值提供 `onAwait` 子句。
+注意：主函數等待它們的第一個函數完成，並且計算仍處於活動狀態的 Deferred 類型數值。注意，我們在這裡使用 `select` 表達式是一個 Kotlin DSL ，所以我們可以為它使用隨便的代碼提供子句。在這樣的情況下，我們遍歷一個 Deferred 類型值的列表，為每個 Deferred 類型值提供 `onAwait` 子句。
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -388,7 +395,7 @@ fun CoroutineScope.asyncString(time: Int) = async {
     "Waited for $time ms"
 }
 
-// 1.產生 12 個 隨機等待 0.003 ~ 1 秒的 Deferred 值到 List
+// 1.產生 12 個 隨機等待 0.003 ~ 1 秒的 Deferred 類型值到 List
 fun CoroutineScope.asyncStringsList(): List<Deferred<String>> {
     val random = Random(3)
     return List(12) { asyncString(random.nextInt(1000)) }
@@ -428,13 +435,15 @@ Deferred 4 produced answer 'Waited for 128 ms'
 11 coroutines are still active
 ```
 
+---
+
 ### Switch over a channel of deferred values
 
-Switch over a channel of deferred values ：轉換推遲類型值的通道
+Switch over a channel of deferred values ：轉換 Deferred 類型值的通道
 
 Let us write a channel producer function that consumes a channel of deferred string values, waits for each received deferred value, but only until the next deferred value comes over or the channel is closed. This example puts together [onReceiveOrNull][ReceiveChannel.onReceiveOrNull] and [onAwait][Deferred.onAwait] clauses in the same `select`:
 
-讓我們寫一個通道生產者函數，該函數消費推遲類型字串值的通道，等待每個已收到的推遲類型值，但只有在下個推遲類型值過來或通道被關閉之前。這個範例在相同的 `select` 表達式放置 [onReceiveOrNull][ReceiveChannel.onReceiveOrNull] 和 [onAwait][Deferred.onAwait] 子句在一起：
+讓我們寫一個通道生產者函數，該函數消費 Deferred 類型字串值的通道，等待每個已收到的 Deferred 類型值，但只有在下個 Deferred 類型值過來或通道被關閉之前。這個範例在相同的 `select` 表達式放置 [onReceiveOrNull][ReceiveChannel.onReceiveOrNull] 和 [onAwait][Deferred.onAwait] 子句在一起：
 
 ```kotlin
 fun CoroutineScope.switchMapDeferreds(input: ReceiveChannel<Deferred<String>>) = produce<String> {
