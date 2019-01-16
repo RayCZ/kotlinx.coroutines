@@ -15,11 +15,13 @@ Shared mutable state and concurrency ：共享的可變狀態與並發
 
 Coroutines can be executed concurrently using a multi-threaded dispatcher like the [Dispatchers.Default][Dispatchers.Default]. It presents all the usual concurrency problems. The main problem being synchronization of access to **shared mutable state**. Some solutions to this problem in the land of coroutines are similar to the solutions in the multi-threaded world, but others are unique.
 
-使用多線程的分配器像是 [Dispatchers.Default][Dispatchers.Default] 去並發 (同時) 執行協程。它提出所有常見並發的問題。主要問題是存取**共享的可變狀態**的同步。在協程的領土 (領域) 中，這問題的一些解決方式類似於在多線程的世界中的解決方式，但其他的解決方式是唯一的 (獨一無二) 。
+使用多線程的分配器像是 [Dispatchers.Default][Dispatchers.Default] 去並發 (同時) 執行協程。它提出所有常見的並發問題。主要問題是**共享的可變狀態**存取的同步。在協程的領土 (領域) 中，這問題的一些解決方式類似於在多線程的世界中的解決方式，但其他的解決方式是唯一的 (獨一無二) 。
+
+---
 
 ### The problem
 
-The problem ：問題
+The problem ：問題，共享的變數沒有做線程安全處理
 
 Let us launch a hundred coroutines all doing the same action thousand times. We'll also measure their completion time for further comparisons:
 
@@ -43,7 +45,7 @@ suspend fun CoroutineScope.massiveRun(action: suspend () -> Unit) {
 
 We start with a very simple action that increments a shared mutable variable using multi-threaded [Dispatchers.Default][Dispatchers.Default]  that is used in [GlobalScope][GlobalScope]. 
 
-我們從一個非常簡單的動作開始，在 [GlobalScope][GlobalScope] 中使用多線程的 [Dispatchers.Default][Dispatchers.Default] 增量一個共享可變的變數 `counter++` 。
+我們從一個非常簡單的動作開始，在 [GlobalScope][GlobalScope] 中使用多線程的 [Dispatchers.Default][Dispatchers.Default] 增量 (遞增) 一個共享可變的變數 `counter++` 。
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -85,7 +87,7 @@ fun main() = runBlocking<Unit> {
 
 What does it print at the end? It is highly unlikely to ever print "Counter = 100000", because a thousand coroutines increment the `counter` concurrently from multiple threads without any synchronization.
 
-最後印出什麼？它不太可能印出 "Counter = 100000" ，因為 1000 個協程從多個線程同時增量 `counter` 沒有任何同步。 
+最後印出什麼？它不太可能印出 "Counter = 100000" ，因為 1000 個協程從多個線程同時增量 (遞增)  `counter` 沒有任何同步。 
 
 > Note: if you have an old system with 2 or fewer CPUs, then you _will_ consistently see 100000, because the thread pool is running in only one thread in this case. To reproduce the problem you'll need to make the following change:
 >
@@ -133,9 +135,11 @@ fun main() = runBlocking<Unit> {
 >
 > 你可以在[這裡](https://github.com/kotlin/kotlinx.coroutines/blob/master/core/kotlinx-coroutines-core/test/guide/example-sync-01b.kt)獲取完整的代碼
 
+---
+
 ### Volatiles are of no help
 
-Volatiles are of no help ： Volatiles 功能沒有任何幫助
+Volatiles are of no help ： Volatiles 功能沒有任何幫助，使用 @Volatile 註釋還是無法保證
 
 There is common misconception that making a variable `volatile` solves concurrency problem. Let us try it:
 
@@ -183,9 +187,11 @@ This code works slower, but we still don't get "Counter = 100000" at the end, be
 
 這些代碼運作很慢，但我們在最終還是不會獲取 "Counter = 100000" ，因為 volatile 變數保證可線性 (這是 "原子" 的技術術語) 讀跟寫對應的變數，但不會提供大量動作的原子性 (在我們例子中的增量) 。
 
+---
+
 ### Thread-safe data structures
 
-Thread-safe data structures ：線程安全的資料結構
+Thread-safe data structures ：線程安全的資料結構，使用 Atomic 線程安全的類別
 
 The general solution that works both for threads and for coroutines is to use a thread-safe (aka synchronized, linearizable, or atomic) data structure that provides all the necessarily synchronization for the corresponding operations that needs to be performed on a shared state. In the case of a simple counter we can use `AtomicInteger` class which has atomic `incrementAndGet` operations:
 
@@ -236,13 +242,15 @@ This is the fastest solution for this particular problem. It works for plain cou
 
 這是為了這特定的問題最快的解決方式。它適用於原始數值的計數器、集合、佇列和其他標準的資料結構，以及在它們之中的基本操作。然而，它不容易衡量複雜的狀態或複雜的操作，所以不會有隨時即用的線程安全實作。
 
+---
+
 ### Thread confinement fine-grained
 
-Thread confinement fine-grained ：線程限制的「細」粒度方式，細粒度是為每個細節的操作增加線程安全的方式
+Thread confinement fine-grained ：線程限制的「細」粒度方式，細粒度是等於每個細節的操作，並增加線程安全的方式
 
 _Thread confinement_ is an approach to the problem of shared mutable state where all access to the particular shared state is confined to a single thread. It is typically used in UI applications, where all UI state is confined to the single event-dispatch/application thread. It is easy to apply with coroutines by using a single-threaded context. 
 
-**線程限制**是共享的可變狀態問題的解決辦法，所有存取特定共享狀態被限制到單一線程。它在 UI 應用程式中是典型的使用，所有 UI 狀態被限制到單一事件 - 分配 / 應用程式線程。透過使用一個單一線程環境應應用協程是容易的。
+**線程限制**是共享的可變狀態問題的解決辦法，所有存取特定共享狀態被限制到單一線程。在 UI 應用程式中是典型的使用，所有 UI 狀態被限制到「單一事件 - 分配」 / 「應用程式線程」。透過使用一個單一線程的環境應應用協程是容易的。
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -288,15 +296,17 @@ fun main() = runBlocking<Unit> {
 
 This code works very slowly, because it does _fine-grained_ thread-confinement. Each individual increment switches from multi-threaded [Dispatchers.Default][Dispatchers.Default] context to the single-threaded context using [withContext][withContext] block.
 
-這些代碼非常慢的運作，因為它進行**細粒度**的線程限制。每個個別增量操作使用 [withContext][withContext] 區塊從多線程 [Dispatchers.Default][Dispatchers.Default] 環境轉換到單線程環境。
+這些代碼非常慢的運作，因為它進行**細粒度**的線程限制。每個個別增量 (遞增) 操作使用 [withContext][withContext] 區塊從多線程的 [Dispatchers.Default][Dispatchers.Default] 環境轉換到單線程的環境。
+
+---
 
 ### Thread confinement coarse-grained
 
-Thread confinement coarse-grained ：線程限制的「粗」粒度方式，，粗粒度是為每個細節操作的環境增加線程安全的方式
+Thread confinement coarse-grained ：線程限制的「粗」粒度方式，粗粒度等於整合每個細節操作的環境，增加線程安全的方式
 
 In practice, thread confinement is performed in large chunks, e.g. big pieces of state-updating business logic are confined to the single thread. The following example does it like that, running each coroutine in the single-threaded context to start with. Here we use [CoroutineScope()][CoroutineScope()] function to convert coroutine context reference to [CoroutineScope][CoroutineScope]:
 
-在實踐中，在大區塊中執行線程限制，例如：大部分的狀態更新業務邏輯被限制到單一線程。以下範例像這樣，在單一線程的環境中運行每個協程為開始。這裡我們使用 [CoroutineScope()][CoroutineScope()] 函數，讓協程環境轉換到 [CoroutineScope][CoroutineScope] 引用：
+在實際中，在大區塊中執行線程限制，例如：大部分的狀態更新業務邏輯被限制到單一線程。以下範例像這樣，在單一線程的環境中運行每個協程為開始。這裡我們使用 [CoroutineScope()][CoroutineScope()] 函數，讓協程環境轉換到 [CoroutineScope][CoroutineScope] 引用：
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -316,11 +326,14 @@ suspend fun CoroutineScope.massiveRun(action: suspend () -> Unit) {
     println("Completed ${n * k} actions in $time ms")    
 }
 
+// 新增一個單線程的環境
 val counterContext = newSingleThreadContext("CounterContext")
 var counter = 0
 
 fun main() = runBlocking<Unit> {
 //sampleStart
+    
+    // 指定單線程環境
     CoroutineScope(counterContext).massiveRun { // run each coroutine in the single-threaded context
         counter++
     }
@@ -340,13 +353,15 @@ This now works much faster and produces correct result.
 
 這是現在更快運行的方式以並產生正確的結果。
 
+---
+
 ### Mutual exclusion
 
 Mutual exclusion ：互斥排除，當只有一開一關的情況時才讓你寫入。
 
 Mutual exclusion solution to the problem is to protect all modifications of the shared state with a _critical section_ that is never executed concurrently. In a blocking world you'd typically use `synchronized` or `ReentrantLock` for that. Coroutine's alternative is called [Mutex][Mutex]. It has [lock][Mutex.lock] and [unlock][Mutex.unlock] functions to delimit a critical section. The key difference is that `Mutex.lock()` is a suspending function. It does not block a thread.
 
-問題的互斥排除解決方式是永不同時執行**關鍵部分**的程式，保護共享狀態的所有修改。在阻塞的世界中，你可能會使用 Java 典型的 `synchronized` 或  `ReentrantLock` API 用於阻塞。多協程的替代品是稱 [Mutex][Mutex] 。它有 [lock][Mutex.lock] 和 [unlock][Mutex.unlock] 函數去劃分某一關鍵區塊。關鍵的區別是 `Mutex.lock()` 是懸掛函數。它不會阻塞線程。
+互斥排除問題的解決方式是永不同時執行**關鍵部分**的程式，保護共享狀態的所有修改。在阻塞的世界中，你可能會使用 Java 典型的 `synchronized` 或  `ReentrantLock` API 用於阻塞。多協程的替代品是稱 [Mutex][Mutex] 。它有 [lock][Mutex.lock] 和 [unlock][Mutex.unlock] 函數去劃分某一關鍵區塊。關鍵的區別是 `Mutex.lock()` 是懸掛函數。它不會阻塞線程。
 
 There is also [withLock][withLock] extension function that conveniently represents `mutex.lock(); try { ... } finally { mutex.unlock() }` pattern: 
 
@@ -400,6 +415,8 @@ The locking in this example is fine-grained, so it pays the price. However, it i
 
 在這個範例中的鎖是細粒度的 (每個操作都執行) ，所以它付出了代價。而且，對於你絕對必須定期的修改某些共享的狀態某些情況是一個好的選擇，但是沒有這種限制狀態的自然線程。
 
+---
+
 ### Actors
 
 Actors ：執行者，通道類型，與 produce 相反，函數內負責消費，回傳類型負責生產
@@ -414,7 +431,7 @@ There is an [actor][actor] coroutine builder that conveniently combines actor's 
 
 The first step of using an actor is to define a class of messages that an actor is going to process. Kotlin's [sealed classes](https://github.com/RayCZ/kotlin-web-site/blob/ray/pages/docs/reference/sealed-classes.md) are well suited for that purpose. We define `CounterMsg` sealed class with `IncCounter` message to increment a counter and `GetCounter` message to get its value. The later needs to send a response. A [CompletableDeferred][CompletableDeferred] communication primitive, that represents a single value that will be known (communicated) in the future, is used here for that purpose.
 
-使用 actor 的第一步是定義 actor 將要處理的訊息類別。 Kotlin 的[密封類別](https://github.com/RayCZ/kotlin-web-site/blob/ray/pages/docs/reference/sealed-classes.md)非常適合這個目的。我們使用 `IncCounter` 訊息類別去增量計數器，並 `GetCounter` 訊息類別去獲取它的結果值，具體的定義 `CounterMsg` 密封類別。後者 (`GetCounter`) 需要發送一個回應 `msg.response.complete(counter) ` 。 [CompletableDeferred][CompletableDeferred] 類型通訊原始資料，表示在將來已知 (通訊) 的單一值，此處用於此目的。
+使用 actor 的第一步是定義 actor 將要處理的訊息類別。 Kotlin 的[密封類別](https://github.com/RayCZ/kotlin-web-site/blob/ray/pages/docs/reference/sealed-classes.md)非常適合這個目的。我們使用 `IncCounter` 訊息類別去增量 (遞增) 計數器，並 `GetCounter` 訊息類別去獲取它的結果值，具體的定義 `CounterMsg` 密封類別。後者 (`GetCounter`) 需要發送一個回應 `msg.response.complete(counter) ` 。 [CompletableDeferred][CompletableDeferred] 類型通訊原始資料，表示在將來已知 (通訊) 的單一值，此處用於此目的。
 
 ```kotlin
 // Message types for counterActor
@@ -479,7 +496,7 @@ fun CoroutineScope.counterActor() = actor<CounterMsg> {
     for (msg in channel) { // iterate over incoming messages
         when (msg) {
             
-            // 增量處理
+            // 增量 (遞增) 處理
             is IncCounter -> counter++ 
             
             // CompletableDeferred 類型送出結果，await 才能取值
@@ -494,11 +511,15 @@ fun main() = runBlocking<Unit> {
     // 回傳一個通道讓別的協程可以送資料
     val counter = counterActor() // create the actor
     
-    // 利用通道送出大量的送 IncCounter 訊息類
+    // 利用通道送出大量的送 IncCounter 訊息物件
     // 在 actor 程式內判斷類型是 IncCounter 就做數字增量
     GlobalScope.massiveRun {
         counter.send(IncCounter)
     }
+    
+    // ↑ 做遞增處理
+    // ===========================
+    // ↓ 取得遞增的結果
     
     // CompletableDeferred 類型讓別的協程呼叫 complete 帶上參數結果，讓 await 取值
     // send a message to get a counter value from an actor
@@ -525,7 +546,7 @@ fun main() = runBlocking<Unit> {
 
 It does not matter (for correctness) what context the actor itself is executed in. An actor is a coroutine and a coroutine is executed sequentially, so confinement of the state to the specific coroutine works as a solution to the problem of shared mutable state. Indeed, actors may modify their own private state, but can only affect each other through messages (avoiding the need for any locks).
 
-actor 本身執行在什麼環境不重要。 actor 是一個協程並且一個協程被依序執行 (因為是 Channel 負責處理訊息)，所以狀態限制到特定協程適用共享可變狀態問題的解決方式。實際上 ，actor 可以修改它們擁有的私有狀態，只能透過訊息互相影響 (避免任何鎖)。
+actor 本身執行在什麼環境不重要 (為了正確) 。 actor 是一個協程並且依序執行每個協程 (因為是 Channel 負責處理訊息)，所以狀態限制到特定協程適用共享可變狀態問題的解決方式。實際上 ，actor 可以修改它們擁有的私有狀態，只能透過訊息互相影響 (避免任何鎖)。
 
 **actor 本身是一個 Channel 類型，已經採用依序性的執行方式。**
 
